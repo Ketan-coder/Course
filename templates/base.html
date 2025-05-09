@@ -1,0 +1,175 @@
+{% load static %}
+<!doctype html>
+<html lang="en" data-bs-theme="dark">
+	<head>
+		<title>Made with python</title>
+		<link rel="stylesheet" href="{% static 'vendors/css/style.css'%}">
+		<script src="{% static 'vendors/js/htmx.min.js'%}"></script>
+		<!-- Required meta tags -->
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<meta name="title" content="Timely: One Notebook For Every Need">
+		<meta name="description"
+			content="Timely can be used to create quick Notebooks with pages and many more things.">
+	
+		{% comment %} <meta property="og:type" content="website">
+		<meta property="og:url" content="https://timely.pythonanywhere.com/">
+		<meta property="og:title" content="Timely: One Notebook For Every Need">
+		<meta property="og:description"
+			content="Timely can be used to create quick Notebooks with pages and many more things.">
+		<meta property="og:image" content="resoures/img/For_website.png">
+	
+		<meta property="twitter:card" content="summary_large_image">
+		<meta property="twitter:url" content="https://timely.pythonanywhere.com/">
+		<meta property="twitter:title" content="Timely: One Notebook For Every Need">
+		<meta property="twitter:description"
+			content="Timely can be used to create quick Notebooks with pages and many more things.">
+		<meta property="twitter:image" content="resoures/img/For_website.png"> {% endcomment %}
+		<meta name="csrf-token" content="{{ csrf_token }}">
+		<link rel="preconnect" href="https://fonts.googleapis.com">
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+		<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@100;300;400;700;900&display=swap" rel="stylesheet">
+		<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+		<link href="https://cdn.jsdelivr.net/npm/halfmoon@2.0.1/css/halfmoon.min.css" rel="stylesheet" integrity="sha256-SsJizWSIG9JT9Qxbiy8xnYJfjCAkhEQ0hihxRn7jt2M=" crossorigin="anonymous">
+		<link href="{% static 'vendors/css/halfmoon.css' %}" rel="stylesheet" >
+		<script src="{% static 'vendors/js/htmx.min.js' %}" defer></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
+		{% comment %} <link href="https://fonts.googleapis.com/css?family=Roboto|Lora|Poppins" rel="stylesheet"> {% endcomment %}
+		<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@100;300;400;700;900&display=swap" rel="stylesheet">
+		<link href="https://fonts.googleapis.com/css2?family=Lora:wght@100;300;400;700;900&display=swap" rel="stylesheet">
+		<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@100;300;400;700;900&display=swap" rel="stylesheet">
+		
+		{% block head %}
+			
+		{% endblock head %}
+			
+	</head>
+	<body>
+			<!-- Navbar nav scrolling -->
+<nav class="navbar navbar-expand-lg" style="background-color: var(--bs-content-bg); border-bottom: var(--bs-border-width) solid var(--bs-content-border-color);">
+	<div class="container-fluid">
+	  <a class="navbar-brand" href="" style="font-weight: 800;">
+		{% comment %} <img src="..." alt="Logo" width="24" height="24" class="d-inline-block align-text-top"> {% endcomment %}
+		Timely
+	  </a>
+	  <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar-collapse-7" aria-controls="navbar-collapse-7" aria-expanded="false" aria-label="Toggle navigation">
+		<span class="navbar-toggler-icon"></span>
+	  </button>
+	  <div class="collapse navbar-collapse" id="navbar-collapse-7">
+		<ul class="navbar-nav me-auto my-2 my-lg-0 navbar-nav-scroll" style="--bs-scroll-height: 100px;">
+		  <li class="nav-item">
+			<a class="nav-link {% if request.session.page == 'home' %}active{% endif %}" aria-current="page" href="">
+			  <svg style="margin-top: -5px;" fill="#fff" width="14px" height="14px" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"><polygon fill-rule="evenodd" points="192 0 0 153.6 0 384 149.333 384 149.333 256 234.667 256 234.667 384 384 384 384 153.6" transform="translate(64 64)"></polygon></g></svg>
+			  Home</a>
+		  </li>
+		  <li class="nav-item">
+			{% if user.is_authenticated %}
+			<button type="button" class="nav-link" data-bs-toggle="offcanvas" data-bs-target="#example-offcanvas-4">
+			  <svg fill="#fff" width="14px" height="14px" style="margin-top: -5px;" viewBox="0 0 64 64" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <rect id="Icons" x="-576" y="0" width="1280" height="800" style="fill:none;"></rect> <g id="Icons1" serif:id="Icons"> <g id="Strike"> </g> <g id="H1"> </g> <g id="H2"> </g> <g id="H3"> </g> <g id="list-ul"> </g> <g id="hamburger-1"> </g> <g id="hamburger-2"> </g> <g id="list-ol"> </g> <g id="list-task"> <path d="M14.563,17.167l7.468,-7.468l2.61,2.61l-10.107,10.107l-6.359,-6.358l2.64,-2.64l3.748,3.749Zm41.456,0.806l-27.993,0l0,-3.969l27.993,0l0,3.969Z"></path> <path d="M14.563,17.167l7.468,-7.468l2.61,2.61l-10.107,10.107l-6.359,-6.358l2.64,-2.64l3.748,3.749Zm41.456,0.806l-27.993,0l0,-3.969l27.993,0l0,3.969Z"></path> <path d="M14.563,49.167l7.468,-7.468l2.61,2.61l-10.107,10.107l-6.359,-6.358l2.64,-2.64l3.748,3.749Zm41.456,0.806l-27.993,0l0,-3.969l27.993,0l0,3.969Z"></path> <path d="M14.563,49.167l7.468,-7.468l2.61,2.61l-10.107,10.107l-6.359,-6.358l2.64,-2.64l3.748,3.749Zm41.456,0.806l-27.993,0l0,-3.969l27.993,0l0,3.969Z"></path> <path d="M14.563,33.167l7.468,-7.468l2.61,2.61l-10.107,10.107l-6.359,-6.358l2.64,-2.64l3.748,3.749Zm41.456,0.806l-27.993,0l0,-3.969l27.993,0l0,3.969Z"></path> <path d="M14.563,33.167l7.468,-7.468l2.61,2.61l-10.107,10.107l-6.359,-6.358l2.64,-2.64l3.748,3.749Zm41.456,0.806l-27.993,0l0,-3.969l27.993,0l0,3.969Z"></path> </g> <g id="trash"> </g> <g id="vertical-menu"> </g> <g id="horizontal-menu"> </g> <g id="sidebar-2"> </g> <g id="Pen"> </g> <g id="Pen1" serif:id="Pen"> </g> <g id="clock"> </g> <g id="external-link"> </g> <g id="hr"> </g> <g id="info"> </g> <g id="warning"> </g> <g id="plus-circle"> </g> <g id="minus-circle"> </g> <g id="vue"> </g> <g id="cog"> </g> <g id="logo"> </g> <g id="radio-check"> </g> <g id="eye-slash"> </g> <g id="eye"> </g> <g id="toggle-off"> </g> <g id="shredder"> </g> <g id="spinner--loading--dots-" serif:id="spinner [loading, dots]"> </g> <g id="react"> </g> <g id="check-selected"> </g> <g id="turn-off"> </g> <g id="code-block"> </g> <g id="user"> </g> <g id="coffee-bean"> </g> <g id="coffee-beans"> <g id="coffee-bean1" serif:id="coffee-bean"> </g> </g> <g id="coffee-bean-filled"> </g> <g id="coffee-beans-filled"> <g id="coffee-bean2" serif:id="coffee-bean"> </g> </g> <g id="clipboard"> </g> <g id="clipboard-paste"> </g> <g id="clipboard-copy"> </g> <g id="Layer1"> </g> </g> </g></svg>
+			  Todo's
+			</button>
+			{% endif %}
+		  </li>
+		  <li class="nav-item">
+			{% if user.is_authenticated %}
+			<a class="nav-link {% if request.session.page == 'load_json' %}active{% endif %}" href="">
+			  <svg viewBox="0 0 48 48" width="14px" height="14px" style="margin-top: -5px;" xmlns="http://www.w3.org/2000/svg" fill="#ffffff"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <title>cloud-upload-solid</title> <g id="Layer_2" data-name="Layer 2"> <g id="invisible_box" data-name="invisible box"> <rect width="48" height="48" fill="none"></rect> </g> <g id="icons_Q2" data-name="icons Q2"> <path d="M40.5,21.8a9.1,9.1,0,0,0-3.4-6.5A9.8,9.8,0,0,0,29.6,13,12.2,12.2,0,0,0,19.5,7a11.6,11.6,0,0,0-8.9,4,12.4,12.4,0,0,0-3.2,8.4,11.8,11.8,0,0,0-5.2,8.2A11.5,11.5,0,0,0,5.3,37.8,12.4,12.4,0,0,0,14,41H34.5c7.7,0,11.3-5.1,11.5-9.9A9.9,9.9,0,0,0,40.5,21.8Zm-7.8,6.4a2,2,0,0,1-3.1.2L26,24.8V36a2,2,0,0,1-4,0V24.8l-3.6,3.6a2,2,0,0,1-3.1-.2,2.1,2.1,0,0,1,.4-2.7l6.9-6.9a1.9,1.9,0,0,1,2.8,0l6.9,6.9A2.1,2.1,0,0,1,32.7,28.2Z"></path> </g> </g> </g></svg>
+			   Upload Notebook</a>
+			{% endif %}
+		  </li>
+		  <li class="nav-item">
+			{% if user.is_authenticated %}
+			<a class="nav-link {% if request.session.page == 'public_notebooks' %}active{% endif %}" href="">
+			  {% comment %} <svg viewBox="0 0 48 48" width="14px" height="14px" style="margin-top: -5px;" xmlns="http://www.w3.org/2000/svg" fill="#ffffff"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <title>cloud-upload-solid</title> <g id="Layer_2" data-name="Layer 2"> <g id="invisible_box" data-name="invisible box"> <rect width="48" height="48" fill="none"></rect> </g> <g id="icons_Q2" data-name="icons Q2"> <path d="M40.5,21.8a9.1,9.1,0,0,0-3.4-6.5A9.8,9.8,0,0,0,29.6,13,12.2,12.2,0,0,0,19.5,7a11.6,11.6,0,0,0-8.9,4,12.4,12.4,0,0,0-3.2,8.4,11.8,11.8,0,0,0-5.2,8.2A11.5,11.5,0,0,0,5.3,37.8,12.4,12.4,0,0,0,14,41H34.5c7.7,0,11.3-5.1,11.5-9.9A9.9,9.9,0,0,0,40.5,21.8Zm-7.8,6.4a2,2,0,0,1-3.1.2L26,24.8V36a2,2,0,0,1-4,0V24.8l-3.6,3.6a2,2,0,0,1-3.1-.2,2.1,2.1,0,0,1,.4-2.7l6.9-6.9a1.9,1.9,0,0,1,2.8,0l6.9,6.9A2.1,2.1,0,0,1,32.7,28.2Z"></path> </g> </g> </g></svg> {% endcomment %}
+			  <svg viewBox="0 0 25 25" width="14px" height="14px" style="margin-top: -5px;" fill="none" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <path d="M5.5 16.5H19.5M5.5 8.5H19.5M4.5 12.5H20.5M12.5 20.5C12.5 20.5 8 18.5 8 12.5C8 6.5 12.5 4.5 12.5 4.5M12.5 4.5C12.5 4.5 17 6.5 17 12.5C17 18.5 12.5 20.5 12.5 20.5M12.5 4.5V20.5M20.5 12.5C20.5 16.9183 16.9183 20.5 12.5 20.5C8.08172 20.5 4.5 16.9183 4.5 12.5C4.5 8.08172 8.08172 4.5 12.5 4.5C16.9183 4.5 20.5 8.08172 20.5 12.5Z" stroke="#ffffff" stroke-width="1.2"></path> </g></svg>
+			  Public Notebooks</a>
+			{% endif %}
+		  </li>
+		  <li class="nav-item">
+			{% if user.is_authenticated %}
+			<a class="nav-link {% if request.session.page == 'activity' %}active{% endif %}" href="">
+			  <svg viewBox="0 0 16 16" width="14px" height="14px" style="margin-top: -5px;" xmlns="http://www.w3.org/2000/svg" fill="#fff"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <path fill="#ffffff" d="M10.6972,0.468433 C12.354,1.06178 13.7689,2.18485 14.7228,3.66372 C15.6766,5.14258 16.1163,6.89471 15.9736,8.64872 C15.8309,10.4027 15.1138,12.0607 13.9334,13.366 C12.753,14.6712 11.1752,15.5508 9.4443,15.8685 C7.71342,16.1863 5.92606,15.9244 4.35906,15.1235 C2.79206,14.3226 1.53287,13.0274 0.776508,11.4384 C0.539137,10.9397 0.750962,10.343 1.24963,10.1057 C1.74831,9.86829 2.34499,10.0801 2.58236,10.5788 C3.14963,11.7705 4.09402,12.742 5.26927,13.3426 C6.44452,13.9433 7.78504,14.1397 9.08321,13.9014 C10.3814,13.6631 11.5647,13.0034 12.45,12.0245 C13.3353,11.0456 13.8731,9.80205 13.9801,8.48654 C14.0872,7.17103 13.7574,5.85694 13.042,4.74779 C12.3266,3.63864 11.2655,2.79633 10.0229,2.35133 C8.78032,1.90632 7.42568,1.88344 6.1688,2.28624 C5.34644,2.54978 4.59596,2.98593 3.96459,3.5597 L4.69779,4.29291 C5.32776,4.92287 4.88159,6.00002 3.99069,6.00002 L1.77635684e-15,6.00002 L1.77635684e-15,2.00933 C1.77635684e-15,1.11842 1.07714,0.672258 1.70711,1.30222 L2.54916,2.14428 C3.40537,1.3473 4.43126,0.742882 5.55842,0.381656 C7.23428,-0.155411 9.04046,-0.124911 10.6972,0.468433 Z M8,4 C8.55229,4 9,4.44772 9,5 L9,7.58579 L10.7071,9.29289 C11.0976,9.68342 11.0976,10.3166 10.7071,10.7071 C10.3166,11.0976 9.68342,11.0976 9.29289,10.7071 L7,8.41421 L7,5 C7,4.44772 7.44772,4 8,4 Z"></path> </g></svg>
+			   My Activities</a>
+			{% endif %}
+		  </li>
+		  <li class="nav-item">
+			{% if user.is_authenticated %}
+			  <a class="nav-link {% if request.session.page == 'update_user' %}active{% endif %}" href="">
+				<svg xmlns="http://www.w3.org/2000/svg" fill="#ffffff" width="14px" height="14px" style="margin-top: -5px;" viewBox="0 0 24 24"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"></path></g></svg>
+				Update Profile</a>
+			{% else %}
+			  <a class="nav-link" href="">Sign Up</a>
+			{% endif %}
+		  </li>
+		  <li class="nav-item">
+			{% if user.is_authenticated %}
+			  <a class="nav-link" href="">
+				<svg viewBox="0 0 24 24" width="14px" height="14px" style="margin-top: -5px;" xmlns="http://www.w3.org/2000/svg" fill="none"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <path stroke="#ffffff" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12h-9.5m7.5 3l3-3-3-3m-5-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2h5a2 2 0 002-2v-1"></path> </g></svg>
+				Logout</a>
+			  {% else %}
+			  <a class="nav-link" href="">Login</a>
+			{% endif %}
+		  </li>
+		</ul>
+		{% if user.is_authenticated %}
+		<form class="d-flex" role="search" method="GET" action="">
+		  {% csrf_token %}
+			<input class="form-control me-2" type="search" name="query" placeholder="Search Notes" aria-label="Search">
+			<button class="btn btn-primary" type="submit">Search</button>
+		</form>
+		{% endif %}
+	  </div>
+	</div>
+  </nav>
+	<!-- Navbar end -->
+	<!-- Flash messages -->
+  {% if messages %}
+	  <div class="toast-container position-fixed top-0 end-0 p-3">
+		  {% for message in messages %}
+			  <div id="toast-{{ forloop.counter }}" 
+				   class="toast text-bg-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} border-0 shadow-none show"
+				   role="alert" aria-live="assertive" aria-atomic="true">
+				  <div class="d-flex">
+					  <div class="toast-body">
+						  <strong class="me-2 text-capitalize">{{ message.tags }}:</strong> {{ message }}
+					  </div>
+					  <div class="me-2 m-auto">
+						  <button type="button" class="btn-close close-toast" data-toast-id="toast-{{ forloop.counter }}" aria-label="Close" data-bs-theme="dark"></button>
+					  </div>
+				  </div>
+			  </div>
+		  {% endfor %}
+	  </div>
+  
+	  <script>
+		  document.addEventListener("DOMContentLoaded", function () {
+			  var toasts = document.querySelectorAll(".toast");
+  
+			  toasts.forEach(function (toastElement) {
+				  // Auto-hide after 8 seconds (8000ms)
+				  setTimeout(function () {
+					  toastElement.classList.remove("show");  // Hide the toast
+					  toastElement.classList.add("fade");  // Smooth fade effect
+				  }, 8000);
+			  });
+  
+			  // Manually close on button click
+			  document.querySelectorAll(".close-toast").forEach(function (button) {
+				  button.addEventListener("click", function () {
+					  var toastId = this.getAttribute("data-toast-id");
+					  var toastElement = document.getElementById(toastId);
+					  if (toastElement) {
+						  toastElement.classList.remove("show");
+						  toastElement.classList.add("fade");
+					  }
+				  });
+			  });
+		  });
+	  </script>
+  {% endif %}
+		<h1>Hello World</h1>
+<h3>Do not close the terminal that is running development server(python manage.py runserver)</h3>
+	</body>
+</html>

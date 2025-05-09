@@ -1,0 +1,31 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+IDPassword.txt
+migrations/
+
+# Ignore unnecessary scripts (optional)
+Django_automation.py
+WebsiteTester.py
+
+# Ignore IDE and system files
+.vscode/
+.idea/
+*.swp
+.DS_Store
+
+# Ignore Python compiled files
+**/__pycache__/
+*.pyc
+*.pyo
+
+# Ignore Django migrations except __init__.py
+**/migrations/
+!**/migrations/__init__.py
