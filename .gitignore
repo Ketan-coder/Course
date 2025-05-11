@@ -10,6 +10,7 @@ wheels/
 .venv
 IDPassword.txt
 migrations/
+.env
 
 # Ignore unnecessary scripts (optional)
 Django_automation.py
@@ -25,7 +26,10 @@ WebsiteTester.py
 **/__pycache__/
 *.pyc
 *.pyo
+*.zip
 
 # Ignore Django migrations except __init__.py
 **/migrations/
 !**/migrations/__init__.py
+
+media/

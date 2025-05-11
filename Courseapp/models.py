@@ -1,6 +1,8 @@
 from django.db import models
 from django.core.exceptions import ValidationError
 
+from utils.media_handler import MediaHandler
+
 # Utility function
 
 def validate_discount(value):
@@ -31,12 +33,11 @@ class Course(models.Model):
         choices=[('beginner', 'Beginner'), ('intermediate', 'Intermediate'), ('advanced', 'Advanced'), ('all', 'All')],
         default='beginner'
     )
-    # language = models.CharField(max_length=20, choices=[('english', 'English'), ('nepali', 'Nepali')], default='english')
     language = models.OneToOneField(Language, on_delete=models.CASCADE, default=1, related_name='courses', blank=True, null=True)
     instructor = models.ForeignKey('Users.Profile', on_delete=models.CASCADE, related_name='courses')
-    thumbnail = models.ImageField(upload_to='course_thumbnails/', blank=True, null=True)
+    thumbnail = models.ImageField(upload_to='course_thumbnails', blank=True, null=True)
     sections = models.ManyToManyField('Section', related_name='courses', blank=True)
-    intro_video = models.FileField(upload_to='intro_videos/', blank=True, null=True)
+    intro_video = models.FileField(upload_to='intro_videos', blank=True, null=True)
     tags = models.ManyToManyField('Tag', related_name='courses', blank=True)
     prerequisites = models.TextField(blank=True, null=True)
     circulam = models.TextField(blank=True, null=True)
@@ -62,11 +63,28 @@ class Course(models.Model):
     def save(self, *args, **kwargs):
         self.extra_fields['last_updated'] = str(self.updated_at)
         self.extra_fields['is_active'] = self.is_published
-        self.extra_fields['discount_percentage'] = (
-            round(((self.price - self.discount_price) / self.price) * 100, 2)
-            if self.price else 0
-        )
+        if self.price is not None and self.discount_price is not None:
+            discount_percentage = 0
+            if self.price > 0:
+                discount_percentage = round(((self.price - self.discount_price) / self.price) * 100, 2)
+            self.extra_fields['discount_percentage'] = float(discount_percentage)
+        if self.thumbnail:
+            resized_path = MediaHandler.resize_image(self.thumbnail, size=(150, 150))
+            if resized_path:
+                # You might want to save this resized path to another field
+                # or just use it for processing. For now, we will just pass.
+                self.thumbnail = resized_path
+            else:
+                pass
         super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        # Delete the associated media files when the model instance is deleted
+        if self.image:
+            MediaHandler.delete_media_file(self.image.name)
+        if self.video:
+            MediaHandler.delete_media_file(self.video.name)
+        super().delete(*args, **kwargs)
 
 
 class Section(models.Model):
@@ -85,7 +103,7 @@ class Lesson(models.Model):
     course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='lessons')
     section = models.ForeignKey(Section, on_delete=models.CASCADE, related_name='lessons')
     title = models.CharField(max_length=200)
-    video = models.FileField(upload_to='lesson_videos/', blank=True, null=True)
+    video = models.FileField(upload_to='lesson_videos', blank=True, null=True)
     description = models.TextField(blank=True, null=True)
     is_open = models.BooleanField(default=True)
     completed_by_users = models.ManyToManyField('Users.Profile', related_name='completed_lessons', blank=True)
@@ -95,6 +113,7 @@ class Lesson(models.Model):
     extra_fields = models.JSONField(blank=True, null=True, default=dict)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    
 
     class Meta:
         ordering = ['order']
@@ -106,6 +125,14 @@ class Lesson(models.Model):
         self.extra_fields['last_updated'] = str(self.updated_at)
         super().save(*args, **kwargs)
 
+    def delete(self, *args, **kwargs):
+        # Delete the associated media files when the model instance is deleted
+        if self.image:
+            MediaHandler.delete_media_file(self.image.name)
+        if self.video:
+            MediaHandler.delete_media_file(self.video.name)
+        super().delete(*args, **kwargs)
+
 
 class Quiz(models.Model):
     course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='quizzes')
@@ -113,6 +140,7 @@ class Quiz(models.Model):
     lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE, related_name='quizzes')
     title = models.CharField(max_length=200)
     questions = models.JSONField(blank=True, null=True)
+    is_inside_video = models.BooleanField(default=False)
     completed_by_users = models.ManyToManyField('Users.Profile', related_name='completed_quizzes', blank=True)
     max_score = models.DecimalField(max_digits=5, decimal_places=2, default=0.0)
     passing_score = models.DecimalField(max_digits=5, decimal_places=2, default=0.0)
@@ -215,6 +243,20 @@ class CourseComment(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.course.title} - {self.comment_text[:20]}"
+    
+class CourseSubComment(models.Model):
+    user = models.ForeignKey('Users.Profile', on_delete=models.CASCADE, related_name='course_sub_comments')
+    course_comment = models.ForeignKey(CourseComment, on_delete=models.CASCADE, related_name='sub_comments')
+    comment_text = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    extra_fields = models.JSONField(blank=True, null=True, default=dict)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.user.username} - {self.course_comment.course.title} - {self.comment_text[:20]}"
 
 class PaymentHistory(models.Model):
     payment_uuid = models.UUIDField(unique=True, editable=False, blank=True, null=True)
@@ -255,4 +297,23 @@ class PaymentHistory(models.Model):
         self.extra_fields['location'] = location
 
         self.extra_fields['last_updated'] = str(self.updated_at)
+        super().save(*args, **kwargs)
+
+class CourseCertificate(models.Model):
+    user = models.ForeignKey('Users.Profile', on_delete=models.CASCADE, related_name='course_certificates')
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='certificates')
+    certificate_code = models.CharField(max_length=100, unique=True)
+    issued_at = models.DateTimeField(auto_now_add=True)
+    extra_fields = models.JSONField(blank=True, null=True, default=dict)
+
+    class Meta:
+        ordering = ['-issued_at']
+
+    def __str__(self):
+        return f"{self.user.username} - {self.course.title} - {self.certificate_code}"
+    
+    def save(self, *args, **kwargs):
+        import uuid
+        self.certificate_code = str(uuid.uuid4())
+        self.extra_fields['last_updated'] = str(self.issued_at)
         super().save(*args, **kwargs)

@@ -6,7 +6,7 @@ class Stock(models.Model):
     description = models.TextField(blank=True, null=True)
     
     date_added = models.DateField(auto_now_add=True)
-    logo = models.ImageField(upload_to='stock_logos/', blank=True, null=True)
+    logo = models.ImageField(upload_to='stock_logos', blank=True, null=True)
     website = models.URLField(blank=True, null=True)
     exchange = models.CharField(max_length=50, blank=True, null=True)
     sector = models.CharField(max_length=100, blank=True, null=True)
@@ -111,6 +111,8 @@ class StockPortfolio(models.Model):
     extra_fields = models.JSONField(blank=True, null=True, default=dict)
 
     def __str__(self):
+        """Returns a string representation of the StockPortfolio instance, 
+        showing the associated user's username and indicating it's their stock portfolio."""
         return f"{self.user.username}'s Stock Portfolio"
 
 class StockHolding(models.Model):

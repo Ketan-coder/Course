@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Profile
+from .models import Profile, Instructor, Student
 # Register your models here.
 
 @admin.register(Profile)
@@ -12,6 +12,38 @@ class ProfileAdmin(admin.ModelAdmin):
     fieldsets = (
         (None, {
             'fields': ('user', 'phone_no_prefix', 'phone_no', 'address', 'image', 'bio', 'date_of_birth')
+        }),
+        ('Extra Fields', {
+            'fields': ('extra_fields',)
+        }),
+    )
+
+@admin.register(Instructor)
+class InstructorAdmin(admin.ModelAdmin):
+    list_display = ('profile', 'experience', 'rating', 'created_at')
+    search_fields = ('profile__user__username', 'experience')
+    list_filter = ('created_at',)
+    ordering = ('-created_at',)
+    date_hierarchy = 'created_at'
+    fieldsets = (
+        (None, {
+            'fields': ('profile', 'experience', 'rating')
+        }),
+        ('Extra Fields', {
+            'fields': ('extra_fields',)
+        }),
+    )
+
+@admin.register(Student)
+class StudentAdmin(admin.ModelAdmin):
+    list_display = ('profile', 'tier', 'rank', 'created_at')
+    search_fields = ('profile__user__username', 'tier__name', 'rank__name')
+    list_filter = ('created_at',)
+    ordering = ('-created_at',)
+    date_hierarchy = 'created_at'
+    fieldsets = (
+        (None, {
+            'fields': ('profile', 'tier', 'rank')
         }),
         ('Extra Fields', {
             'fields': ('extra_fields',)
