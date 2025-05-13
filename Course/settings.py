@@ -168,6 +168,11 @@ TEMPLATES = [
 	},
 ]
 
+CSRF_TRUSTED_ORIGINS = [
+    # 'https://your-production-domain.com',
+    'https://8000-firebase-coursegit-1747156684969.cluster-htdgsbmflbdmov5xrjithceibm.cloudworkstations.dev',
+]
+
 
 # Media files settings
 MEDIA_URL = '/media/'

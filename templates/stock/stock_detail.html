@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+{% block title %}Stock Details{% endblock %}
+
+{% block content %}
+    <h1>Stock Details</h1>
+
+    {% if stock %}
+        <h2>{{ stock.name }} ({{ stock.symbol }})</h2>
+
+        <p>
+            <strong>Symbol:</strong> {{ stock.symbol }}<br>
+            <strong>Name:</strong> {{ stock.name }}<br>
+            <strong>Market Cap:</strong> {{ stock.market_cap }}
+        </p>
+
+        <h3>Current Price:</h3>
+        {% if current_price %}
+            <p>Rs.{{ current_price }}</p>
+        {% else %}
+            <p>Could not fetch current price.</p>
+        {% endif %}
+
+    {% else %}
+        <p>Stock not found.</p>
+    {% endif %}
+
+{% endblock %}

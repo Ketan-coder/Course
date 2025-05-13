@@ -33,3 +33,4 @@ WebsiteTester.py
 !**/migrations/__init__.py
 
 media/
+.idx/
