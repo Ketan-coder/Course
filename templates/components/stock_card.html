@@ -1,0 +1,176 @@
+{% load static %}
+<div class="card" style="width: 600px; height: 600px;">
+    <div class="card-body">
+        <h5 class="card-title">{{ stock.symbol }}</h5> 
+        <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#modal-{{ stock.symbol }}">
+            Open <!-- FontAwesome icon -->
+        </button>
+        <p class="card-text">{{ stock.name }}</p>
+        <div id="chart-{{ stock.symbol }}" style="height: 200px;"></div>
+        <p class="card-text">Current Price: $<span id="price-{{ stock.symbol }}">{{ stock.price }}</span></p>
+        <button class="btn btn-primary buy-button" data-symbol="{{ stock.symbol }}">Buy</button>
+    </div>
+</div>
+
+<!-- Fullscreen Modal for Chart -->
+<div class="modal fade" id="modal-{{ stock.symbol }}" tabindex="-1" aria-labelledby="modalLabel-{{ stock.symbol }}" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="modalLabel-{{ stock.symbol }}">{{ stock.symbol }} - Fullscreen Chart</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div id="chart-fullscreen-{{ stock.symbol }}" ></div>
+          <div class="row mt-3">
+            <div class="col">
+              <button class="btn btn-outline-secondary btn-sm duration-button" data-duration="1d">1d</button>
+              <button class="btn btn-outline-secondary btn-sm duration-button" data-duration="5d">5d</button>
+              <button class="btn btn-outline-secondary btn-sm duration-button" data-duration="1mo">1mo</button>
+              <button class="btn btn-outline-secondary btn-sm duration-button" data-duration="3mo">3mo</button>
+              <button class="btn btn-outline-secondary btn-sm duration-button" data-duration="6mo">6mo</button>
+              <button class="btn btn-outline-secondary btn-sm duration-button" data-duration="1y">1y</button>
+              <button class="btn btn-outline-secondary btn-sm duration-button" data-duration="2y">2y</button>
+              <button class="btn btn-outline-secondary btn-sm duration-button" data-duration="5y">5y</button>
+              <button class="btn btn-outline-secondary btn-sm duration-button" data-duration="10y">10y</button>
+              <button class="btn btn-outline-secondary btn-sm duration-button" data-duration="ytd">YTD</button>
+              <button class="btn btn-outline-secondary btn-sm duration-button" data-duration="max">Max</button>
+            </div>
+          </div>
+        </div>
+        <div class="modal-bottom">
+            <button class="btn btn-primary buy-button" data-symbol="{{ stock.symbol }}">Buy</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var symbol = "{{ stock.symbol }}";
+
+        // Elements
+        var cardChartElement = document.getElementById("chart-" + symbol);
+        var modalChartElement = document.getElementById("chart-fullscreen-" + symbol);
+
+        // Card chart (no interactivity)
+        var cardChart = new ApexCharts(cardChartElement, {
+            ...chartOptions(symbol),
+            chart: { ...chartOptions(symbol).chart, toolbar: { show: false } }
+        });
+        cardChart.render();
+
+        // Modal chart (interactive)
+        let modalChart;
+
+        function updateModalChart(duration) {
+            // Remove 'active' class from all duration buttons
+            durationButtons.forEach(btn => btn.classList.remove('active'));
+            // Add 'active' class to the button corresponding to the current duration
+            modalElement.querySelector(`.duration-button[data-duration="${duration}"]`).classList.add('active');
+
+            fetchChartData(symbol, duration, function (data) {
+                if (modalChart) {
+                    modalChart.updateSeries([{ data: data }]);
+                }
+            });
+        }
+
+        const modalElement = document.getElementById(`modal-${symbol}`);
+        modalElement.addEventListener('show.bs.modal', () => {
+            // Init only once when modal is opened
+            if (!modalChart) {
+                modalChart = new ApexCharts(modalChartElement, chartOptions(symbol));
+                modalChart.render();
+                updateModalChart('5d'); // Load default data
+            }
+        });
+
+        // Button clicks inside modal update only the modal chart
+        const durationButtons = modalElement.querySelectorAll('.duration-button');
+        durationButtons.forEach(button => {
+            button.addEventListener('click', function () {
+                const duration = this.getAttribute('data-duration');
+                updateModalChart(duration);
+            });
+        });
+
+        // Initial static chart for the card
+        fetchChartData(symbol, '5d', function (data) {
+            cardChart.updateSeries([{ data: data }]);
+        });
+    });
+
+    // Helper: Chart options
+    function chartOptions(symbol) {
+        return {
+            series: [{ name: symbol, data: [] }],
+            chart: {
+                type: 'area',
+                height: 350,
+                zoom: { type: 'x', enabled: true, autoScaleYaxis: true },
+                toolbar: { autoSelected: 'zoom' },
+                foreColor: '#ffffff'
+            },
+            dataLabels: { enabled: false },
+            markers: { size: 0 },
+            title: {
+                text: 'Stock Price Movement - ' + symbol,
+                align: 'left',
+                style: { color: '#ffffff' }
+            },
+            fill: {
+                type: 'gradient',
+                gradient: {
+                    shadeIntensity: 1,
+                    inverseColors: false,
+                    opacityFrom: 0.5,
+                    opacityTo: 0,
+                    stops: [0, 90, 100]
+                }
+            },
+            yaxis: {
+                labels: {
+                    formatter: val => val.toFixed(2),
+                    style: { colors: '#ffffff' }
+                },
+                title: {
+                    text: 'Price',
+                    style: { color: '#ffffff' }
+                }
+            },
+            xaxis: {
+                type: 'datetime',
+                labels: {
+                    style: { colors: '#ffffff' }
+                }
+            },
+            tooltip: {
+                shared: false,
+                y: {
+                    formatter: val => val.toFixed(2)
+                },
+                style: {
+                    fontSize: '14px',
+                    color: '#000000'
+                }
+            }
+        };
+    }
+
+    // Helper: Fetch data
+    function fetchChartData(symbol, duration, callback) {
+        fetch(`/get_historical_prices/${symbol}/${duration}/`)
+            .then(res => res.json())
+            .then(data => {
+                if (!Array.isArray(data)) {
+                    console.error("Invalid chart data:", data);
+                    return;
+                }
+                callback(data);
+            })
+            .catch(err => console.error("Chart data fetch error:", err));
+    }
+</script>
+

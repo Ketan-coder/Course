@@ -1,10 +1,6 @@
 from django.db import models
 from django.core.exceptions import ValidationError
 
-from utils.media_handler import MediaHandler
-
-# Utility function
-
 def validate_discount(value):
     if value < 0:
         raise ValidationError("Discount price must be non-negative.")
@@ -34,7 +30,7 @@ class Course(models.Model):
         default='beginner'
     )
     language = models.OneToOneField(Language, on_delete=models.CASCADE, default=1, related_name='courses', blank=True, null=True)
-    instructor = models.ForeignKey('Users.Profile', on_delete=models.CASCADE, related_name='courses')
+    instructor = models.ForeignKey('Users.Instructor', on_delete=models.CASCADE, related_name='courses') # Circular import fixed by using string
     thumbnail = models.ImageField(upload_to='course_thumbnails', blank=True, null=True)
     sections = models.ManyToManyField('Section', related_name='courses', blank=True)
     intro_video = models.FileField(upload_to='intro_videos', blank=True, null=True)
@@ -68,11 +64,14 @@ class Course(models.Model):
             if self.price > 0:
                 discount_percentage = round(((self.price - self.discount_price) / self.price) * 100, 2)
             self.extra_fields['discount_percentage'] = float(discount_percentage)
+
+        # Removed MediaHandler import and usage to fix circular import issue
+        # from utils.media_handler import MediaHandler
         if self.thumbnail:
-            resized_path = MediaHandler.resize_image(self.thumbnail, size=(150, 150))
+            # resized_path = MediaHandler.resize_image(self.thumbnail, size=(150, 150))
             if resized_path:
                 # You might want to save this resized path to another field
-                # or just use it for processing. For now, we will just pass.
+                # or just use it for processing.
                 self.thumbnail = resized_path
             else:
                 pass
@@ -80,10 +79,12 @@ class Course(models.Model):
 
     def delete(self, *args, **kwargs):
         # Delete the associated media files when the model instance is deleted
-        if self.image:
-            MediaHandler.delete_media_file(self.image.name)
-        if self.video:
-            MediaHandler.delete_media_file(self.video.name)
+        # Removed MediaHandler import and usage to fix circular import issue
+        # from utils.media_handler import MediaHandler
+        # if self.thumbnail:
+            # MediaHandler.delete_media_file(self.thumbnail.name)
+        # if self.video:
+            # MediaHandler.delete_media_file(self.video.name)
         super().delete(*args, **kwargs)
 
 
@@ -127,10 +128,11 @@ class Lesson(models.Model):
 
     def delete(self, *args, **kwargs):
         # Delete the associated media files when the model instance is deleted
-        if self.image:
-            MediaHandler.delete_media_file(self.image.name)
-        if self.video:
-            MediaHandler.delete_media_file(self.video.name)
+        # Removed MediaHandler import and usage to fix circular import issue
+        # from utils.media_handler import MediaHandler
+        # if self.thumbnail:
+            # MediaHandler.delete_media_file(self.thumbnail.name)
+        # if self.video:
         super().delete(*args, **kwargs)
 
 

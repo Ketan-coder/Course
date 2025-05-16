@@ -10,6 +10,7 @@ CacheControl==0.14.2
 certifi==2024.2.2
 cffi==1.16.0
 cfgv==3.4.0
+channels
 chardet==5.2.0
 charset-normalizer==3.3.2
 cleo==2.1.0
@@ -105,3 +106,7 @@ zipp==3.21.0
 zopfli==0.2.3
 zstandard==0.23.0
 yfinance
+redis
+asgiref
+apscheduler
+channels_redis

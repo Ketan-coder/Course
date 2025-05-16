@@ -16,6 +16,10 @@ import os
 load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
+REDIS_HOST = 'localhost'
+REDIS_PORT = 6379
+REDIS_DB = 0
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
@@ -140,6 +144,7 @@ INSTALLED_APPS = [
     "Tiers.apps.TiersConfig",
     "Rewards.apps.RewardsConfig",
     "utils",
+    "channels"
 ]
 
 
@@ -172,6 +177,15 @@ CSRF_TRUSTED_ORIGINS = [
     # 'https://your-production-domain.com',
     'https://8000-firebase-coursegit-1747156684969.cluster-htdgsbmflbdmov5xrjithceibm.cloudworkstations.dev',
 ]
+
+CHANNEL_LAYERS = {
+        "default": {
+            "BACKEND": "channels_redis.core.RedisChannelLayer",
+            "CONFIG": {
+                "hosts": [("localhost", 48684)], # Replace with your Redis host and port
+            },
+        },
+    }
 
 
 # Media files settings

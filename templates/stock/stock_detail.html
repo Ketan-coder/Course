@@ -5,24 +5,88 @@
 {% block content %}
     <h1>Stock Details</h1>
 
-    {% if stock %}
-        <h2>{{ stock.name }} ({{ stock.symbol }})</h2>
+    {% if stock %} {# Assuming 'stock' object is passed in the context #}
+    <div id="stock-data" data-symbol="{{ stock.symbol }}" data-is-watched="{{ is_watched|lower }}"> {# Pass is_watched as a data attribute #}
+        <h2>{{ stock.name }} (<span id="stock-symbol">{{ stock.symbol }}</span>)</h2>
 
         <p>
             <strong>Symbol:</strong> {{ stock.symbol }}<br>
             <strong>Name:</strong> {{ stock.name }}<br>
-            <strong>Market Cap:</strong> {{ stock.market_cap }}
         </p>
 
         <h3>Current Price:</h3>
-        {% if current_price %}
-            <p>Rs.{{ current_price }}</p>
-        {% else %}
-            <p>Could not fetch current price.</p>
-        {% endif %}
+        <p id="current-price">Fetching price...</p>
 
-    {% else %}
-        <p>Stock not found.</p>
-    {% endif %}
+        <h3>Change:</h3>
+        <p id="price-change">Fetching change...</p>
 
+        <h3>Percentage Change:</h3>
+        <p id="percentage-change">Fetching percentage change...</p>
+        {% include 'components/stock_card.html' %}
+    </div>
+    {% endif %} {# End of stock check #}
+
+{% endblock %}
+
+{% block script %}
+<script>
+    const stockDataElement = document.getElementById('stock-data');
+    const symbol = stockDataElement ? stockDataElement.dataset.symbol : null;
+    const isWatched = stockDataElement ? stockDataElement.dataset.isWatched === 'true' : false;
+    let fetchInterval = null;
+
+    if (symbol) {
+        const fetchStockData = () => {
+            fetch(`/fetch-realtime/${symbol}/`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log(data);
+                    // Update HTML elements with fetched data
+                    const currentPriceElement = document.getElementById('current-price');
+                    const priceChangeElement = document.getElementById('price-change');
+                    const percentageChangeElement = document.getElementById('percentage-change');
+
+                    if (currentPriceElement) {
+                        currentPriceElement.textContent = `Rs.${data.price}`; // Adjust data keys based on your API response
+                    }
+                    if (priceChangeElement) {
+                        priceChangeElement.textContent = data.price_change; // Adjust data keys
+                    }
+                    if (percentageChangeElement) {
+                        percentageChangeElement.textContent = `${data.percentage_change}%`; // Adjust data keys
+                    }
+                })
+                .catch(error => {
+                    console.error("Error fetching stock data:", error);
+                    // Handle errors (e.g., display an error message)
+                });
+        };
+
+    // Use visibilityState to manage subscription
+    document.addEventListener("visibilitychange", function () {
+        if (document.visibilityState === "visible" && fetchInterval === null) {
+            console.log("Tab is visible, starting stock data fetch");
+            fetchStockData(); // Initial fetch
+            const interval = isWatched ? 1000 : 60000; // 5 seconds if watched, 1 minute otherwise
+            fetchInterval = setInterval(fetchStockData, interval);
+        } else if (document.visibilityState === "hidden" && fetchInterval !== null) {
+            console.log("Tab is hidden, stopping stock data fetch");
+            clearInterval(fetchInterval);
+            fetchInterval = null;
+        }
+    });
+
+        // Initial fetch when the page loads and is visible
+        if (document.visibilityState === "visible") {
+            fetchStockData(); // Initial fetch
+            const interval = isWatched ? 1000 : 60000; // 5 seconds if watched, 1 minute otherwise
+            fetchInterval = setInterval(fetchStockData, interval);
+        }
+}
+</script>
 {% endblock %}
