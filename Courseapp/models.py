@@ -1,6 +1,6 @@
 from django.db import models
 from django.core.exceptions import ValidationError
-
+from utils.media_handler import MediaHandler
 def validate_discount(value):
     if value < 0:
         raise ValidationError("Discount price must be non-negative.")
@@ -68,7 +68,7 @@ class Course(models.Model):
         # Removed MediaHandler import and usage to fix circular import issue
         # from utils.media_handler import MediaHandler
         if self.thumbnail:
-            # resized_path = MediaHandler.resize_image(self.thumbnail, size=(150, 150))
+            resized_path = MediaHandler.resize_image(self.thumbnail, size=(150, 150))
             if resized_path:
                 # You might want to save this resized path to another field
                 # or just use it for processing.
@@ -92,6 +92,7 @@ class Section(models.Model):
     title = models.CharField(max_length=200)
     order = models.PositiveIntegerField(default=0)
     is_open = models.BooleanField(default=True)
+    lesson = models.ManyToManyField('Lesson', related_name='sections', blank=True)
     extra_fields = models.JSONField(blank=True, null=True, default=dict)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -102,7 +103,7 @@ class Section(models.Model):
 
 class Lesson(models.Model):
     course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='lessons')
-    section = models.ForeignKey(Section, on_delete=models.CASCADE, related_name='lessons')
+    # section = models.ForeignKey(Section, on_delete=models.CASCADE, related_name='lessons')
     title = models.CharField(max_length=200)
     video = models.FileField(upload_to='lesson_videos', blank=True, null=True)
     description = models.TextField(blank=True, null=True)
@@ -120,7 +121,7 @@ class Lesson(models.Model):
         ordering = ['order']
 
     def __str__(self):
-        return f"{self.section.title} - {self.title}"
+        return f"{self.title}"
 
     def save(self, *args, **kwargs):
         self.extra_fields['last_updated'] = str(self.updated_at)

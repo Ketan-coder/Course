@@ -82,7 +82,7 @@ class StockPriceHistory(models.Model):
     extra_fields = models.JSONField(blank=True, null=True, default=dict)
 
     class Meta:
-        unique_together = ('stock', 'datetime')  # prevent duplicate entries
+        # unique_together = ('stock', 'datetime')  # prevent duplicate entries
         ordering = ['-datetime']
 
     def save(self, *args, **kwargs):
@@ -128,8 +128,8 @@ class StockHolding(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     extra_fields = models.JSONField(blank=True, null=True, default=dict)
 
-    class Meta:
-        unique_together = ('portfolio', 'stock')
+    # class Meta:
+    #     unique_together = ('portfolio', 'stock')
 
     def __str__(self):
         return f"{self.portfolio.user.username}'s Holding of {self.stock.symbol}"

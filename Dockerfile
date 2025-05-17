@@ -22,4 +22,4 @@ EXPOSE 8000
 CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
 
 # For Production
-# CMD ["gunicorn", "--workers=3", "--bind=0.0.0.0:8000", "Timely.wsgi:application"]
+# CMD ["gunicorn", "--workers=3", "--bind=0.0.0.0:8000", "Course.wsgi:application"]

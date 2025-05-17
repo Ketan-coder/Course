@@ -28,26 +28,26 @@ from .models import Profile
 
 #  Request Password Reset (User submits email)
 class CustomPasswordResetView(PasswordResetView):
-    template_name = "users/password_reset.html"
-    email_template_name = "users/password_reset_email.html"
-    subject_template_name = "users/password_reset_subject.txt"
+    template_name = "user/password_reset.html"
+    email_template_name = "user/password_reset_email.html"
+    subject_template_name = "user/password_reset_subject.txt"
     success_url = reverse_lazy("password_reset_done")
 
 
 #  Password Reset Done (Email sent confirmation page)
 class CustomPasswordResetDoneView(PasswordResetDoneView):
-    template_name = "users/password_reset_done.html"
+    template_name = "user/password_reset_done.html"
 
 
 #  Password Reset Confirm (User sets new password)
 class CustomPasswordResetConfirmView(PasswordResetConfirmView):
-    template_name = "users/password_reset_confirm.html"
+    template_name = "user/password_reset_confirm.html"
     success_url = reverse_lazy("password_reset_complete")
 
 
 #  Password Reset Complete (Password successfully changed)
 class CustomPasswordResetCompleteView(PasswordResetCompleteView):
-    template_name = "users/password_reset_complete.html"
+    template_name = "user/password_reset_complete.html"
 
 
 @login_required
@@ -117,7 +117,7 @@ def updateUser(request):
         return redirect("home")
 
     context = {"user": user, "profile": profile}
-    return render(request, "user_update.html", context)
+    return render(request, "user/user_update.html", context)
 
 
 def login_form(request):
@@ -135,7 +135,7 @@ def login_form(request):
                     subject="Login Alert",
                     title="Login Alert Notification",
                     body=f"Your account with username '{user.username}' was accessed on {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}. If this was not you, please reset your password to secure your account!.",
-                    anchor_link="https://timely.pythonanywhere.com/accounts/password-reset/",
+                    anchor_link="https://sajan.pythonanywhere.com/accounts/password-reset/",
                     anchor_text="Reset Password",
                 )
             # subject, from_email, to = (
@@ -144,21 +144,21 @@ def login_form(request):
             #     f"{user.email}",
             # )
             # text_content = "This is an important message."
-            # html_content = f'<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:o="urn:schemas-microsoft-com:office:office">\n<head><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200&display=swap" rel="stylesheet">\n<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="x-apple-disable-message-reformatting"><title></title></head<body style="margin:0;padding:0;font-family:"Poppins",Arial,sans-serif;"><table role="presentation" style="width:100%;border-collapse:collapse;border:0;border-spacing:0;background:#ffffff;"><tr><td align="center" style="padding:0;"><table role="presentation" style="width:602px;border-collapse:collapse;border:1px solid #cccccc;border-spacing:0;text-align:left;"><tr><td align="center" style="padding:40px 0 30px 0;background:#efefef;"><h1>Timely</h1></td></tr><tr><td style="padding:36px 30px 42px 30px;"><table role="presentation" style="width:100%;border-collapse:collapse;border:0;border-spacing:0;"><tr><td style="padding:0 0 36px 0;color:#153643;"><h1 style="font-size:24px;margin:0 0 20px 0;font-family:Arial,sans-serif;">Login Alert Mail</h1><p style="margin:0 0 12px 0;font-size:16px;line-height:24px;font-family:Arial,sans-serif;">This is to tell you that your account with username: {username} signing in at {datetime.now()}, If this is not you please consider changing your password immediately!</p><h3 style="margin:0;line-height:24px;font-family:Arial,sans-serif;"><a href="https://codingfox.pythonanywhere.com/users/password-reset/" style="padding: 1%; background-color: #0076d1; color: white;text-decoration: none;">Reset Password!</a></h3><br><p>Please do not reply to this email address, Mail me here: <a href="mailto:ketanv288@gmail.com" style="background-color: transparent; color: #0076d1;text-decoration: none;">Mail Me!</a></p></td></tr></table></body></html>'
+            # html_content = f'<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:o="urn:schemas-microsoft-com:office:office">\n<head><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200&display=swap" rel="stylesheet">\n<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="x-apple-disable-message-reformatting"><title></title></head<body style="margin:0;padding:0;font-family:"Poppins",Arial,sans-serif;"><table role="presentation" style="width:100%;border-collapse:collapse;border:0;border-spacing:0;background:#ffffff;"><tr><td align="center" style="padding:0;"><table role="presentation" style="width:602px;border-collapse:collapse;border:1px solid #cccccc;border-spacing:0;text-align:left;"><tr><td align="center" style="padding:40px 0 30px 0;background:#efefef;"><h1>sajan</h1></td></tr><tr><td style="padding:36px 30px 42px 30px;"><table role="presentation" style="width:100%;border-collapse:collapse;border:0;border-spacing:0;"><tr><td style="padding:0 0 36px 0;color:#153643;"><h1 style="font-size:24px;margin:0 0 20px 0;font-family:Arial,sans-serif;">Login Alert Mail</h1><p style="margin:0 0 12px 0;font-size:16px;line-height:24px;font-family:Arial,sans-serif;">This is to tell you that your account with username: {username} signing in at {datetime.now()}, If this is not you please consider changing your password immediately!</p><h3 style="margin:0;line-height:24px;font-family:Arial,sans-serif;"><a href="https://codingfox.pythonanywhere.com/users/password-reset/" style="padding: 1%; background-color: #0076d1; color: white;text-decoration: none;">Reset Password!</a></h3><br><p>Please do not reply to this email address, Mail me here: <a href="mailto:ketanv288@gmail.com" style="background-color: transparent; color: #0076d1;text-decoration: none;">Mail Me!</a></p></td></tr></table></body></html>'
             # msg = EmailMultiAlternatives(subject, text_content, from_email, [to])
             # msg.attach_alternative(html_content, "text/html")
             # msg.send()
             return redirect("home")
         else:
             messages.error(request, f"Account Does Not Exists with {username}")
-            return render(request, "login.html", context)
-    return render(request, "login.html", context)
+            return render(request, "user/login.html", context)
+    return render(request, "user/login.html", context)
 
 
 def logout_form(request):
     context = {"title": "Logout"}
     logout(request)
-    return render(request, "logout.html", context)
+    return render(request, "user/logout.html", context)
 
 
 def registeration_form(request):
@@ -180,7 +180,7 @@ def registeration_form(request):
     else:
         form = UserRegistrationForm()
     context = {"title": "Register", "form": form}
-    return render(request, "newuser.html", context)
+    return render(request, "user/newuser.html", context)
 
 
 def register_view(request):
@@ -191,12 +191,12 @@ def register_view(request):
 
         if password != confirm_password:
             messages.error(request, "Passwords do not match.")
-            return render(request, "register.html", {"title": "Register"})
+            return render(request, "user/register.html", {"title": "Register"})
 
         existing_user = User.objects.filter(email=email).first()
         if existing_user:
             messages.error(request, "Email is already registered. Try logging in.")
-            return render(request, "register.html", {"title": "Register"})
+            return render(request, "user/register.html", {"title": "Register"})
 
         #  Step 1: Create User First
         user = User.objects.create_user(username=email, email=email, password=password)
@@ -212,14 +212,14 @@ def register_view(request):
         if project_settings.DEBUG is False:
             send_email(
                 to_email=user.email,
-                subject="Confirm Your Timely Account",
+                subject="Confirm Your sajan Account",
                 title="Complete Your Registration",
                 body="Thank you for registering! Please confirm your email by clicking the button below.",
                 anchor_link=confirmation_link,
                 anchor_text="Confirm Email",
             )
         print(confirmation_link)
-        # subject = "Confirm Your Timely Account"
+        # subject = "Confirm Your sajan Account"
         # from_email = "codingfoxblogs@gmail.com"
         # to = user.email
         # text_content = "Please confirm your email."
@@ -231,9 +231,9 @@ def register_view(request):
         #     <title>Email Confirmation</title>
         # </head>
         # <body style="font-family: 'Poppins', Arial, sans-serif; background: #ffffff; padding: 20px;">
-        #     <h2 style="color: #0076d1;">Confirm Your Email for Timely</h2>
+        #     <h2 style="color: #0076d1;">Confirm Your Email for sajan</h2>
         #     <p>Hello,</p>
-        #     <p>Thank you for registering with Timely. Please click the link below to confirm your email address:</p>
+        #     <p>Thank you for registering with sajan. Please click the link below to confirm your email address:</p>
         #     <p><a href="{confirmation_link}" style="padding: 10px; background-color: #0076d1; color: white; text-decoration: none;">Confirm Email</a></p>
         #     <p>If you did not sign up, please ignore this email.</p>
         # </body>
@@ -249,7 +249,7 @@ def register_view(request):
         )
         return redirect("email_confirmation_pending")  #  Fixed the URL name
 
-    return render(request, "register.html", {"title": "Register"})
+    return render(request, "user/register.html", {"title": "Register"})
 
 
 def email_confirmation_view(request, token):
@@ -289,7 +289,7 @@ def profile_setup_view(request):
 
         if User.objects.filter(username=username).exists():
             messages.error(request, "Username is already taken.")
-            return render(request, "profile_setup.html", {"title": "Complete Profile"})
+            return render(request, "user/profile_setup.html", {"title": "Complete Profile"})
 
         user = request.user
         user.username = username
@@ -304,7 +304,7 @@ def profile_setup_view(request):
         messages.success(request, "Profile updated successfully.")
         return redirect("home")
 
-    return render(request, "profile_setup.html", {"title": "Complete Profile"})
+    return render(request, "user/profile_setup.html", {"title": "Complete Profile"})
 
 
 def check_username(request):

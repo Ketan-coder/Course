@@ -1,11 +1,14 @@
+# Suggested code may be subject to a license. Learn more: ~LicenseLog:2350900594.
+# Suggested code may be subject to a license. Learn more: ~LicenseLog:4169070995.
 # Suggested code may be subject to a license. Learn more: ~LicenseLog:4254670771.
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 from django.contrib.auth.decorators import user_passes_test
 from Users.models import Instructor
+from .models import *
 
 # Create your views here.
 def index(request):
-    return render(request,"base.html")
+    return render(request,"index.html")
 
 
 def course_list(request):
@@ -45,5 +48,6 @@ def course_delete(request, pk):
 
 def course_detail(request, pk):
     course = get_object_or_404(Course, pk=pk)
-    return render(request, 'course_detail.html', {'course': course})
+    # lessons = Lesson.objects.filter(course=course)
+    return render(request, 'course/course_detail.html', {'course': course})
 

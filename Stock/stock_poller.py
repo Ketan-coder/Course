@@ -7,6 +7,7 @@ from apscheduler.triggers.interval import IntervalTrigger
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 import random
+from .models import Stock
 from django.conf import settings
 
 # Ensure settings.STOCK_CACHE_TTL is defined in your Django settings.py
@@ -20,7 +21,7 @@ def get_cached_stock_data(symbol):
         if cached_data:
             return json.loads(cached_data)
     except Exception as e:
-        print(f"Error retrieving cached data for {symbol}: {e}")
+        print(f"Something went wrong: Error retrieving cached data for {symbol}: {e}")
         return None
 
 def fetch_and_send_stock_data(symbol):
@@ -36,6 +37,10 @@ def fetch_and_send_stock_data(symbol):
                 percentage_change = (price_change / hist['Open'].iloc[-1]) * 100
             else:
                 percentage_change = 0.0
+            try:
+                Stock.objects.filter(symbol=symbol).update(price=current_price)
+            except Exception as error:
+                print(f"Something went wrong: Error updating Stock price in database: {error}")
         else:
             print(f"No history data for {symbol}")
             return
@@ -57,12 +62,28 @@ def fetch_and_send_stock_data(symbol):
         # Fallback: Attempt to use cached data if real-time fetching fails
         cached_data = get_cached_stock_data(symbol)
         if cached_data:
-            print(f"Using cached data for {symbol} as fallback.")
+            print(f"Something went wrong: Using cached data for {symbol} as fallback.")
             data = cached_data
         else:
-            print(f"No cached data available for {symbol}. Consider more frequent background polling for this stock.")
+            print(f"Something went wrong: No cached data available for {symbol}. Consider more frequent background polling for this stock.")
             return None # Exit if no data is available
     return data
+
+
+def update_stock_details(stock):
+    """
+    Fetches updated details for a single stock and updates the database.
+    """
+    if stock.is_watched:
+        try:
+            ticker = yf.Ticker(stock.symbol)
+            hist = ticker.history(period="1d")
+            if not hist.empty:
+                current_price = hist['Close'].iloc[-1]
+                stock.price = current_price
+                stock.save()
+        except Exception as e:
+            print(f"Something went wrong: Error updating details for {stock.symbol}: {e}")
 
 
 def poll_unwatched_stocks():
@@ -77,14 +98,14 @@ def poll_watched_stocks():
 def add_watched_stock(symbol):
     try:
         redis_client.sadd('stocks:watched', symbol)
-        print(f"Added {symbol} to watched stocks.")
+        print(f"Something went wrong: Added {symbol} to watched stocks.")
     except Exception as e:
         print(f"Error adding {symbol} to watched stocks: {e}")
 
 def remove_watched_stock(symbol):
     try:
         redis_client.srem('stocks:watched', symbol)
-        print(f"Removed {symbol} from watched stocks.")
+        print(f"Something went wrong: Removed {symbol} from watched stocks.")
     except Exception as e:
         print(f"Error removing {symbol} from watched stocks: {e}")
 

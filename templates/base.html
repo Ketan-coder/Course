@@ -2,39 +2,18 @@
 <!DOCTYPE html>
 <html lang="en" data-bs-theme="dark">
   <head>
-    <title>Made with python</title>
+    <title>
+      {% block title %} {% endblock title %}
+    </title>
     <!-- Required meta tags -->
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="title" content="Timely: One Notebook For Every Need" />
+    <meta name="title" content="Sajan" />
     <meta
       name="description"
-      content="Timely can be used to create quick Notebooks with pages and many more things."
+      content=""
     />
-
-    {% comment %}
-    <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://timely.pythonanywhere.com/" />
-    <meta property="og:title" content="Timely: One Notebook For Every Need" />
-    <meta
-      property="og:description"
-      content="Timely can be used to create quick Notebooks with pages and many more things."
-    />
-    <meta property="og:image" content="resoures/img/For_website.png" />
-
-    <meta property="twitter:card" content="summary_large_image" />
-    <meta property="twitter:url" content="https://timely.pythonanywhere.com/" />
-    <meta
-      property="twitter:title"
-      content="Timely: One Notebook For Every Need"
-    />
-    <meta
-      property="twitter:description"
-      content="Timely can be used to create quick Notebooks with pages and many more things."
-    />
-    <meta property="twitter:image" content="resoures/img/For_website.png" />
-    {% endcomment %}
     <meta name="csrf-token" content="{{ csrf_token }}" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -53,6 +32,7 @@
     <link href="{% static 'vendors/css/halfmoon.css' %}" rel="stylesheet" />
     <script src="{% static 'vendors/js/htmx.min.js' %}" ></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha256-CDOy6cOibCWEdsRiZuaHf8dSGGJRYuBGC+mjoJimHGw=" crossorigin="anonymous"></script>
+    <link href="https://cdn.jsdelivr.net/npm/halfmoon@2.0.2/css/halfmoon.min.css" rel="stylesheet" integrity="sha256-RjeFzczeuZHCyS+Gvz+kleETzBF/o84ZRHukze/yv6o=" crossorigin="anonymous">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
     {% comment %}
     <link
@@ -102,7 +82,7 @@
         <div class="collapse navbar-collapse" id="navbar-collapse-2">
           <ul class="navbar-nav ms-auto">
             <li class="nav-item">
-              <a class="nav-link active" aria-current="page" href="#">Home</a>
+              <a class="nav-link active" aria-current="page" href="{% url 'home' %}">Home</a>
             </li>
             <li class="nav-item">
               <a class="nav-link" href="#">Docs</a>
@@ -124,15 +104,15 @@
                 {{ user.username }}
               </a>
               <ul class="dropdown-menu dropdown-menu-end mt-md-2 rounded-top-0">
-                <li><a class="dropdown-item" href="#"></a></li>
-                <li><a class="dropdown-item" href="#">Form builder</a></li>
+                <li><a class="dropdown-item" href="#">Liked Courses</a></li>
+                <li><a class="dropdown-item" href="{% url 'update_user' %}">Update Profile</a></li>
                 <li><hr class="dropdown-divider" /></li>
-                <li><a class="dropdown-item" href="#">Plan and pricing</a></li>
+                <li><a class="dropdown-item" href="{% url 'logout' %}">Log out</a></li>
               </ul>
             </li>
 			{% else %}
 			<li class="nav-item">
-				<a class="nav-link">Login/Register</a>
+				<a class="nav-link" href="{% url 'login' %}">Login/Register</a>
 			</li>	
 			{% endif %}
 				
@@ -156,8 +136,7 @@
       >
         <div class="d-flex">
           <div class="toast-body">
-            <strong class="me-2 text-capitalize">{{ message.tags }}:</strong> {{
-            message }}
+            <strong class="me-2 text-capitalize">{{ message.tags }}:</strong> {{message}}
           </div>
           <div class="me-2 m-auto">
             <button
@@ -199,7 +178,7 @@
       });
     </script>
     {% endif %}
-    {% block content %}
+    {% block body %}
     
      {% endblock %}
 

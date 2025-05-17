@@ -1,0 +1,192 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block body %}
+
+<div class="video-header">
+    <video autoplay muted loop playsinline class="bg-video">
+      <source src="{{ course.intro_video.url }}" type="video/mp4">
+      Your browser does not support the video tag.
+    </video>
+    <div class="overlay-gradient"></div>
+    <div class="header-title">
+      {{ course.title }}
+    </div>
+  </div>
+  
+
+<div class="tabs">
+    <button>Description</button>
+    <button>Syllabus</button>
+    <button>Reviews</button>
+</div>
+
+<!-- <div class="chapters">
+    {% for chapter in course.sections.all %}
+    <div class="chapter">
+        <button class="collapsible">
+            <span style="color:green;">&#9670;</span> Chapter {{ forloop.counter }}: {{ chapter.title }}
+        </button>
+        <div class="content">
+            {% for lessons in chapter.lesson.all %}
+            <h4 style="margin-top: 10px; color: green;">{{ section.title }}</h4>
+                <div class="lesson-box">
+                    <div class="lesson-number">{{ forloop.counter }}.</div>
+                    <div class="lesson-details">
+                        <strong>{{ lessons.title }}</strong><br>
+                        <button class="watch-button">Watch Video</button>
+                    </div>
+                </div>
+                {% endfor %}
+        </div>
+    </div>
+    {% endfor %}
+</div> -->
+
+<div class="chapters">
+    {% for chapter in course.sections.all %}
+    <div class="chapter">
+      <button type="button" class="btn btn-link" data-bs-toggle="collapse" data-bs-target="#chapter-{{ forloop.counter }}" aria-expanded="true" aria-controls="chapter-{{ forloop.counter }}">
+        <span style="color:green;">&#9670;</span> Chapter {{ forloop.counter }}: {{ chapter.title }} <i class="fa-light fa-angle-down"></i>
+      </button>
+  
+      <div class="collapse show" id="chapter-{{ forloop.counter }}">
+        <div class="ps-4 mt-2">
+          {% for lessons in chapter.lesson.all %}
+          <h4 style="margin-top: 10px; color: green;">{{ section.title }}</h4>
+          <div class="lesson-box">
+            <div class="lesson-number">{{ forloop.counter }}.</div>
+            <div class="lesson-details">
+              <strong>{{ lessons.title }}</strong><br>
+              <button class="watch-button">Watch Video</button>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  
+
+<style>
+    .video-header {
+        position: relative;
+        width: 100%;
+        height: 300px;
+        overflow: hidden;
+        }
+
+        .bg-video {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        min-width: 100%;
+        min-height: 100%;
+        transform: translate(-50%, -50%);
+        object-fit: cover;
+        z-index: 1;
+        }
+
+        .overlay-gradient {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(to bottom, rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.9));
+        z-index: 2;
+        }
+
+        .header-title {
+        position: relative;
+        z-index: 3;
+        color: white;
+        font-size: 2.5em;
+        font-weight: bold;
+        text-align: center;
+        line-height: 300px;
+        }
+
+
+    .tabs {
+        text-align: center;
+        margin: 20px 0;
+    }
+
+    .tabs button {
+        background: white;
+        border: 1px solid #aaa;
+        padding: 8px 16px;
+        margin: 0 5px;
+        cursor: pointer;
+        border-radius: 20px;
+        color: green;
+        font-weight: bold;
+    }
+
+    /* .collapsible {
+        background-color: #f1f1f1;
+        color: #333;
+        cursor: pointer;
+        padding: 18px;
+        width: 100%;
+        border: none;
+        text-align: left;
+        outline: none;
+        font-size: 18px;
+        font-weight: bold;
+    }
+
+    .collapsible::after {
+        content: '\002B';
+        float: right;
+    }
+
+    .active::after {
+        content: "\2212";
+    }
+
+    .content {
+        padding: 0 18px;
+        background-color: white;
+        display: none;
+        overflow: hidden;
+    }
+
+    .lesson-box {
+        display: flex;
+        align-items: center;
+        background: #eee;
+        padding: 10px;
+        margin-bottom: 8px;
+        border-radius: 5px;
+    }
+
+    .lesson-number {
+        font-weight: bold;
+        margin-right: 10px;
+        color: green;
+    }
+
+    .watch-button {
+        background: #32CD32;
+        color: white;
+        border: none;
+        padding: 6px 12px;
+        border-radius: 20px;
+        cursor: pointer;
+    } */
+</style>
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const collapsibles = document.querySelectorAll(".collapsible");
+        collapsibles.forEach(btn => {
+            btn.addEventListener("click", () => {
+                btn.classList.toggle("active");
+                const content = btn.nextElementSibling;
+                content.style.display = content.style.display === "block" ? "none" : "block";
+            });
+        });
+    });
+</script>
+
+{% endblock %}

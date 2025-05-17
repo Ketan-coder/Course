@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+
+{% block body %}
+
+<div class="d-flex justify-content-center align-items-center vh-100 bg-bg-dark-subtle">
+    <div class="card p-4 rounded-4" style="max-width: 400px; width: 100%;">
+
+        <!-- ✅ Show error messages if password is incorrect -->
+        {% if messages %}
+            {% for message in messages %}
+                <p class="text-danger text-center fw-bold">{{ message }}</p>
+            {% endfor %}
+        {% endif %}
+
+        {% if notebook.is_password_protected and not notebook.is_password_entered %}
+
+        <h2 class="text-center fw-bold mb-3">🔒 Notebook Locked</h2>
+        <p class="text-center text-muted">Enter the password to access your notes.</p>
+
+        <form method="POST">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label for="password" class="form-label fw-semibold">Password</label>
+                <input type="password" class="form-control rounded-pill px-3 py-2" 
+                       id="notebook_password" 
+                       name="notebook_password" 
+                       placeholder="Enter your password" required>
+            </div>
+            <div class="mb-3 text-end">
+                <a class="text-decoration-none small text-primary" href="{% url 'request_notebook_password_reset' notebook_id=notebook.pk %}">Forgot password?</a>
+            </div>
+            <button type="submit" class="btn btn-primary w-100 rounded-pill py-2">Unlock Notebook</button>
+        </form>
+
+        {% else %}
+
+        <h2 class="text-center text-success fw-bold">✅ Notebook Unlocked</h2>
+        <p class="text-center text-muted">You now have access to your notes.</p>
+
+        {% endif %}
+
+    </div>
+</div>
+
+{% endblock body %}
