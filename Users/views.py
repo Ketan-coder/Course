@@ -21,9 +21,9 @@ from django.views.generic import ListView
 from utils.utils import send_email
 
 from Course import settings as project_settings
-
+from utils.media_handler import MediaHandler
 from .forms import ProfileForm, UserRegistrationForm
-from .models import Profile
+from .models import Profile, Instructor, Student
 
 
 #  Request Password Reset (User submits email)
@@ -128,7 +128,6 @@ def login_form(request):
         user = authenticate(request, username=username, password=password)
         if user is not None:
             login(request, user)
-            messages.success(request, "Login successful")
             if project_settings.DEBUG is False:
                 send_email(
                     to_email=user.email,
@@ -140,7 +139,7 @@ def login_form(request):
                 )
             # subject, from_email, to = (
             #     "Login Alert",
-            #     "codingfoxblogs@gmail.com",
+            #     "sajan@gmail.com",
             #     f"{user.email}",
             # )
             # text_content = "This is an important message."
@@ -148,7 +147,19 @@ def login_form(request):
             # msg = EmailMultiAlternatives(subject, text_content, from_email, [to])
             # msg.attach_alternative(html_content, "text/html")
             # msg.send()
-            return redirect("home")
+            
+            try:
+                profile = Profile.objects.get(user=user)
+                if Instructor.objects.filter(profile=profile).exists():
+                    messages.success(request, "Welcome Back Instructor!")
+                elif Student.objects.filter(profile=profile).exists():
+                    messages.success(request, f"Welcome Back {user.first_name}! Start Learning by doing")
+                return redirect("home")
+            except Profile.DoesNotExist:
+                messages.error(request, "Profile isn't created for this user.")
+            except Exception as error:
+                messages.error(request, f"Unexpected error: {error}")
+            return redirect("login")
         else:
             messages.error(request, f"Account Does Not Exists with {username}")
             return render(request, "user/login.html", context)
@@ -270,7 +281,10 @@ def email_confirmation_view(request, token):
     profile.user.is_active = True
     profile.user.save()
     profile.email_confirmation_token = None  # Remove token after activation
+    profile.is_email_verified = True
     profile.save()
+
+    # Student.objects.create(profile=profile)
 
     login(request, profile.user)
     messages.success(request, "Email confirmed! Complete your profile.")
@@ -282,24 +296,70 @@ def profile_setup_view(request):
         return redirect("login")
 
     if request.method == "POST":
-        username = request.POST.get("username")
-        first_name = request.POST.get("first_name")
-        last_name = request.POST.get("last_name")
-        bio = request.POST.get("bio")
+        username = request.POST.get("username", "").strip()
+        first_name = request.POST.get("first_name", "").strip()
+        last_name = request.POST.get("last_name", "").strip()
+        bio = request.POST.get("bio", "").strip()
+        phone_no_prefix = request.POST.get("phone_no_prefix", "").strip()
+        phone_no = request.POST.get("phone_no", "").strip()
+        address = request.POST.get("address", "").strip()
+        date_of_birth_raw = request.POST.get("date_of_birth", "").strip()
+        profile_pic = request.FILES.get("profile_pic")
 
-        if User.objects.filter(username=username).exists():
+        # Validate required fields
+        if not username:
+            messages.error(request, "Username cannot be empty.")
+        elif User.objects.filter(username=username).exclude(id=request.user.id).exists():
             messages.error(request, "Username is already taken.")
+        elif not phone_no.isdigit():
+            messages.error(request, "Phone number must contain only digits.")
+        elif not phone_no_prefix.isdigit():
+            messages.error(request, "Phone number prefix must contain only digits.")
+        elif date_of_birth_raw:
+            try:
+                date_of_birth = datetime.strptime(date_of_birth_raw, "%Y-%m-%d").date()
+            except ValueError:
+                messages.error(request, "Invalid date format. Use YYYY-MM-DD.")
+                return render(request, "user/profile_setup.html", {"title": "Complete Profile"})
+        else:
+            date_of_birth = None
+
+        # Validate image file if uploaded
+        profile_pic_path = None
+        if profile_pic_file and MediaHandler.is_image(profile_pic_file.name):
+            resized_path = MediaHandler.resize_image(profile_pic_file)
+            if resized_path:
+                profile_pic_path = resized_path
+            else:
+                messages.error(request, "Failed to process the image.")
+                return render(request, "user/profile_setup.html", {"title": "Complete Profile"})
+        elif profile_pic_file:
+            messages.error(request, "Uploaded file is not a valid image.")
             return render(request, "user/profile_setup.html", {"title": "Complete Profile"})
 
+        # If any errors occurred, stop here
+        if messages.get_messages(request):
+            return render(request, "user/profile_setup.html", {"title": "Complete Profile"})
+
+        # Save user data
         user = request.user
         user.username = username
         user.first_name = first_name
         user.last_name = last_name
         user.save()
 
-        Profile.objects.filter(user=user).update(
-            bio=bio, firstName=first_name, lastName=last_name, email=user.email
-        )
+        profile_data = {
+            "bio": bio,
+            "phone_no_prefix": phone_no_prefix,
+            "phone_no": phone_no,
+            "address": address,
+            "date_of_birth": date_of_birth,
+        }
+
+        if profile_pic_path:
+            profile_data["profile_pic"] = profile_pic_path
+
+        Profile.objects.update_or_create(user=user, defaults=profile_data)
 
         messages.success(request, "Profile updated successfully.")
         return redirect("home")
