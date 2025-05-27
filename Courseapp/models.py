@@ -1,6 +1,9 @@
 from django.db import models
 from django.core.exceptions import ValidationError
 from utils.media_handler import MediaHandler
+from decimal import Decimal
+
+
 def validate_discount(value):
     if value < 0:
         raise ValidationError("Discount price must be non-negative.")
@@ -59,11 +62,18 @@ class Course(models.Model):
     def save(self, *args, **kwargs):
         self.extra_fields['last_updated'] = str(self.updated_at)
         self.extra_fields['is_active'] = self.is_published
-        if self.price is not None and self.discount_price is not None:
-            discount_percentage = 0
-            if self.price > 0:
-                discount_percentage = round(((self.price - self.discount_price) / self.price) * 100, 2)
+
+        try:
+            price = Decimal(self.price)
+            discount_price = Decimal(self.discount_price)
+            if price > 0:
+                discount_percentage = round(((price - discount_price) / price) * 100, 2)
+            else:
+                discount_percentage = 0
             self.extra_fields['discount_percentage'] = float(discount_percentage)
+        except Exception as e:
+            self.extra_fields['discount_percentage'] = 0  # Or handle it as needed
+
 
         # Removed MediaHandler import and usage to fix circular import issue
         # from utils.media_handler import MediaHandler

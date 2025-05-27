@@ -1,0 +1,395 @@
+{% extends 'base.html' %}
+
+{% block body %}
+<div class="container mt-4">
+    <h2 class="mb-4">{% if course %}Edit Course{% else %}Create Course{% endif %}</h2>
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        {# Display non-field errors #}
+        {% if form.non_field_errors %}
+        <div class="alert alert-danger" role="alert">
+            {{ form.non_field_errors }}
+        </div>
+        {% endif %}
+
+        <div class="form-group">
+            <label for="id_title" class="form-label">Title:</label>
+            <input type="text" name="title" id="id_title" value="{{ course.title|default:'' }}" class="form-control"
+                required>
+            {% if form.title.errors %}
+            <div class="invalid-feedback d-block">{{ form.title.errors }}</div>
+            {% endif %}
+        </div>
+
+        <div class="form-group">
+            <label for="id_description" class="form-label">Description:</label>
+            <textarea name="description" id="id_description" class="form-control">{{ course.description|default:'' }}</textarea>
+            {% if form.description.errors %}
+            <div class="invalid-feedback d-block">{{ form.description.errors }}</div>
+            {% endif %}
+        </div>
+
+        <div class="form-group">
+            <label for="id_course_type" class="form-label">Course Type:</label>
+            <select name="course_type" id="id_course_type" class="form-control">
+                <option value="free" {% if course.course_type == 'free' %}selected{% endif %}>Free</option>
+                <option value="paid" {% if course.course_type == 'paid' %}selected{% endif %}>Paid</option>
+            </select>
+            {% if form.course_type.errors %}
+            <div class="invalid-feedback d-block">{{ form.course_type.errors }}</div>
+            {% endif %}
+        </div>
+
+        <div class="form-group">
+            <label for="id_course_level" class="form-label">Course Level:</label>
+            <select name="course_level" id="id_course_level" class="form-control">
+                <option value="beginner" {% if course.course_level == 'beginner' %}selected{% endif %}>Beginner</option>
+                <option value="intermediate" {% if course.course_level == 'intermediate' %}selected{% endif %}>Intermediate</option>
+                <option value="advanced" {% if course.course_level == 'advanced' %}selected{% endif %}>Advanced</option>
+                <option value="all" {% if course.course_level == 'all' %}selected{% endif %}>All</option>
+            </select>
+            {% if form.course_level.errors %}
+            <div class="invalid-feedback d-block">{{ form.course_level.errors }}</div>
+            {% endif %}
+        </div>
+
+        <div class="form-group">
+            <label for="id_language" class="form-label">Language:</label>
+            <select name="language" id="id_language" class="form-control">
+                {% for lang in languages %}
+                <option value="{{ lang.pk }}" {% if course.language == lang %}selected{% endif %}>{{ lang.name }}</option>
+                {% endfor %}
+            </select>
+            {% if form.language.errors %}
+            <div class="invalid-feedback d-block">{{ form.language.errors }}</div>
+            {% endif %}
+        </div>
+
+        <div class="form-group">
+            <label for="id_instructor" class="form-label">Instructor:</label>
+            <select name="instructor" id="id_instructor" class="form-control">
+                {% for inst in instructors %}
+                <option value="{{ inst.pk }}" {% if course.instructor == inst %}selected{% endif %}>{{ inst.profile.user.username }}</option>
+                {% endfor %}
+            </select>
+            {% if form.instructor.errors %}
+            <div class="invalid-feedback d-block">{{ form.instructor.errors }}</div>
+            {% endif %}
+        </div>
+
+        <div class="form-group">
+            <label for="id_thumbnail" class="form-label">Thumbnail:</label>
+            <input type="file" name="thumbnail" id="id_thumbnail" class="form-control">
+            {% if course.thumbnail %}
+            <p class="mt-2">Current: <a href="{{ course.thumbnail.url }}" target="_blank">{{ course.thumbnail.name }}</a></p>
+            {% endif %}
+            {% if form.thumbnail.errors %}
+            <div class="invalid-feedback d-block">{{ form.thumbnail.errors }}</div>
+            {% endif %}
+        </div>
+
+        <div class="form-group">
+            <label for="id_intro_video" class="form-label">Intro Video:</label>
+            <input type="file" name="intro_video" id="id_intro_video" class="form-control">
+            {% if course.intro_video %}
+            <p class="mt-2">Current: <a href="{{ course.intro_video.url }}" target="_blank">{{ course.intro_video.name }}</a></p>
+            {% endif %}
+            {% if form.intro_video.errors %}
+            <div class="invalid-feedback d-block">{{ form.intro_video.errors }}</div>
+            {% endif %}
+        </div>
+
+        <div class="form-group">
+            <label for="id_tags" class="form-label">Tags:</label>
+            <input type="text" id="id_tags_search" class="form-control" placeholder="Search and add tags">
+            <div id="tags_search_results" class="list-group mt-2"></div>
+            <div id="selected_tags" class="mt-2">
+                {% for tag in course.tags.all %}
+                <span class="badge bg-secondary mr-1 selected-tag" data-tag-id="{{ tag.id }}">
+                    {{ tag.name }} <button type="button" class="btn btn-sm btn-outline-light ml-1 p-0 border-0" aria-label="Remove" onclick="removeTag(this)">&times;</button>
+                </span>
+                <input type="hidden" name="selected_tags" value="{{ tag.id }}">
+                {% endfor %}
+            </div>
+            {% if form.tags.errors %}
+            <div class="invalid-feedback d-block">{{ form.tags.errors }}</div>
+            {% endif %}
+        </div>
+
+        <div class="form-group">
+            <label for="id_prerequisites" class="form-label">Prerequisites:</label>
+            <textarea name="prerequisites" id="id_prerequisites" class="form-control">{{ course.prerequisites|default:'' }}</textarea>
+            {% if form.prerequisites.errors %}
+            <div class="invalid-feedback d-block">{{ form.prerequisites.errors }}</div>
+            {% endif %}
+        </div>
+
+        <div class="form-group">
+            <label for="id_circulam" class="form-label">Curriculum:</label>
+            <textarea name="circulam" id="id_circulam" class="form-control">{{ course.circulam|default:'' }}</textarea>
+            {% if form.circulam.errors %}
+            <div class="invalid-feedback d-block">{{ form.circulam.errors }}</div>
+            {% endif %}
+        </div>
+
+        <div class="form-group">
+            <label for="id_faqs" class="form-label">FAQs:</label>
+            <input type="text" id="id_faqs_search" class="form-control" placeholder="Search and add FAQs">
+            <div id="faqs_search_results" class="list-group mt-2"></div>
+            <div id="selected_faqs" class="mt-2">
+                 {% for faq in course.faqs.all %}
+                <span class="badge bg-secondary mr-1 selected-faq" data-faq-id="{{ faq.id }}">
+                    {{ faq.question }} <button type="button" class="btn btn-sm btn-outline-light ml-1 p-0 border-0" aria-label="Remove" onclick="removeFaq(this)">&times;</button>
+                </span>
+                <input type="hidden" name="selected_faqs" value="{{ faq.id }}">
+                {% endfor %}
+            </div>
+            {% if form.faqs.errors %}
+            <div class="invalid-feedback d-block">{{ form.faqs.errors }}</div>
+            {% endif %}
+        </div>
+
+        <div class="form-group">
+            <label for="id_price" class="form-label">Price:</label>
+            <!-- <input type="number" name="price" id="id_price" value="{{ course.price|default:'0.0' }}" step="0.01"
+                class="form-control"> -->
+            <div class="input-group mb-3">
+              <span class="input-group-text" id="add-on-1">AUD</span>
+              <input type="number" name="price" id="id_price" value="{{ course.price|default:'0.0' }}" step="0.01"
+                class="form-control">
+            </div>
+            {% if form.price.errors %}
+            <div class="invalid-feedback d-block">{{ form.price.errors }}</div>
+            {% endif %}
+        </div>
+
+        <div class="form-group">
+            <label for="id_discount_price" class="form-label">Discount Price:</label>
+            <!-- <input type="number" name="discount_price" id="id_discount_price"
+                value="{{ course.discount_price|default:'0.0' }}" step="0.01" class="form-control"> -->
+              <div class="input-group mb-3">
+                <span class="input-group-text" id="add-on-1">AUD</span>
+                <input type="number" name="discount_price" id="id_discount_price"
+                value="{{ course.discount_price|default:'0.0' }}" step="0.01" class="form-control">
+              </div>
+            {% if form.discount_price.errors %}
+            <div class="invalid-feedback d-block">{{ form.discount_price.errors }}</div>
+            {% endif %}
+        </div>
+
+        <div class="form-group form-check">
+            <input type="checkbox" name="is_published" id="id_is_published" class="form-check-input" {% if course.is_published %}checked{% endif %}>
+            <label for="id_is_published" class="form-check-label">Is Published:</label>
+            {% if form.is_published.errors %}
+            <div class="invalid-feedback d-block">{{ form.is_published.errors }}</div>
+            {% endif %}
+        </div>
+
+        <div class="form-group form-check">
+            <input type="checkbox" name="is_open_to_all" id="id_is_open_to_all" class="form-check-input" {% if course.is_open_to_all %}checked{% endif %}>
+            <label for="id_is_open_to_all" class="form-check-label">Is Open to All:</label>
+            {% if form.is_open_to_all.errors %}
+            <div class="invalid-feedback d-block">{{ form.is_open_to_all.errors }}</div>
+            {% endif %}
+        </div>
+
+        {# ManyToMany fields - These will require JavaScript for search and selection #}
+        <div class="form-group">
+            <label for="id_sections" class="form-label">Sections:</label>
+            <input type="text" id="id_sections_search" class="form-control" placeholder="Search and add sections">
+            <div id="sections_search_results" class="list-group mt-2"></div>
+            <div id="selected_sections" class="mt-2">
+                {% for section in course.sections.all %}
+                <span class="badge bg-secondary mr-1 selected-section" data-section-id="{{ section.id }}">
+                    {{ section.title }} <button type="button" class="btn btn-sm btn-outline-light ml-1 p-0 border-0" aria-label="Remove" onclick="removeSection(this)">&times;</button>
+                </span>
+                <input type="hidden" name="selected_sections" value="{{ section.id }}">
+                {% endfor %}
+            </div>
+            {% if form.sections.errors %}
+            <div class="invalid-feedback d-block">{{ form.sections.errors }}</div>
+            {% endif %}
+        </div>
+
+        {# Add similar sections for: #}
+        {# is_bought_by_users, bookmarked_by_users, completed_by_users, reviews #}
+        {# You'll need to add the HTML structure for these and the corresponding JavaScript #}
+
+ <button type="submit" class="btn btn-primary btn-lg mt-3 float-right">{% if course %}Update Course{% else %}Create Course{% endif %}</button>
+</form>
+</div>
+{% endblock %}
+
+{% block script %}
+<script>
+    // JavaScript for tag search (example)
+    document.getElementById('id_tags_search').addEventListener('input', function () {
+        const searchTerm = this.value;
+        const resultsDiv = document.getElementById('tags_search_results');
+
+        if (searchTerm.length > 1) { // Minimum characters to trigger search
+            fetch(`/courses/search_tags/?q=${searchTerm}`) // Replace with your actual URL
+                .then(response => response.json())
+                .then(data => {
+                    resultsDiv.innerHTML = ''; // Clear previous results
+                    data.forEach(tag => {
+                        const tagElement = document.createElement('a');
+                        tagElement.href = '#';
+                        tagElement.classList.add('list-group-item', 'list-group-item-action');
+                        tagElement.textContent = tag.name;
+                        tagElement.dataset.tagId = tag.id;
+                        tagElement.addEventListener('click', function (e) {
+                            e.preventDefault();
+                            // Add the selected tag to the selected_tags div
+                            const selectedTagsDiv = document.getElementById('selected_tags');
+                            // Check if tag is already added
+                            if (!selectedTagsDiv.querySelector(`span[data-tag-id="${tag.id}"]`)) {
+                                const selectedTagElement = document.createElement('span');
+                                selectedTagElement.classList.add('badge', 'bg-secondary', 'mr-1', 'selected-tag');
+                                selectedTagElement.dataset.tagId = tag.id; selectedTagElement.classList.add('d-inline-flex', 'align-items-center'); // Add flex and align items
+                                selectedTagElement.innerHTML = `${tag.name} <button type="button" class="close ml-1" aria-label="Remove" onclick="removeTag(this)">&times;</button>`;
+
+                                // Add a hidden input to send the ID
+                                const hiddenInput = document.createElement('input');
+                                hiddenInput.type = 'hidden';
+                                hiddenInput.name = 'selected_tags'; // Use the same name for all selected tags
+                                hiddenInput.value = tag.id;
+
+                                selectedTagsDiv.appendChild(selectedTagElement);
+                                selectedTagsDiv.appendChild(hiddenInput);
+                            }
+
+                            // Clear the search input and results
+                            document.getElementById('id_tags_search').value = '';
+                            resultsDiv.innerHTML = '';
+                        });
+                        resultsDiv.appendChild(tagElement);
+                    });
+                });
+        } else {
+            resultsDiv.innerHTML = ''; // Clear results if search term is too short
+        }
+    });
+
+    function removeTag(button) {
+        const selectedTagElement = button.closest('.selected-tag');
+        const tagId = selectedTagElement.dataset.tagId;
+        selectedTagElement.remove();
+        // Remove the corresponding hidden input
+        const hiddenInput = document.querySelector(`input[name="selected_tags"][value="${tagId}"]`);
+        if (hiddenInput) {
+            hiddenInput.remove();
+        }
+    }
+
+    // JavaScript for FAQ search (example)
+    document.getElementById('id_faqs_search').addEventListener('input', function () {
+        const searchTerm = this.value;
+        const resultsDiv = document.getElementById('faqs_search_results');
+
+        if (searchTerm.length > 1) {
+            fetch(`/courses/search_faqs/?q=${searchTerm}`) // Replace with your actual URL
+                .then(response => response.json())
+                .then(data => {
+                    resultsDiv.innerHTML = '';
+                    data.forEach(faq => {
+                        const faqElement = document.createElement('a');
+                        faqElement.href = '#';
+                        faqElement.classList.add('list-group-item', 'list-group-item-action');
+                        faqElement.textContent = faq.question;
+                        faqElement.dataset.faqId = faq.id;
+                        faqElement.addEventListener('click', function (e) {
+                            e.preventDefault();
+                            const selectedFaqsDiv = document.getElementById('selected_faqs');
+                            if (!selectedFaqsDiv.querySelector(`span[data-faq-id="${faq.id}"]`)) {
+                                const selectedFaqElement = document.createElement('span');
+                                selectedFaqElement.classList.add('badge', 'bg-secondary', 'mr-1', 'selected-faq');
+                                selectedFaqElement.dataset.faqId = faq.id; selectedFaqElement.classList.add('d-inline-flex', 'align-items-center'); // Add flex and align items
+                                selectedFaqElement.innerHTML = `${faq.question} <button type="button" class="close ml-1" aria-label="Remove" onclick="removeFaq(this)">&times;</button>`;
+
+                                const hiddenInput = document.createElement('input');
+                                hiddenInput.type = 'hidden';
+                                hiddenInput.name = 'selected_faqs';
+                                hiddenInput.value = faq.id;
+
+                                selectedFaqsDiv.appendChild(selectedFaqElement);
+                                selectedFaqsDiv.appendChild(hiddenInput);
+                            }
+                            document.getElementById('id_faqs_search').value = '';
+                            resultsDiv.innerHTML = '';
+                        });
+                        resultsDiv.appendChild(faqElement);
+                    });
+                });
+        } else {
+            resultsDiv.innerHTML = '';
+        }
+    });
+
+    function removeFaq(button) {
+        const selectedFaqElement = button.closest('.selected-faq');
+        const faqId = selectedFaqElement.dataset.faqId;
+        selectedFaqElement.remove();
+        const hiddenInput = document.querySelector(`input[name="selected_faqs"][value="${faqId}"]`);
+        if (hiddenInput) {
+            hiddenInput.remove();
+        }
+    }
+
+    // JavaScript for Section search (example)
+    document.getElementById('id_sections_search').addEventListener('input', function () {
+        const searchTerm = this.value;
+        const resultsDiv = document.getElementById('sections_search_results');
+
+        if (searchTerm.length > 1) {
+            fetch(`/courses/search_sections/?q=${searchTerm}`) // Replace with your actual URL
+                .then(response => response.json())
+                .then(data => {
+                    resultsDiv.innerHTML = '';
+                    data.forEach(section => {
+                        const sectionElement = document.createElement('a');
+                        sectionElement.href = '#';
+                        sectionElement.classList.add('list-group-item', 'list-group-item-action');
+                        sectionElement.textContent = section.title;
+                        sectionElement.dataset.sectionId = section.id;
+                        sectionElement.addEventListener('click', function (e) {
+                            e.preventDefault();
+                            const selectedSectionsDiv = document.getElementById('selected_sections');
+                            if (!selectedSectionsDiv.querySelector(`span[data-section-id="${section.id}"]`)) {
+                                const selectedSectionElement = document.createElement('span');
+                                selectedSectionElement.classList.add('badge', 'bg-secondary', 'mr-1', 'selected-section');
+                                selectedSectionElement.dataset.sectionId = section.id; selectedSectionElement.classList.add('d-inline-flex', 'align-items-center'); // Add flex and align items
+                                selectedSectionElement.innerHTML = `${section.title} <button type="button" class="close ml-1" aria-label="Remove" onclick="removeSection(this)">&times;</button>`;
+
+                                const hiddenInput = document.createElement('input');
+                                hiddenInput.type = 'hidden';
+                                hiddenInput.name = 'selected_sections';
+                                hiddenInput.value = section.id;
+
+                                selectedSectionsDiv.appendChild(selectedSectionElement);
+                                selectedSectionsDiv.appendChild(hiddenInput);
+                            }
+                            document.getElementById('id_sections_search').value = '';
+                            resultsDiv.innerHTML = '';
+                        });
+                        resultsDiv.appendChild(sectionElement);
+                    });
+                });
+        } else {
+            resultsDiv.innerHTML = '';
+        }
+    });
+
+    function removeSection(button) {
+        const selectedSectionElement = button.closest('.selected-section');
+        const sectionId = selectedSectionElement.dataset.sectionId;
+        selectedSectionElement.remove();
+        const hiddenInput = document.querySelector(`input[name="selected_sections"][value="${sectionId}"]`);
+        if (hiddenInput) {
+            hiddenInput.remove();
+        }
+    }
+</script>
+
+{% endblock %}

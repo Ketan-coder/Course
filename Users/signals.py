@@ -5,11 +5,14 @@ from django.dispatch import receiver
 import uuid
 from .models import Instructor, Profile, Student
 import datetime
+from Stock.models import Wallet, StockPortfolio
 
 @receiver(post_save, sender=User)
 def create_profile(sender, instance, created, **kwargs):
     if created:
         profile = Profile.objects.create(user=instance, email_confirmation_token=uuid.uuid4())
+        wallet = Wallet.objects.create(user=profile, balance=10000)
+        stock_portfolio = StockPortfolio.objects.create(user=profile)
         # send_email(
         #     to_email=instance.email,
         #     subject="Confirm Your Email",

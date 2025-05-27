@@ -208,3 +208,20 @@ class CourseCertificateAdmin(admin.ModelAdmin):
     #         'fields': ('extra_fields',)
     #     }),
     # )
+
+
+@admin.register(FAQ)
+class FAQAdmin(admin.ModelAdmin):
+    list_display = ('question', 'created_at')
+    search_fields = ('question', 'answer')
+    list_filter = ('created_at',)
+    ordering = ('-created_at',)
+    date_hierarchy = 'created_at'
+    # fieldsets = (
+    #     (None, {
+    #         'fields': ('course', 'question', 'answer')
+    #     }),
+    #     ('Extra Fields', {
+    #         'fields': ('extra_fields',)
+    #     }),
+    # )

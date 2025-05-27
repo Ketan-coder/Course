@@ -126,7 +126,7 @@ def login_form(request):
         username = request.POST.get("username")
         password = request.POST.get("password")
         user = authenticate(request, username=username, password=password)
-        if user is not None:
+        if user is not None and user.is_active:
             login(request, user)
             if project_settings.DEBUG is False:
                 send_email(

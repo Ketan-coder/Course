@@ -1,0 +1,52 @@
+
+
+<a href="{% url 'course_detail' pk=course.id %}" class="card-link-wrapper" style="width: 18.75rem;">
+  <div class="card" style="width: 18.75rem;">
+      <!-- Thumbnail or Placeholder -->
+      {% if course.thumbnail %}
+      <img src="{{ course.thumbnail.url }}" class="card-img-top" alt="Course Thumbnail">
+      {% else %}
+      <svg class="bd-placeholder-img card-img-top" width="100%" height="180" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Placeholder: Thumbnail" preserveAspectRatio="xMidYMid slice" focusable="false"><title>Placeholder</title><rect width="100%" height="100%" fill="#55595c"></rect><text x="50%" y="50%" fill="#eceeef" dy=".3em">No Thumbnail</text></svg>
+      {% endif %}
+
+      <div class="card-body d-flex flex-column">
+        <!-- <h1 class="card-text mt-2 mx-auto text-success text-start"><b>{{ course.get_course_type_display }}</b></h1> -->
+        <h5 class="card-title mb-2">{{ course.title }}</h5>
+        {% if course.course_type == 'free' %}
+        <p class="card-text fs-5 d-flex align-items-center">
+          <strong class="text-success-emphasis me-2">Free</strong>
+          <s class="fs-6 text-body-secondary">{% if course.price and course.price != 0 %}{{course.price}}{% endif %}</s>
+        </p>
+        {% else %}
+        <p class="card-text fs-5 d-flex align-items-center">
+          {% if course.discount_price and course.discount_price < course.price %}
+          <strong class="text-success-emphasis me-2">${{ course.discount_price }}</strong>
+          <s class="fs-6 text-body-secondary">${{ course.price }}</s>
+          {% elif course.price %}
+          <strong class="text-success-emphasis me-2">${{ course.price }}</strong>
+          {% else %}
+          <strong class="text-success-emphasis me-2">Price not available</strong>
+          {% endif %}
+        </p>
+        {% endif %}
+        <p class="card-text flex-grow-1">{{ course.description|striptags|truncatechars:75 }}</p>
+        <div class="d-flex hstack gap-3">
+            <div>{{ course.get_course_level_display }}</div>
+            <div class="vr"></div>
+            <div>{{ course.sections.count }} Sections</div>
+            <div class="vr"></div>
+            <div>{{ course.language.name|default:"English" }}</div>
+        </div>
+    </div>
+    {% if course.instructor.profile.user.id == request.user.id %}
+        <div class="card-footer">
+              <div class="d-flex justify-content-between align-items-center">
+              {% if course.instructor.profile.user.id == request.user.id %}
+                <a href="{% url 'course_update' pk=course.id %}" class="btn btn-sm btn-secondary">Edit</a>
+              {% endif %}
+              <!-- <a href="{% url 'course_detail' pk=course.id %}" class="btn btn-sm btn-secondary">View More</a> -->
+            </div>
+        </div>
+        {% endif %}
+      </div>
+</a>
