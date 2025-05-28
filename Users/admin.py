@@ -11,7 +11,7 @@ class ProfileAdmin(admin.ModelAdmin):
     date_hierarchy = 'created_at'
     fieldsets = (
         (None, {
-            'fields': ('user', 'phone_no_prefix', 'phone_no', 'address', 'image', 'bio', 'date_of_birth')
+            'fields': ('user', 'phone_no_prefix', 'phone_no', 'currency' , 'address', 'image', 'bio', 'date_of_birth')
         }),
         ('Extra Fields', {
             'fields': ('extra_fields',)

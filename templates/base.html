@@ -147,7 +147,7 @@
                       <a class="nav-link" href="#">Home</a>
                   </li>
                   <li class="nav-item">
-                      <a class="nav-link active" aria-current="page" href="#">Courses</a>
+                      <a class="nav-link active" aria-current="page" href="{% url 'course_list' %}">Courses</a>
                   </li>
                   <li class="nav-item">
                       <a class="nav-link" href="#">Instructors</a>
@@ -165,7 +165,31 @@
                       </span>
                       <input class="form-control" type="search" placeholder="Search courses" aria-label="Search">
                   </div>
-                  <img src="https://placehold.co/40x40/666/fff?text=U" alt="User" class="rounded-circle ms-2" style="width: 40px; height: 40px;">
+                  {% if user.is_authenticated %}
+                  <!-- <img src="https://placehold.co/40x40/666/fff?text=U" alt="User" class="rounded-circle ms-2" style="width: 40px; height: 40px;"> -->
+                   <li class="nav-item dropdown">
+                      <a
+                        class="nav-link dropdown-toggle"
+                        href="#"
+                        role="button"
+                        data-bs-toggle="dropdown"
+                        aria-expanded="false"
+                      >
+                        <!-- {{ user.username }} -->
+                        <img src="https://placehold.co/40x40/666/fff?text=U" alt="User" class="rounded-circle ms-2" style="width: 20px; height: 20px;">
+                      </a>
+                      <ul class="dropdown-menu dropdown-menu-end mt-md-2 rounded-top-0">
+                        <li><a class="dropdown-item" href="#">Liked Courses</a></li>
+                        <li><a class="dropdown-item" href="{% url 'update_user' %}">Update Profile</a></li>
+                        <li><hr class="dropdown-divider" /></li>
+                        <li><a class="dropdown-item" href="{% url 'logout' %}">Log out</a></li>
+                      </ul>
+                    </li>
+                  {% else %}
+                <li class="nav-item">
+                  <a class="nav-link" href="{% url 'login' %}">Login/Register</a>
+                </li>	
+                {% endif %}
               </form>
           </div>
       </div>

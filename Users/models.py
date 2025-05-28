@@ -2,7 +2,7 @@ from datetime import datetime
 import uuid
 from django.contrib.auth.models import User
 from django.db import models
-
+from utils.models import Currency, PhoneNoPrefix
 from Courseapp.models import Course
 from Tiers.models import Tier, TierRank
 
@@ -10,7 +10,8 @@ from Tiers.models import Tier, TierRank
 # Create your models here.
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    phone_no_prefix = models.CharField(max_length=5, blank=True, null=True)
+    # phone_no_prefix = models.CharField(max_length=5, blank=True, null=True)
+    phone_no_prefix = models.OneToOneField(PhoneNoPrefix, on_delete=models.SET_NULL, null=True, blank=True)
     phone_no = models.CharField(max_length=15, blank=True, null=True)
     address = models.CharField(max_length=255, blank=True, null=True)
     image = models.ImageField(default='default_profile_pic.jpg', upload_to='profile_pics')
@@ -19,6 +20,7 @@ class Profile(models.Model):
     is_email_verified = models.BooleanField(default=False)
     is_phone_verified = models.BooleanField(default=False)
     is_profile_complete = models.BooleanField(default=False)
+    currency = models.OneToOneField(Currency, on_delete=models.SET_NULL, null=True, blank=True)
     email_confirmation_token = models.UUIDField(unique=True, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -36,7 +38,7 @@ class Profile(models.Model):
         self.extra_fields['last_logged_in'] = str(self.user.last_login) if self.user.last_login else None
         self.extra_fields['is_active'] = self.user.is_active
         self.extra_fields['date_joined'] = self.user.date_joined.strftime('%Y-%m-%d %H:%M:%S') if self.user.date_joined else None
-        self.extra_fields['whole_phone_no'] = self.phone_no_prefix + self.phone_no if self.phone_no_prefix and self.phone_no else None
+        self.extra_fields['whole_phone_no'] = self.phone_no_prefix.phone_no_prefix + self.phone_no if self.phone_no_prefix and self.phone_no else None
         if self.date_of_birth:
             # Get the date part of user.date_joined
             join_date = self.user.date_joined.date()
