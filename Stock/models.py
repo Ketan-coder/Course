@@ -1,10 +1,10 @@
 from django.db import models
 
 class Stock(models.Model):
-    symbol = models.CharField(max_length=10, unique=True)
+    symbol = models.CharField(max_length=25, unique=True)
     name = models.CharField(max_length=200)
     description = models.TextField(blank=True, null=True)
-    
+    # chart_data = models.JSONField(blank=True, null=True)
     date_added = models.DateField(auto_now_add=True)
     logo = models.ImageField(upload_to='stock_logos', blank=True, null=True)
     website = models.URLField(blank=True, null=True)

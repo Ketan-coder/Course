@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block body %}
+<div class="content-wrapper"> {# Halfmoon's content wrapper for consistent padding if not in base #}
+    <div class="container my-4">
+
+        <div class="mb-4">
+            <h2 class="fw-bold">Market Overview</h2>
+        </div>
+        <div class="row g-3"> {# g-3 provides a gap between columns/cards #}
+            {# Example: Loop through your stock data from Django context #}
+            {# Replace 'market_stocks' with your actual context variable for this section #}
+            {% for stock_item in stocks %}
+                <div class="col-12 col-md-6 col-lg-4"> {# Responsive grid: 1 col on xs, 2 on md, 3 on lg #}
+                    {% include "components/stock_card.html" with stock=stock_item %}
+                </div>
+            {% empty %}
+                <div class="col-12">
+                    <div class="alert alert-info text-center" role="alert">
+                        Market overview data is currently unavailable.
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+        <div class="mt-5">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h2 class="fw-bold mb-0">Trending Courses</h2>
+                <a href="{% url 'course_list' %}" class="btn btn-sm btn-outline-primary">View All Courses</a> {# Adjust URL name #}
+            </div>
+            <div class="row g-3">
+                {# Example: Loop through your trending courses data #}
+                {# Replace 'trending_courses_data' with your actual context variable #}
+                {% for course_item in courses %}
+                    <div class="col-12 col-md-6 col-lg-4">
+                        {# This is where you include YOUR prebuilt course_card.html #}
+                        {# Ensure the path is correct #}
+                        {% include "course/components/course_card.html" with course=course_item %}
+                    </div>
+                {% empty %}
+                    <div class="col-12">
+                        <div class="alert alert-info text-center" role="alert">
+                            No trending courses to display at the moment.
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+        <!--
+        <div class="mt-5">
+            <h2 class="fw-bold mb-3">Top Movers</h2>
+            {# ... content for Top Movers ... #}
+        </div>
+
+        <div class="mt-5">
+            <h2 class="fw-bold mb-3">My Watchlist</h2>
+            {# ... content for Watchlist ... #}
+        </div>
+        -->
+
+    </div>
+</div>
+
+{# Ensure ApexCharts is loaded, ideally in base.html #}
+{# If not, uncomment the line below or add it to your base.html #}
+{# <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script> #}
+
+<style>
+    /* Optional: Custom styles if needed, though Halfmoon should cover most */
+    .stock-overview-card .card-title {
+        font-size: 1.1rem; /* Slightly larger symbol text */
+    }
+    .stock-overview-card .badge {
+        font-size: 0.7rem; /* Smaller badge text */
+    }
+    .stock-overview-card h4 { /* Percentage change */
+        font-size: 1.75rem;
+    }
+    /* Ensure chart container maintains aspect ratio or fills space */
+    #chart-overview-{{ stock.symbol|slugify }} > div {
+        min-height: 60px !important; /* Ensure ApexCharts internal div respects height */
+    }
+</style>
+
+{% endblock %}

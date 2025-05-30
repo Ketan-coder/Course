@@ -1,5 +1,6 @@
 {% load static %}
-<div class="card" style="width: 600px; height: 600px;">
+<!-- style="width: 600px; height: 600px;" -->
+<div class="card" >
     <div class="card-body">
         <h5 class="card-title">{{ stock.symbol }}</h5> 
         <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#modal-{{ stock.symbol }}">
@@ -161,7 +162,7 @@
 
     // Helper: Fetch data
     function fetchChartData(symbol, duration, callback) {
-        fetch(`/get_historical_prices/${symbol}/${duration}/`)
+        fetch(`/stock/get_historical_prices/${symbol}/${duration}/`)
             .then(res => res.json())
             .then(data => {
                 if (!Array.isArray(data)) {

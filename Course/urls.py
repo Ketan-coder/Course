@@ -5,11 +5,11 @@ from django.conf import settings
 
 urlpatterns = [
 	path('admin/', admin.site.urls),
-	path('', include('Users.urls')),
-	path('', include('Stock.urls')),
-	path('', include('Courseapp.urls')),
-	path('', include('Tiers.urls')),
-	path('', include('Rewards.urls')),
+	path('accounts/', include('Users.urls')),
+	path('stock/', include('Stock.urls')),
+	path('course/', include('Courseapp.urls')),
+	path('tiers/', include('Tiers.urls')),
+	path('rewards/', include('Rewards.urls')),
 	path('', include('utils.urls')),
 ]
 if settings.DEBUG:

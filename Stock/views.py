@@ -5,9 +5,16 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_POST, require_GET
 from .stock_poller import redis_client
 from Stock.stock_poller import fetch_and_send_stock_data
+from Courseapp.models import Course
+
 # Create your views here.
-def index(request):
-    return render(request,"base.html")
+def stock_list(request):
+    """
+    Displays a list of all stocks.
+    """
+    stocks = Stock.objects.all()
+    courses = Course.objects.all()
+    return render(request,"stock/stock_list.html",locals())
 
 def stock_detail(request, symbol):
     """
