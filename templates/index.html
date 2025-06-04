@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block body %}
+  {% if question_type == "SINGLE_SELECT" %}
+    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modal-mcq-{{ quiz_data.id }}">
+      Open MCQ Quiz
+    </button>
+    {% include "components/modal_mcq.html" with quiz_data=quiz_data %}
+
+  {% elif question_type == "IMAGE_MC" %}
+    <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#modal-imcq-{{ quiz_data.id }}">
+      Open Image MCQ Quiz
+    </button>
+    {% include "components/image_modal_mcq.html" with quiz_data=quiz_data %}
+
+  {% elif question_type == "DRAG_DROP" %}
+    <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modal-drag-drop-{{ quiz_data.id }}">
+      Open Drag & Drop Quiz
+    </button>
+    {% include "components/drag_and_drop_quiz_modal.html" with quiz_data=quiz_data correct_mapping=correct_mapping %}
+  {% else %}
+    <p class="text-danger">Unsupported quiz type: {{ question_type }}</p>
+  {% endif %}
+
+{% endblock body %}

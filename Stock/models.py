@@ -1,3 +1,4 @@
+from decimal import Decimal
 from django.db import models
 
 class Stock(models.Model):
@@ -40,9 +41,9 @@ class Stock(models.Model):
     def save(self, *args, **kwargs):
         # Automatically update 52-week high/low
         if self.week_52_high is None or self.price > self.week_52_high:
-            self.week_52_high = self.price
+            self.week_52_high: Decimal = self.price
         if self.week_52_low is None or self.price < self.week_52_low:
-            self.week_52_low = self.price
+            self.week_52_low: Decimal = self.price
 
         # Optional: update extra_fields with deltas etc.
         self.extra_fields['last_updated'] = str(self.updated_at)

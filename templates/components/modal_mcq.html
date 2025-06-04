@@ -1,0 +1,110 @@
+{% load static %}
+
+<div class="modal fade" id="modal-mcq-{{ quiz_data.id }}" tabindex="-1" aria-labelledby="modalLabel-mcq-{{ quiz_data.id }}" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+
+      <!-- Modal Header -->
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalLabel-mcq-{{ quiz_data.id }}">
+          {{ quiz_data.title|default:"Multiple Choice Question" }}
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="modal-body">
+        <p class="fw-bold mb-3">{{ question }}</p>
+
+        <form id="form-mcq-{{ quiz_data.id }}">
+          {% for option in options %}
+          <div class="form-check mb-2">
+            <input class="form-check-input" type="radio" name="mcq-option-{{ quiz_data.id }}" id="mcq-{{ quiz_data.id }}-option-{{ forloop.counter }}" value="{{ option }}">
+            <label class="form-check-label w-100 border rounded p-2 hover-bg-light-gray cursor-pointer" for="mcq-{{ quiz_data.id }}-option-{{ forloop.counter }}">
+              {{ option }}
+            </label>
+          </div>
+          {% endfor %}
+        </form>
+
+        <div id="feedback-mcq-{{ quiz_data.id }}" class="mt-3 small text-center"></div>
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="modal-footer justify-content-end">
+        <button type="button" class="btn btn-primary" id="submit-mcq-{{ quiz_data.id }}">Submit</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const quizId = "{{ quiz_data.id|escapejs }}";
+  const correctAnswer = "{{ correct_answer|escapejs }}";
+  const correctFeedback = "{{ quiz_data.correct_feedback|default:'Correct!'|escapejs }}";
+  const incorrectFeedback = "{{ quiz_data.incorrect_feedback|default:'Incorrect. Try again.'|escapejs }}";
+
+  const form = document.getElementById(`form-mcq-${quizId}`);
+  const submitBtn = document.getElementById(`submit-mcq-${quizId}`);
+  const feedback = document.getElementById(`feedback-mcq-${quizId}`);
+
+  form.addEventListener('change', function (e) {
+    if (e.target.type === 'radio') {
+      form.querySelectorAll('label').forEach(lbl => {
+        lbl.classList.remove('border-primary', 'bg-primary-subtle', 'text-primary-emphasis');
+        lbl.classList.add('border');
+      });
+      const label = form.querySelector(`label[for="${e.target.id}"]`);
+      if (label) {
+        label.classList.add('border-primary', 'bg-primary-subtle', 'text-primary-emphasis');
+        label.classList.remove('border');
+      }
+    }
+  });
+
+  submitBtn.addEventListener('click', function () {
+    const selected = form.querySelector(`input[name="mcq-option-${quizId}"]:checked`);
+    feedback.innerHTML = '';
+    feedback.classList.remove('text-success', 'text-danger', 'text-warning');
+
+    if (!selected) {
+      feedback.textContent = "Please select an answer.";
+      feedback.classList.add('text-warning');
+      return;
+    }
+
+    const value = selected.value.trim().toLowerCase();
+    const correct = correctAnswer.trim().toLowerCase();
+
+    if (value === correct) {
+      feedback.textContent = correctFeedback;
+      feedback.classList.add('text-success');
+      submitBtn.classList.remove('btn-primary');
+      submitBtn.classList.add('btn-success');
+      submitBtn.textContent = "Correct!";
+      submitBtn.disabled = true;
+      form.querySelectorAll('input').forEach(r => r.disabled = true);
+    } else {
+      feedback.textContent = incorrectFeedback;
+      feedback.classList.add('text-danger');
+    }
+  });
+
+  const modal = document.getElementById(`modal-mcq-${quizId}`);
+  modal.addEventListener('hidden.bs.modal', function () {
+    form.reset();
+    feedback.innerHTML = '';
+    feedback.className = 'mt-3 small text-center';
+    submitBtn.className = 'btn btn-primary';
+    submitBtn.textContent = 'Submit';
+    submitBtn.disabled = false;
+    form.querySelectorAll('input').forEach(r => r.disabled = false);
+    form.querySelectorAll('label').forEach(l => {
+      l.classList.remove('border-primary', 'bg-primary-subtle', 'text-primary-emphasis');
+      l.classList.add('border');
+    });
+  });
+});
+</script>

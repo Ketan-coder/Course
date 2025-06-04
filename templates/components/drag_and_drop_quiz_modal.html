@@ -1,0 +1,375 @@
+{% comment %}
+    Template: modal_drag_drop.html
+    Description: A drag-and-drop fill-in-the-blanks modal.
+    Context: Expects a 'quiz_data' object with:
+        - id: A unique ID for this quiz instance (e.g., "dnd1").
+        - title: (Optional) Title for the modal header (e.g., "Drag-and-Drop Challenge").
+        - progress_percentage: (Optional) e.g., 50 for 50%.
+        - sentence_parts: A list of strings and nulls. Null represents a blank.
+                          e.g., ["Our company values ", null, " and puts ", null, " at the center of everything we do through effective ", null, "."]
+        - draggable_options: A list of dictionaries, each with:
+            - id: Unique ID for the draggable item (e.g., "innovation", "customers"). THIS ID IS CRUCIAL and should be the simple ID.
+            - text: The text of the draggable item.
+            - icon_class: (Optional) e.g. "bi bi-people-fill" for an icon
+        - correct_mapping: A dictionary mapping blank_index (as string "0", "1", etc.) to the simple draggable_option.id (e.g., "innovation", "customers").
+                           e.g., {"0": "innovation", "1": "customers", "2": "teamwork"}
+        - correct_feedback: (Optional) Text to show for correct answer.
+        - incorrect_feedback: (Optional) Text to show for incorrect answer.
+        - icon_svg_path: (Optional) Path to an SVG icon for the modal title.
+    IMPORTANT: If the JavaScript code from this template appears as visible text on your page,
+    it strongly indicates an unclosed HTML tag or improper HTML structure in the PARENT Django template
+    that includes this modal. Please validate the HTML of your main page template.
+{% endcomment %}
+{% load static %}
+
+{% with "correct-mapping-data-"|add:quiz_data.id as json_id %}
+    {{ correct_mapping|json_script:json_id }}
+{% endwith %}
+
+<div class="modal fade" id="modal-drag-drop-{{ quiz_data.id }}" tabindex="-1" aria-labelledby="modalLabel-drag-drop-{{ quiz_data.id }}" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header align-items-center">
+                {% if quiz_data.icon_svg_path %}
+                <img src="{% static quiz_data.icon_svg_path %}" alt="Challenge Icon" width="24" height="24" class="me-2">
+                {% else %}
+                <!-- Default Click Icon SVG -->
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-hand-index-thumb-fill me-2" viewBox="0 0 16 16">
+                    <path d="M8.5 1.75v2.716l.047-.002c.312-.012.652-.024 1.03-.048C11.136 4.27 12.291 5.02 13 6.257V8.5a.5.5 0 0 1-.5.5l-3.592.001a.5.5 0 0 1-.48-.354l-.872-2.324a.5.5 0 0 0-.472-.355h-.05a.5.5 0 0 0-.479.36L6.05 8.499a.5.5 0 0 1-.48.355L2 8.855a.5.5 0 0 1-.5-.5v-2.5a2.5 2.5 0 0 1 2.5-2.5h3.104a2.52 2.52 0 0 0 .61-.065L8.5 1.75Z"/>
+                    <path d="M10.202 15.294a1.5 1.5 0 0 1-2.034.463l-1.539-.923a1.5 1.5 0 0 1-.751-1.303V9.355a.5.5 0 0 1 .63-.482l.09.015c.264.044.54.14.778.283l.072.045c.24.15.407.42.407.734v2.745a.5.5 0 0 0 .854.354l.147-.147a1.5 1.5 0 0 1 2.121 0l.615.616a1.5 1.5 0 0 1 .463 2.034l-.204.268-.001.001Z"/>
+                </svg>
+                {% endif %}
+                <h5 class="modal-title" id="modalLabel-drag-drop-{{ quiz_data.id }}">
+                    {{ question|default:"Drag-and-Drop Challenge" }}
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                {% if quiz_data.progress_percentage is not None %}
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <span class="text-muted small">Progress</span>
+                    <span class="text-muted small">{{ quiz_data.progress_percentage }}%</span>
+                </div>
+                <div class="progress mb-3 progress-custom-height">
+                    <div class="progress-bar bg-primary" role="progressbar" style="width: {{ quiz_data.progress_percentage }}%;" aria-valuenow="{{ quiz_data.progress_percentage }}" aria-valuemin="0" aria-valuemax="100"></div>
+                </div>
+                {% endif %}
+
+                <p class="text-center mb-3">Complete the sentence:</p>
+                <div id="sentence-container-{{ quiz_data.id }}" class="sentence-container p-3 border rounded bg-light mb-4 fs-5 lh-lg text-center">
+                    {% for part in sentence_parts %}
+                        {% if part is None or part == "None" %} {# Check for string "None" as well, just in case #}
+                            <span class="drop-zone border-bottom border-dashed border-2 border-primary mx-1"></span>
+                        {% else %}
+                            {{ part }}
+                        {% endif %}
+                    {% endfor %}
+                </div>
+
+                <p class="text-center text-muted small mb-2">Drag the words below to the blanks:</p>
+                <div id="draggable-options-{{ quiz_data.id }}" class="draggable-options-container d-flex flex-wrap justify-content-center gap-2 mb-3">
+                    {% for option in draggable_options %}
+                    <span class="badge fs-6 p-2 bg-light-gray border text-dark-gray draggable-option cursor-grab" draggable="true" id="drag-{{ quiz_data.id }}-{{ option.id }}" data-option-id="{{ option.id }}">
+                        {% if option.icon_class %} <i class="{{ option.icon_class }} me-1"></i>{% endif %}
+                        {{ option.text }}
+                    </span>
+                    {% endfor %}
+                </div>
+                <div id="feedback-drag-drop-{{ quiz_data.id }}" class="mt-3 small text-center"></div>
+            </div>
+            <div class="modal-footer justify-content-center">
+                <button type="button" class="btn btn-primary" id="submit-drag-drop-{{ quiz_data.id }}">Check Answer</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const quizIdDnD = "{{ quiz_data.id|escapejs }}";
+    // console.log(`Initializing Drag & Drop for quiz ID: ${quizIdDnD}`);
+    const modalElementDnD = document.getElementById(`modal-drag-drop-${quizIdDnD}`);
+    if (!modalElementDnD) {
+        console.error(`DnD (${quizIdDnD}): Modal element not found.`);
+        return;
+    }
+
+    const sentenceContainer = document.getElementById(`sentence-container-${quizIdDnD}`);
+    const draggableOptionsContainer = document.getElementById(`draggable-options-${quizIdDnD}`);
+    const dropZones = Array.from(sentenceContainer.querySelectorAll('.drop-zone'));
+    const draggableOptionElements = Array.from(draggableOptionsContainer.querySelectorAll('.draggable-option'));
+    const submitButtonDnD = document.getElementById(`submit-drag-drop-${quizIdDnD}`);
+    const feedbackElementDnD = document.getElementById(`feedback-drag-drop-${quizIdDnD}`);
+
+    const mappingScriptElementId = `correct-mapping-data-${quizIdDnD}`;
+    const correctMappingDataElement = document.getElementById(mappingScriptElementId);
+    let correctMappingDnD = {};
+    if (correctMappingDataElement && correctMappingDataElement.textContent) {
+        try {
+            correctMappingDnD = JSON.parse(correctMappingDataElement.textContent);
+            // console.log(`DnD (${quizIdDnD}) - Correct Mapping Loaded:`, correctMappingDnD);
+        } catch (e) {
+            console.error(`DnD (${quizIdDnD}): Failed to parse correct_mapping JSON. Error: ${e}. Content: ${correctMappingDataElement.textContent}`);
+        }
+    } else {
+        console.warn(`DnD (${quizIdDnD}): Correct mapping data script tag not found or empty (ID: ${mappingScriptElementId}). Ensure 'quiz_data.correct_mapping' is provided and the json_script tag is correct in the template.`);
+    }
+    
+    const correctFeedbackDnD = "{{ quiz_data.correct_feedback|default:'Correct! Well done.'|escapejs }}";
+    const incorrectFeedbackDnD = "{{ quiz_data.incorrect_feedback|default:'Not quite right. Try again!'|escapejs }}";
+    let currentlyDraggedElement = null; 
+
+    draggableOptionElements.forEach(option => {
+        option.addEventListener('dragstart', function (e) {
+            currentlyDraggedElement = e.target; 
+            e.dataTransfer.setData('text/plain', e.target.id); // Use the full ID for transfer
+            e.dataTransfer.effectAllowed = 'move';
+            // console.log(`DnD (${quizIdDnD}) - Drag Start:`, currentlyDraggedElement.id, "Data:", currentlyDraggedElement.dataset.optionId);
+            setTimeout(() => { 
+                if (currentlyDraggedElement) currentlyDraggedElement.classList.add('opacity-50');
+            }, 0);
+        });
+
+        option.addEventListener('dragend', function (e) {
+            // console.log(`DnD (${quizIdDnD}) - Drag End:`, e.target.id, "Drop Effect:", e.dataTransfer.dropEffect);
+            if (currentlyDraggedElement) { // Check if it's the element that was being dragged
+                 currentlyDraggedElement.classList.remove('opacity-50');
+            }
+            // If dropEffect is 'none', it means it wasn't dropped on a valid target.
+            // Return to options pool if it's not already there and not in a drop zone.
+            if (e.dataTransfer.dropEffect === 'none' && currentlyDraggedElement) {
+                const parent = currentlyDraggedElement.parentElement;
+                if (parent && !parent.isSameNode(draggableOptionsContainer) && !parent.classList.contains('drop-zone')) {
+                    // console.log(`DnD (${quizIdDnD}) - Drag End (invalid drop): Returning ${currentlyDraggedElement.id} to options.`);
+                    draggableOptionsContainer.appendChild(currentlyDraggedElement);
+                    currentlyDraggedElement.classList.remove('cursor-default');
+                    currentlyDraggedElement.classList.add('cursor-grab');
+                }
+            }
+            currentlyDraggedElement = null; 
+        });
+    });
+
+    const handleDragOver = function (e) {
+        e.preventDefault(); 
+        e.dataTransfer.dropEffect = 'move';
+        if (e.currentTarget.classList.contains('drop-zone') || e.currentTarget.classList.contains('draggable-options-container')) {
+            e.currentTarget.classList.add('drag-over-active');
+        }
+    };
+
+    const handleDragLeave = function (e) {
+        if (e.currentTarget.classList.contains('drop-zone') || e.currentTarget.classList.contains('draggable-options-container')) {
+            e.currentTarget.classList.remove('drag-over-active');
+        }
+    };
+
+    const handleDropOnZone = function (e) {
+        e.preventDefault();
+        const targetZone = e.currentTarget; 
+        targetZone.classList.remove('drag-over-active');
+
+        if (!currentlyDraggedElement) {
+            // console.log(`DnD (${quizIdDnD}) - Drop on Zone: No item being dragged.`);
+            return;
+        }
+        // console.log(`DnD (${quizIdDnD}) - Drop on Zone ${targetZone.dataset.blankIndex}: Item ${currentlyDraggedElement.id}`);
+
+        if (targetZone.firstChild && targetZone.firstChild.classList.contains('draggable-option')) {
+            const existingItem = targetZone.firstChild;
+            if (existingItem !== currentlyDraggedElement) { 
+                draggableOptionsContainer.appendChild(existingItem);
+                existingItem.classList.remove('cursor-default');
+                existingItem.classList.add('cursor-grab');
+                // console.log(`DnD (${quizIdDnD}) - Returned to options: ${existingItem.id}`);
+            }
+        }
+        
+        targetZone.innerHTML = ''; 
+        targetZone.appendChild(currentlyDraggedElement);
+        currentlyDraggedElement.classList.remove('cursor-grab'); 
+        currentlyDraggedElement.classList.add('cursor-default');
+        // Opacity is removed in dragend
+    };
+
+    const handleDropOnOptionsContainer = function(e) {
+        e.preventDefault();
+        draggableOptionsContainer.classList.remove('drag-over-active');
+        if (!currentlyDraggedElement) {
+            // console.log(`DnD (${quizIdDnD}) - Drop on Options: No item being dragged.`);
+            return;
+        }
+        // console.log(`DnD (${quizIdDnD}) - Drop on Options Container: Item ${currentlyDraggedElement.id}`);
+        
+        // If the item was in a drop-zone, its parent (the drop-zone) would have been cleared by the drop on zone.
+        // This ensures it's added back to the options container.
+        if(currentlyDraggedElement.parentElement !== draggableOptionsContainer){
+            draggableOptionsContainer.appendChild(currentlyDraggedElement);
+        }
+        currentlyDraggedElement.classList.remove('cursor-default');
+        currentlyDraggedElement.classList.add('cursor-grab');
+        // Opacity is removed in dragend
+    };
+
+    dropZones.forEach((zone, index) => {
+        zone.dataset.blankIndex = index.toString(); // Ensure blankIndex is a string for mapping
+        zone.addEventListener('dragover', handleDragOver);
+        zone.addEventListener('dragleave', handleDragLeave);
+        zone.addEventListener('drop', handleDropOnZone);
+    });
+
+    draggableOptionsContainer.addEventListener('dragover', handleDragOver);
+    draggableOptionsContainer.addEventListener('dragleave', handleDragLeave);
+    draggableOptionsContainer.addEventListener('drop', handleDropOnOptionsContainer);
+
+    submitButtonDnD.addEventListener('click', function () {
+        let allCorrect = true;
+        let allBlanksFilled = true;
+        feedbackElementDnD.innerHTML = '';
+        feedbackElementDnD.classList.remove('text-success', 'text-danger', 'text-warning');
+
+        dropZones.forEach((zone) => {
+            const blankIdx = zone.dataset.blankIndex; // This is already a string "0", "1", etc.
+            const placedItem = zone.querySelector('.draggable-option');
+            
+            zone.classList.remove('border-success', 'border-danger', 'bg-success-subtle', 'bg-danger-subtle');
+            zone.classList.add('border-primary'); 
+
+            if (placedItem && placedItem.dataset.optionId) { // Check if placedItem and its dataset.optionId exist
+                const placedItemOptionId = placedItem.dataset.optionId; 
+                const correctDraggableId = correctMappingDnD ? correctMappingDnD[blankIdx] : undefined;
+
+                // console.warn(`DnD (${quizIdDnD}) - Checking Zone ${blankIdx}: Placed Item ID: '${placedItemOptionId}', Correct ID from mapping: '${correctDraggableId}'`);
+
+                if (correctDraggableId && placedItemOptionId === correctDraggableId) {
+                    zone.classList.remove('border-primary');
+                    zone.classList.add('border-success', 'bg-success-subtle');
+                } else {
+                    allCorrect = false;
+                    zone.classList.remove('border-primary');
+                    zone.classList.add('border-danger', 'bg-danger-subtle');
+                }
+            } else {
+                allBlanksFilled = false;
+                allCorrect = false; // If no item or no optionId, it's not filled/correct
+                // console.warn(`DnD (${quizIdDnD}) - Zone ${blankIdx} is empty or item has no data-option-id.`);
+            }
+        });
+
+        if (!allBlanksFilled) {
+            feedbackElementDnD.textContent = "Please fill all the blanks.";
+            feedbackElementDnD.classList.add('text-warning');
+        } else if (allCorrect) {
+            feedbackElementDnD.textContent = correctFeedbackDnD;
+            feedbackElementDnD.classList.add('text-success');
+            submitButtonDnD.classList.remove('btn-primary');
+            submitButtonDnD.classList.add('btn-success');
+            submitButtonDnD.textContent = 'Correct!';
+            draggableOptionElements.forEach(opt => opt.draggable = false); 
+            dropZones.forEach(zone => { 
+                const item = zone.querySelector('.draggable-option');
+                if (item) item.draggable = false; 
+            });
+            submitButtonDnD.disabled = true;
+        } else {
+            feedbackElementDnD.textContent = incorrectFeedbackDnD;
+            feedbackElementDnD.classList.add('text-danger');
+        }
+    });
+
+     modalElementDnD.addEventListener('hidden.bs.modal', function () {
+        feedbackElementDnD.innerHTML = '';
+        feedbackElementDnD.classList.remove('text-success', 'text-danger', 'text-warning');
+        submitButtonDnD.classList.remove('btn-success');
+        submitButtonDnD.classList.add('btn-primary');
+        submitButtonDnD.textContent = 'Check Answer';
+        submitButtonDnD.disabled = false;
+
+        dropZones.forEach(zone => {
+            zone.innerHTML = '';
+            zone.classList.remove('border-success', 'border-danger', 'bg-success-subtle', 'bg-danger-subtle', 'drag-over-active');
+            zone.classList.add('border-primary'); 
+        });
+        draggableOptionElements.forEach(opt => {
+            draggableOptionsContainer.appendChild(opt);
+            opt.draggable = true;
+            opt.classList.add('cursor-grab');
+            opt.classList.remove('cursor-default', 'opacity-50');
+        });
+        draggableOptionsContainer.classList.remove('drag-over-active');
+    });
+});
+</script>
+
+<style>
+    #modal-drag-drop-{{ quiz_data.id }} .progress-custom-height {
+        height: 8px;
+    }
+    #modal-drag-drop-{{ quiz_data.id }} .sentence-container {
+        line-height: 2.5; 
+    }
+    #modal-drag-drop-{{ quiz_data.id }} .drop-zone {
+        display: inline-block;
+        min-width: 120px; 
+        min-height: calc(1em + .4rem + 4px); 
+        padding: 0.2rem 0.5rem; 
+        margin: 0 0.25em;
+        vertical-align: baseline; 
+        text-align: center;
+        border-bottom: 2px dashed var(--bs-primary); /* Default style for drop zone */
+        transition: background-color 0.2s ease, border-color 0.2s ease, border-style 0.2s ease;
+        position: relative; 
+        background-color: var(--bs-lightgray-50); /* Default background */
+    }
+    /* This specific selector from user's code might be too specific or conflict, simplified .drop-zone styling */
+    /* #modal-drag-drop-{{ quiz_data.id }} .drop-zone.border-bottom.border-dashed.border-2.border-primary.mx-1 {
+        min-width: 100px;
+        min-height: 1.5em;
+        padding: 0.25em 0.5em;
+        vertical-align: bottom;
+        background-color: var(--bs-primary-bg-subtle);
+    } */
+    #modal-drag-drop-{{ quiz_data.id }} .drop-zone.drag-over-active { /* Unified hover/dragover style */
+        background-color: var(--bs-primary-bg-subtle) !important;
+        border-color: var(--bs-primary) !important;
+        border-bottom-style: solid; /* Change to solid on hover */
+    }
+    #modal-drag-drop-{{ quiz_data.id }} .draggable-option {
+        transition: opacity 0.15s ease-in-out, transform 0.15s ease-in-out;
+        align-items: center;
+        touch-action: none; /* Recommended for preventing page scroll on touch devices during drag */
+    }
+    #modal-drag-drop-{{ quiz_data.id }} .draggable-option.opacity-50 {
+        opacity: 0.4 !important; 
+        transform: scale(0.95); 
+    }
+    #modal-drag-drop-{{ quiz_data.id }} .cursor-grab {
+        cursor: grab;
+    }
+    #modal-drag-drop-{{ quiz_data.id }} .cursor-default {
+        cursor: default;
+    }
+
+    #modal-drag-drop-{{ quiz_data.id }} .drop-zone.border-success {
+        border-bottom-style: solid !important;
+        border-color: var(--bs-success) !important;
+        background-color: var(--bs-success-bg-subtle) !important;
+    }
+    #modal-drag-drop-{{ quiz_data.id }} .drop-zone.border-danger {
+        border-bottom-style: solid !important;
+        border-color: var(--bs-danger) !important;
+        background-color: var(--bs-danger-bg-subtle) !important;
+    }
+    #modal-drag-drop-{{ quiz_data.id }} .draggable-options-container {
+        min-height: 50px; 
+        padding: 0.75rem; 
+        border: 1px solid var(--bs-border-color-light); 
+        border-radius: var(--bs-border-radius-sm);
+        transition: background-color 0.2s ease, border-style 0.2s ease, border-color 0.2s ease; /* Added border-color transition */
+    }
+    #modal-drag-drop-{{ quiz_data.id }} .draggable-options-container.drag-over-active { 
+        background-color: var(--bs-lightgray-200) !important;
+        border-style: dashed !important;
+        border-color: var(--bs-primary) !important; 
+    }
+</style>

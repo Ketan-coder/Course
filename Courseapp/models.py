@@ -1,10 +1,12 @@
+from typing import Literal
 from django.db import models
 from django.core.exceptions import ValidationError
+from requests import Response
 from utils.media_handler import MediaHandler
 from decimal import Decimal
 
 
-def validate_discount(value):
+def validate_discount(value) -> None:
     if value < 0:
         raise ValidationError("Discount price must be non-negative.")
     
@@ -67,22 +69,23 @@ class Course(models.Model):
             price = Decimal(self.price)
             discount_price = Decimal(self.discount_price)
             if price > 0:
-                discount_percentage = round(((price - discount_price) / price) * 100, 2)
+                discount_percentage: Decimal = round(((price - discount_price) / price) * 100, 2)
             else:
                 discount_percentage = 0
             self.extra_fields['discount_percentage'] = float(discount_percentage)
         except Exception as e:
+            print(f"Error calculating discount percentage: {e}")
             self.extra_fields['discount_percentage'] = 0  # Or handle it as needed
 
 
         # Removed MediaHandler import and usage to fix circular import issue
         # from utils.media_handler import MediaHandler
         if self.thumbnail:
-            resized_path = MediaHandler.resize_image(self.thumbnail, size=(150, 150))
+            resized_path: str | None = MediaHandler.resize_image(self.thumbnail, size=(150, 150))
             if resized_path:
                 # You might want to save this resized path to another field
                 # or just use it for processing.
-                self.thumbnail = resized_path
+                self.thumbnail: str = resized_path
             else:
                 pass
         super().save(*args, **kwargs)
@@ -112,7 +115,7 @@ class Section(models.Model):
 
 
 class Lesson(models.Model):
-    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='lessons')
+    # course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='lessons')
     # section = models.ForeignKey(Section, on_delete=models.CASCADE, related_name='lessons')
     title = models.CharField(max_length=200)
     video = models.FileField(upload_to='lesson_videos', blank=True, null=True)
@@ -128,7 +131,7 @@ class Lesson(models.Model):
     
 
     class Meta:
-        ordering = ['order']
+        ordering: list[str] = ['order']
 
     def __str__(self):
         return f"{self.title}"
@@ -148,9 +151,9 @@ class Lesson(models.Model):
 
 
 class Quiz(models.Model):
-    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='quizzes')
-    section = models.ForeignKey(Section, on_delete=models.CASCADE, related_name='quizzes')
-    lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE, related_name='quizzes')
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='quizzes', blank=True, null=True)
+    section = models.ForeignKey(Section, on_delete=models.CASCADE, related_name='quizzes', blank=True, null=True)
+    lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE, related_name='quizzes', blank=True, null=True)
     title = models.CharField(max_length=200)
     questions = models.JSONField(blank=True, null=True)
     is_inside_video = models.BooleanField(default=False)
@@ -162,18 +165,43 @@ class Quiz(models.Model):
     extra_fields = models.JSONField(blank=True, null=True, default=dict)
 
     class Meta:
-        ordering = ['-created_at']
+        ordering: list[str] = ['-created_at']
 
-    def __str__(self):
-        return f"{self.lesson.title} - {self.title}"
+    def __str__(self) -> str:
+        if self.section:
+            return f"{self.section.title} - {self.title}"
+        if self.course:
+            return f"{self.course.title} - {self.title}"
+        if self.lesson:
+            return f"{self.lesson.title} - {self.title}"
+        else:
+            return f"{self.title}"
 
     def save(self, *args, **kwargs):
         self.extra_fields['last_updated'] = str(self.updated_at)
         if not self.questions:
-            self.questions = {  # Remove in production, sample only
-                "1": {"question": "What is the capital of France?", "options": ["Paris", "London"], "type": "MULTIPLE_SELECT", "answer": "Paris"},
-                "2": {"question": "What is 2 + 2?", "options": ["3", "4"], "type": "SINGLE_SELECT", "answer": "4"},
+            self.questions = {  
+                "1": {"question": "What is the capital of France?", "options": [{"id": "Paris", "text": "Paris"}, {"id": "London", "text": "London"}], "type": "MULTIPLE_SELECT", "answer": "Paris"},
+                "2": {"question": "What is 2 + 2?", "options": [{"id": "1", "text": "1"}, {"id": "2", "text": "2"}, {"id": "3", "text": "3"}, {"id": "4", "text": "4"}], "type": "SINGLE_SELECT", "answer": "4"},
                 "3": {"question": "Capital of Nepal?", "options": [], "type": "TEXT", "answer": "Kathmandu"},
+                "4": {
+                    "question": "Which monument is shown?",
+                    "type": "IMAGE_MC",
+                    "image": "media/monuments/eiffel.jpg",
+                    "options": ["Eiffel Tower", "Taj Mahal", "Colosseum"],
+                    "answer": "Eiffel Tower"
+                },
+                "5": {
+                    "question": "Complete the sentence",
+                    "type": "DRAG_DROP",
+                    "sentence_parts": ["The quick brown ", None, " jumps over the ", None, " dog."],
+                    "draggable_options": [
+                        {"id": "fox", "text": "fox"},
+                        {"id": "lazy", "text": "lazy"},
+                        {"id": "quick", "text": "quick"}
+                    ],
+                    "correct_mapping": { "0": "fox", "1": "lazy" }
+                }
             }
         super().save(*args, **kwargs)
 
@@ -186,7 +214,7 @@ class QuizSubmission(models.Model):
     submitted_at = models.DateTimeField(auto_now_add=True)
     answers = models.JSONField(default=dict)
 
-    def calculate_score(self):
+    def calculate_score(self) -> float | Literal[0]:
         correct = 0
         total_questions = len(self.quiz.questions or {})
 
@@ -196,9 +224,9 @@ class QuizSubmission(models.Model):
             if str(user_answer).strip().lower() == str(correct_answer).strip().lower():
                 correct += 1
 
-        self.total = total_questions
-        self.score = round((correct / total_questions) * 100, 2) if total_questions else 0
-        self.passed = self.score >= float(self.quiz.passing_score)
+        self.total: int = total_questions
+        self.score: float | Literal[0] = round((correct / total_questions) * 100, 2) if total_questions else 0
+        self.passed: bool = self.score >= float(self.quiz.passing_score)
         self.save()
         return self.score
 
@@ -210,9 +238,9 @@ class Tag(models.Model):
     extra_fields = models.JSONField(blank=True, null=True, default=dict)
 
     class Meta:
-        ordering = ['name']
+        ordering: list[str] = ['name']
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.name
 
 
@@ -224,9 +252,9 @@ class FAQ(models.Model):
     extra_fields = models.JSONField(blank=True, null=True, default=dict)
 
     class Meta:
-        ordering = ['-created_at']
+        ordering: list[str] = ['-created_at']
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.question
 
 class CourseReview(models.Model):
@@ -238,9 +266,9 @@ class CourseReview(models.Model):
     extra_fields = models.JSONField(blank=True, null=True, default=dict)
 
     class Meta:
-        ordering = ['-created_at']
+        ordering: list[str] = ['-created_at']
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.user.username} - {self.course.title} - {self.rating}"
 
 class CourseComment(models.Model):
@@ -252,9 +280,9 @@ class CourseComment(models.Model):
     extra_fields = models.JSONField(blank=True, null=True, default=dict)
 
     class Meta:
-        ordering = ['-created_at']
+        ordering: list[str] = ['-created_at']
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.user.username} - {self.course.title} - {self.comment_text[:20]}"
     
 class CourseSubComment(models.Model):
@@ -266,7 +294,7 @@ class CourseSubComment(models.Model):
     extra_fields = models.JSONField(blank=True, null=True, default=dict)
 
     class Meta:
-        ordering = ['-created_at']
+        ordering: list[str] = ['-created_at']
 
     def __str__(self):
         return f"{self.user.username} - {self.course_comment.course.title} - {self.comment_text[:20]}"
@@ -284,25 +312,26 @@ class PaymentHistory(models.Model):
     extra_fields = models.JSONField(blank=True, null=True, default=dict)
 
     class Meta:
-        ordering = ['-created_at']
+        ordering: list[str] = ['-created_at']
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.user.username} - {self.course.title} - {self.amount} - {self.status}"
     
-    def save(self, *args, **kwargs):
+    def save(self, *args, **kwargs) -> None:
         import socket
         import requests
 
         # Get device-specific details
-        device_name = socket.gethostname()
-        device_ip = socket.gethostbyname(device_name)
+        device_name: str = socket.gethostname()
+        device_ip: str = socket.gethostbyname(device_name)
 
         # Get location details using an external service
         try:
-            response = requests.get(f"https://ipinfo.io/{device_ip}/json")
+            response: Response = requests.get(f"https://ipinfo.io/{device_ip}/json")
             location_data = response.json()
-            location = f"{location_data.get('city')}, {location_data.get('region')}, {location_data.get('country')}"
+            location: str = f"{location_data.get('city')}, {location_data.get('region')}, {location_data.get('country')}"
         except requests.RequestException as e:
+            print(f"Error fetching location data: {e}")
             location = "Unknown"
 
         self.extra_fields['device_name'] = device_name
@@ -320,12 +349,12 @@ class CourseCertificate(models.Model):
     extra_fields = models.JSONField(blank=True, null=True, default=dict)
 
     class Meta:
-        ordering = ['-issued_at']
+        ordering: list[str] = ['-issued_at']
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.user.username} - {self.course.title} - {self.certificate_code}"
     
-    def save(self, *args, **kwargs):
+    def save(self, *args, **kwargs) -> None:
         import uuid
         self.certificate_code = str(uuid.uuid4())
         self.extra_fields['last_updated'] = str(self.issued_at)

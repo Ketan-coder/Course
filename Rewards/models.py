@@ -1,11 +1,13 @@
-from django.db import models
-from django.conf import settings
+from typing import Literal
 import uuid
+
+from django.db import models
 
 from Users.models import Instructor, Student
 
+
 class Voucher(models.Model):
-    VOUCHER_TYPE_CHOICES = [
+    VOUCHER_TYPE_CHOICES: list[tuple[str, str]] = [
         ('standard', 'Standard Voucher'),
         ('referral_reward', 'Referral Reward'),
     ]
@@ -50,26 +52,26 @@ class Voucher(models.Model):
         help_text="Unique code used for referral tracking."
     )
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.get_voucher_type_display()}: {self.name} (Code: {self.code if self.code else 'N/A'})"
 
-    def save(self, *args, **kwargs):
+    def save(self, *args, **kwargs) -> None:
         if self.voucher_type == 'referral_reward' and not self.code:
             self.code = self.generate_referral_reward_code()
         elif self.voucher_type == 'standard' and not self.code:
             self.code = self.generate_standard_voucher_code()
         super().save(*args, **kwargs)
 
-    def generate_standard_voucher_code(self):
+    def generate_standard_voucher_code(self) -> str:
         # You can implement your own logic for generating standard voucher codes
         return f"VOUCHER-{uuid.uuid4().hex[:8].upper()}"
 
-    def generate_referral_reward_code(self):
+    def generate_referral_reward_code(self) -> str:
         # Unique code specific to the referral reward
         return f"REF-REWARD-{uuid.uuid4().hex[:10].upper()}"
 
     class Meta:
-        ordering = ['-created_at']
+        ordering: list[str] = ['-created_at']
 
 class VoucherUsage(models.Model):
     voucher = models.ForeignKey(Voucher, on_delete=models.CASCADE, related_name='usage')
@@ -77,7 +79,7 @@ class VoucherUsage(models.Model):
     used_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        unique_together = ('voucher', 'user') # Prevent a user from using the same voucher multiple times (if that's your requirement)
+        unique_together: tuple[Literal['voucher'], Literal['user']] = ('voucher', 'user') # Prevent a user from using the same voucher multiple times (if that's your requirement)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"Voucher '{self.voucher.code}' used by {self.user.username} at {self.used_at}"
