@@ -22,9 +22,14 @@
 {% endcomment %}
 {% load static %}
 
-{% with "correct-mapping-data-"|add:quiz_data.id as json_id %}
+{% comment %} {% with "correct-mapping-data-"|add:quiz_data.id as json_id %}
     {{ correct_mapping|json_script:json_id }}
-{% endwith %}
+{% endwith %} {% endcomment %}
+<script type="application/json" id="correct-mapping-data-{{ quiz_data.id }}">
+    {{ correct_mapping|safe }}
+</script>
+
+This one- {{ correct_mapping }}
 
 <div class="modal fade" id="modal-drag-drop-{{ quiz_data.id }}" tabindex="-1" aria-labelledby="modalLabel-drag-drop-{{ quiz_data.id }}" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
@@ -40,7 +45,7 @@
                 </svg>
                 {% endif %}
                 <h5 class="modal-title" id="modalLabel-drag-drop-{{ quiz_data.id }}">
-                    {{ question|default:"Drag-and-Drop Challenge" }}
+                    {{ quiz_data.question|default:"Drag-and-Drop Challenge" }}
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
@@ -57,7 +62,7 @@
 
                 <p class="text-center mb-3">Complete the sentence:</p>
                 <div id="sentence-container-{{ quiz_data.id }}" class="sentence-container p-3 border rounded bg-light mb-4 fs-5 lh-lg text-center">
-                    {% for part in sentence_parts %}
+                    {% for part in quiz_data.sentence_parts %}
                         {% if part is None or part == "None" %} {# Check for string "None" as well, just in case #}
                             <span class="drop-zone border-bottom border-dashed border-2 border-primary mx-1"></span>
                         {% else %}
@@ -68,7 +73,7 @@
 
                 <p class="text-center text-muted small mb-2">Drag the words below to the blanks:</p>
                 <div id="draggable-options-{{ quiz_data.id }}" class="draggable-options-container d-flex flex-wrap justify-content-center gap-2 mb-3">
-                    {% for option in draggable_options %}
+                    {% for option in quiz_data.draggable_options %}
                     <span class="badge fs-6 p-2 bg-light-gray border text-dark-gray draggable-option cursor-grab" draggable="true" id="drag-{{ quiz_data.id }}-{{ option.id }}" data-option-id="{{ option.id }}">
                         {% if option.icon_class %} <i class="{{ option.icon_class }} me-1"></i>{% endif %}
                         {{ option.text }}
@@ -112,7 +117,7 @@ document.addEventListener('DOMContentLoaded', function () {
             console.error(`DnD (${quizIdDnD}): Failed to parse correct_mapping JSON. Error: ${e}. Content: ${correctMappingDataElement.textContent}`);
         }
     } else {
-        console.warn(`DnD (${quizIdDnD}): Correct mapping data script tag not found or empty (ID: ${mappingScriptElementId}). Ensure 'quiz_data.correct_mapping' is provided and the json_script tag is correct in the template.`);
+        console.warn(`DnD (${quizIdDnD}): Correct mapping data script tag not found or empty (ID: ${mappingScriptElementId}). Ensure 'correct_mapping' is provided and the json_script tag is correct in the template.`);
     }
     
     const correctFeedbackDnD = "{{ quiz_data.correct_feedback|default:'Correct! Well done.'|escapejs }}";

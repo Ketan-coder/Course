@@ -14,4 +14,5 @@ urlpatterns: list[URLPattern] = [
     path('courses/search_tags/', views.search_tags, name='search_tags'),
     path('courses/search_sections/', views.search_sections, name='search_sections'),
     path('courses/search_faqs/', views.search_faqs, name='search_faqs'),
+    # path('check_drag_and_drop_answer/', views.check_drag_and_drop_answer, name='check_drag_and_drop_answer'),
 ]

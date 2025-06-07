@@ -1,18 +1,10 @@
-# from typing import Any
 from django.contrib.auth.decorators import user_passes_test
 from django.db.models.manager import BaseManager
 # from django.db.models.query import ValuesQuerySet
 from django.http import HttpResponse, HttpResponsePermanentRedirect, HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
-
 from Courseapp.models import FAQ, Course, Language, Section, Tag
 from Users.models import Instructor
-
-
-# Create your views here.
-# def index(request) -> HttpResponse:
-#     return render(request, "index.html")
-
 def course_list(request) -> HttpResponse:
     courses: BaseManager[Course] = Course.objects.all()
 
@@ -20,8 +12,7 @@ def course_list(request) -> HttpResponse:
         search_term = request.POST["search_term"]
         courses = courses.filter(
             title__icontains=search_term, language__name__icontains=search_term
-        )
-
+        ) # Suggested code may be subject to a license. Learn more: ~LicenseLog:1606362085.
     print(request.GET)
     if "course_level" in request.GET:
         filter_by_level = request.GET["course_level"]

@@ -7,17 +7,17 @@
       <!-- Modal Header -->
       <div class="modal-header">
         <h5 class="modal-title" id="modalLabel-mcq-{{ quiz_data.id }}">
-          {{ quiz_data.title|default:"Multiple Choice Question" }}
+          {{ quiz_data.question|default:"Multiple Choice Question" }}
         </h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
 
       <!-- Modal Body -->
       <div class="modal-body">
-        <p class="fw-bold mb-3">{{ question }}</p>
+        <p class="fw-bold mb-3">{{ quiz_data.question }}</p>
 
         <form id="form-mcq-{{ quiz_data.id }}">
-          {% for option in options %}
+          {% for option in quiz_data.options %}
           <div class="form-check mb-2">
             <input class="form-check-input" type="radio" name="mcq-option-{{ quiz_data.id }}" id="mcq-{{ quiz_data.id }}-option-{{ forloop.counter }}" value="{{ option }}">
             <label class="form-check-label w-100 border rounded p-2 hover-bg-light-gray cursor-pointer" for="mcq-{{ quiz_data.id }}-option-{{ forloop.counter }}">
@@ -42,7 +42,7 @@
 <script>
 document.addEventListener('DOMContentLoaded', function () {
   const quizId = "{{ quiz_data.id|escapejs }}";
-  const correctAnswer = "{{ correct_answer|escapejs }}";
+  const correctAnswer = "{{ quiz_data.correct_answer|escapejs }}";
   const correctFeedback = "{{ quiz_data.correct_feedback|default:'Correct!'|escapejs }}";
   const incorrectFeedback = "{{ quiz_data.incorrect_feedback|default:'Incorrect. Try again.'|escapejs }}";
 

@@ -1,0 +1,73 @@
+{% load static %}
+
+<div class="modal" id="modal-msq-{{ quiz_data.id }}" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                    <h5 class="modal-title"> Multiple Selection</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                {% comment %} {% if quiz_data.progress_percentage is not None %}
+                    <div class="progress mb-3">
+                        <div class="progress-bar" role="progressbar" style="width: {{ quiz_data.progress_percentage }}%;" aria-valuenow="{{ quiz_data.progress_percentage }}" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                {% endif %} {% endcomment %}
+                <p>{{ quiz_data.question }}</p>
+                {% if quiz_data.image_url %}
+                    <img src="{{ quiz_data.image_url }}" class="img-fluid mb-3" alt="{{ quiz_data.image_url }}">
+                {% endif %}
+                <div class="form-group">
+                    {% for option in quiz_data.options %}
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" value="{{ option.id }}" id="option-{{ quiz_data.id }}-{{ option.id }}">
+                            <label class="form-check-label" for="option-{{ quiz_data.id }}-{{ option.id }}">
+                                {{ option.text }}
+                            </label>
+                        </div>
+                    {% endfor %}
+                </div>
+                <div id="feedback-{{ quiz_data.id }}" class="mt-3" style="display: none;"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary submit-quiz-{{quiz_data.id}}" id="submit-quiz-{{ quiz_data.id }}" data-quiz-id="{{ quiz_data.id }}">Submit Answer</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const quizModal = document.getElementById('modal-msq-{{ quiz_data.id }}');
+    //const submitButton = quizModal.querySelector('.submit-quiz');
+    const submitButton = document.getElementById('submit-quiz-{{ quiz_data.id }}');
+    const feedbackDiv = quizModal.querySelector('#feedback-{{ quiz_data.id }}');
+    const correctFeedback = '{{ quiz_data.correct_feedback|escapejs|default:"Correct Answer" }}';
+    const incorrectFeedback = '{{ quiz_data.incorrect_feedback|escapejs|default:"Wrong Answer! Try Again" }}';
+
+    submitButton.addEventListener('click', function() {
+        const selectedOptions = [];
+        quizModal.querySelectorAll('.form-check-input:checked').forEach(function(checkbox) {
+            selectedOptions.push(checkbox.value);
+        });
+
+        // Assuming quiz_data.correct_answer is a list of correct option IDs
+        // Need to parse this correctly from the template context
+        const correctOptionIdsString = '{{ quiz_data.correct_answer|escapejs }}';
+        const correctOptionIds = correctOptionIdsString ? JSON.parse(correctOptionIdsString) : [];
+
+        const isCorrect = selectedOptions.length === correctOptionIds.length && selectedOptions.length > 0 &&
+                          selectedOptions.every(id => correctOptionIds.includes(id));
+
+        feedbackDiv.style.display = 'block';
+        if (isCorrect) {
+            feedbackDiv.innerHTML = '<div class="alert alert-success">' + correctFeedback + '</div>';
+        } else {
+            feedbackDiv.innerHTML = '<div class="alert alert-danger">' + incorrectFeedback + '</div>';
+        }
+    });
+});
+</script>

@@ -27,6 +27,7 @@ WebsiteTester.py
 *.pyc
 *.pyo
 *.zip
+*.json
 
 # Ignore Django migrations except __init__.py
 **/migrations/

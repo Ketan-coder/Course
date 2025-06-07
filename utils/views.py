@@ -1,6 +1,7 @@
 from django.http import HttpResponse
 from django.shortcuts import render, get_object_or_404
 from Courseapp.models import Quiz
+import json
 
 # Create your views here.
 def index(request) -> HttpResponse:
@@ -72,44 +73,52 @@ def index(request) -> HttpResponse:
     #     "total_questions": total_questions,
     #     "progress_percentage": round(progress),
     # }
-    quiz: Quiz = get_object_or_404(Quiz, id=1)
+    try:
+        quiz: Quiz = get_object_or_404(Quiz, id=1)
 
-    # Unpack dynamic questions from JSONField
-    raw_questions = quiz.questions or {}
-    question_items = list(raw_questions.items())  # List of (qid, question_dict)
-    total_questions: int = len(question_items)
-    print(raw_questions)
+        # Unpack dynamic questions from JSONField
+        raw_questions = quiz.questions or {}
+        question_items = list(raw_questions.items())  # List of (qid, question_dict)
+        total_questions: int = len(question_items)
+        # print(raw_questions)
 
-    # For demo: show first question (index 0)
-    current_index = 4
-    qid, current_question = question_items[current_index]
+        # To display all questions, you should iterate through the question_items
+        # and build a list of questions, instead of processing only one.
+        questions_list = []
+        for current_index, (qid, current_question) in enumerate(question_items):
 
-    # Determine question type
-    # q_type = current_question.get("type")
-    q_type = current_question.get("type", "").upper()
-    question_text = current_question.get("question")
-    options = current_question.get("options", [])
-    answer = current_question.get("answer")  # For validation or feedback
+            # Determine question type
+            q_type = current_question.get("type", "").upper()
+            question_text = current_question.get("question")
+            options = current_question.get("options", [])
+            answer = current_question.get("answer")  # For validation or feedback
 
-    # Optional: extract media if needed from question dict
-    image_url = current_question.get("image")
-    sentence_parts = current_question.get("sentence_parts")
-    draggable_options = current_question.get("draggable_options")
-    correct_mapping = current_question.get("correct_mapping")
+            image_url = current_question.get("image")
+            sentence_parts = current_question.get("sentence_parts")
+            draggable_options = current_question.get("draggable_options")
+            correct_mapping = current_question.get("correct_mapping")
+            correct_mapping_json = json.dumps(correct_mapping)
+
+            questions_list.append({
+                "id": qid,
+                "question_number": current_index + 1,
+                "question": question_text,
+                "question_type": q_type,
+                "options": options,
+                "image_url": image_url,
+                "sentence_parts": sentence_parts,
+                "draggable_options": draggable_options,
+                "correct_mapping": correct_mapping_json,
+                "correct_answer": answer,
+            })
+        print(questions_list)
+    except Exception as e:
+        print(e)
 
     context = {
         "quiz_data": quiz,
         "quiz": quiz,
-        "qid": qid,
-        "question_number": current_index + 1,
         "total_questions": total_questions,
-        "question": question_text,
-        "question_type": q_type,
-        "options": options,
-        "image_url": image_url,
-        "sentence_parts": sentence_parts,
-        "draggable_options": draggable_options,
-        "correct_mapping": correct_mapping,
-        "correct_answer": answer,  # ⚠️ Only use for admin or debug,
+        "questions_list": questions_list, # Pass the list of all questions to the template
     }
     return render(request, 'index.html', context)
