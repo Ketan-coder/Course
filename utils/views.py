@@ -122,3 +122,8 @@ def index(request) -> HttpResponse:
         "questions_list": questions_list, # Pass the list of all questions to the template
     }
     return render(request, 'index.html', context)
+
+def landing_page(request) -> HttpResponse:
+    if request.method == "POST":
+        print(request.POST)
+    return render(request, 'landing_page.html')

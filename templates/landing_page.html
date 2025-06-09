@@ -1,0 +1,1063 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scholarly - To Do Is To Learn</title>
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/phosphor-icons"></script>
+    <!-- Google Fonts: Nunito -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
+    <!-- Anime.js for animations -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <style>
+        /* --- General Styling & Resets --- */
+        :root {
+            /* Updated 'cool, modern tech-vibe' color palette */
+            --primary-color: #00e5ff; /* Bright Cyan */
+            --secondary-color: #f72585; /* Vibrant Pink for accents */
+            --dark-blue: #0a192f;     /* Deep Navy */
+            --light-blue-bg: #0e2a47; 
+            --text-color-dark: #ccd6f6;
+            --text-color-light: #ffffff;
+            --text-color-muted: #8892b0;
+            --card-bg: #113255;
+            --card-border: #234b75;
+            --footer-bg: #0a192f;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Nunito', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: var(--dark-blue);
+            color: var(--text-color-dark);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        section {
+            padding: 80px 0;
+            opacity: 0; /* Hidden by default for animation */
+            transform: translateY(30px);
+            transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+            position: relative;
+            overflow: hidden;
+        }
+
+        section.is-visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        h1, h2, h3 {
+            font-weight: 800; /* Bolder font for playful feel */
+            line-height: 1.2;
+            color: var(--text-color-light); 
+        }
+
+        h2 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            position: relative;
+            display: inline-block;
+        }
+
+        h2::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 50px;
+            height: 4px;
+            background-color: var(--primary-color);
+            border-radius: 2px;
+        }
+
+        /* --- Animations --- */
+        @keyframes pulse {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(0, 229, 255, 0.7); }
+            70% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(0, 229, 255, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(0, 229, 255, 0); }
+        }
+
+        /* --- Header & Navigation --- */
+        .main-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 15px 0;
+            z-index: 1000;
+            transition: background-color 0.3s ease, box-shadow 0.3s ease;
+            background-color: rgba(10, 25, 47, 0.85);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+
+        .main-header .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+        
+        .main-nav ul {
+            list-style: none;
+            display: flex;
+            gap: 30px;
+        }
+        
+        .main-nav a {
+            text-decoration: none;
+            color: var(--text-color-dark);
+            font-weight: 700;
+            padding-bottom: 5px;
+            position: relative;
+            transition: color 0.3s ease;
+        }
+
+        .main-nav a::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background-color: var(--primary-color);
+            transition: width 0.3s ease;
+        }
+
+        .main-nav a:hover, .main-nav a.active {
+            color: var(--primary-color);
+        }
+
+        .main-nav a:hover::after, .main-nav a.active::after {
+            width: 100%;
+        }
+
+        .hamburger {
+            display: none;
+            cursor: pointer;
+            background: none;
+            border: none;
+            z-index: 1001;
+        }
+
+        .hamburger span {
+            display: block;
+            width: 25px;
+            height: 3px;
+            margin: 5px 0;
+            background-color: var(--text-color-dark);
+            transition: all 0.3s ease-in-out;
+        }
+
+        /* --- Hero Section --- */
+        #hero {
+            height: 100vh;
+            display: flex;
+            align-items: flex-end;
+            justify-content: flex-start;
+            position: relative;
+            overflow: hidden;
+            padding: 0;
+            opacity: 1; /* Hero is visible by default */
+            transform: translateY(0);
+        }
+
+        .video-background {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            min-width: 100%;
+            min-height: 100%;
+            width: auto;
+            height: auto;
+            z-index: -2;
+            transform: translateX(-50%) translateY(-50%);
+            filter: grayscale(50%) brightness(50%);
+        }
+
+        .hero-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(10, 25, 47, 0.7);
+            z-index: -1;
+        }
+
+        .hero-content {
+            max-width: 800px;
+            padding: 0 0 10vh 5vw;
+            text-align: left;
+        }
+
+        .hero-content h1 {
+            font-size: clamp(3rem, 10vw, 7rem);
+            margin-bottom: 10px;
+            font-weight: 800;
+            text-shadow: 2px 2px 15px rgba(0,0,0,0.7);
+        }
+
+        .hero-content p {
+            font-size: clamp(1.2rem, 3vw, 1.5rem);
+            margin-bottom: 30px;
+            font-weight: 400;
+            color: var(--text-color-muted);
+            text-shadow: 1px 1px 8px rgba(0,0,0,0.7);
+        }
+
+        .vip-input-group {
+            display: flex;
+            max-width: 450px;
+            margin: 0;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            backdrop-filter: blur(5px);
+        }
+        
+        .vip-input-group input {
+            flex-grow: 1;
+            border: none;
+            padding: 15px;
+            background: transparent;
+            color: var(--text-color-light);
+            font-size: 1rem;
+        }
+        
+        .vip-input-group input::placeholder {
+            color: var(--text-color-muted);
+        }
+
+        .vip-input-group input:focus {
+            outline: none;
+        }
+        
+        .vip-input-group button {
+            border: none;
+            background-color: var(--primary-color);
+            color: var(--dark-blue);
+            padding: 15px 25px;
+            cursor: pointer;
+            border-radius: 0 12px 12px 0;
+            font-weight: 700;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            animation: pulse 2s infinite;
+        }
+
+        .vip-input-group button:hover {
+            background-color: #00cfff;
+            transform: scale(1.05);
+        }
+        
+        /* --- Features Section --- */
+        #features {
+            background-color: var(--light-blue-bg);
+        }
+        
+        #features .container {
+            position: relative;
+            z-index: 1;
+        }
+        
+        #features-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+            margin-top: 40px;
+        }
+
+        .feature-card {
+            background-color: var(--card-bg);
+            padding: 30px;
+            border-radius: 16px;
+            border: 1px solid var(--card-border);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+            z-index: 2;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            border-color: var(--primary-color);
+        }
+
+        .feature-card:hover .icon {
+            transform: rotate(-15deg) scale(1.1);
+        }
+        
+        .feature-card.emphasized {
+            transform: scale(1.05);
+            box-shadow: 0 15px 30px rgba(0, 229, 255, 0.15);
+            border-color: var(--primary-color);
+        }
+
+        .feature-card .icon {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            color: var(--primary-color);
+            line-height: 1;
+            transition: transform 0.3s ease;
+        }
+
+        .feature-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+        }
+
+        .feature-card p {
+            color: var(--text-color-muted);
+        }
+
+        /* --- About Us Section --- */
+        #about {
+             text-align: center;
+             background-color: var(--dark-blue);
+        }
+        #about h2 {
+            display: inline-block;
+        }
+        #about p {
+            max-width: 800px;
+            margin: 20px auto 0 auto;
+            color: var(--text-color-muted);
+        }
+
+        /* --- Contact Us Section --- */
+        #contact {
+             background-color: var(--light-blue-bg);
+        }
+        .contact-wrapper {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+            align-items: flex-start;
+        }
+
+        #contact h2 {
+            margin-bottom: 40px;
+        }
+
+        .contact-form .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .contact-form label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+
+        .contact-form input, .contact-form textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--card-border);
+            background-color: var(--light-blue-bg);
+            border-radius: 12px;
+            font-size: 1rem;
+            color: var(--text-color-dark);
+        }
+        
+        .contact-form input:focus, .contact-form textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(0, 229, 255, 0.2);
+        }
+
+        .contact-form textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        .contact-form button {
+            display: inline-block;
+            padding: 12px 30px;
+            background-color: var(--primary-color);
+            color: var(--dark-blue);
+            border: none;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+
+        .contact-form button:hover {
+            background-color: #00cfff;
+            transform: scale(1.05);
+        }
+
+        .social-links-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 20px;
+        }
+        
+        .social-card {
+            background-color: var(--card-bg);
+            padding: 20px;
+            border-radius: 16px;
+            border: 1px solid var(--card-border);
+            text-align: center;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .social-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            border-color: var(--primary-color);
+        }
+
+        .social-card .icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            color: var(--primary-color);
+        }
+
+        .social-card p {
+            font-weight: 600;
+            color: var(--text-color-dark);
+        }
+
+        /* --- Footer --- */
+        .main-footer {
+            background-color: var(--footer-bg);
+            padding: 60px 0 20px 0;
+        }
+        
+        .footer-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+        
+        .footer-column h4 {
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+            color: var(--text-color-light);
+        }
+        
+        .footer-column ul {
+            list-style: none;
+        }
+        
+        .footer-column li {
+            margin-bottom: 10px;
+        }
+        
+        .footer-column a {
+            text-decoration: none;
+            color: var(--text-color-muted);
+            transition: color 0.3s ease;
+            display: flex;
+            align-items: center;
+        }
+        
+        .footer-column a:hover {
+            color: var(--primary-color);
+        }
+
+        .external-link-icon {
+            width: 16px;
+            height: 16px;
+            margin-left: 8px;
+            color: var(--text-color-muted);
+        }
+        
+        .footer-copyright {
+            text-align: center;
+            padding-top: 20px;
+            border-top: 1px solid var(--card-border);
+            color: var(--text-color-muted);
+            font-size: 0.9rem;
+        }
+        
+        /* --- Responsiveness --- */
+        @media (max-width: 992px) {
+            .features-grid {
+                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            }
+            .feature-card.emphasized {
+                transform: scale(1);
+            }
+        }
+
+        @media (max-width: 768px) {
+            h2 {
+                font-size: 2rem;
+            }
+            .main-nav {
+                display: none;
+                flex-direction: column;
+                position: absolute;
+                top: 100%;
+                left: 0;
+                width: 100%;
+                background-color: var(--card-bg);
+                box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+            }
+            .main-nav.active-mobile {
+                display: flex;
+            }
+            .main-nav ul {
+                flex-direction: column;
+                width: 100%;
+                gap: 0;
+            }
+            .main-nav li {
+                width: 100%;
+                text-align: center;
+                border-bottom: 1px solid var(--card-border);
+            }
+            .main-nav a {
+                padding: 15px;
+                display: block;
+            }
+            
+            .hamburger {
+                display: block;
+            }
+            .hamburger.is-active span:nth-child(1) {
+                transform: translateY(8px) rotate(45deg);
+            }
+            .hamburger.is-active span:nth-child(2) {
+                opacity: 0;
+            }
+            .hamburger.is-active span:nth-child(3) {
+                transform: translateY(-8px) rotate(-45deg);
+            }
+
+            #hero {
+                align-items: center;
+                text-align: center;
+            }
+            .hero-content {
+                padding: 20px;
+                text-align: center;
+            }
+            .hero-content h1 {
+                font-size: clamp(2.5rem, 12vw, 4rem);
+            }
+            .hero-content p {
+                font-size: 1.2rem;
+            }
+            .vip-input-group {
+                margin: 0 auto;
+            }
+
+            .contact-wrapper {
+                grid-template-columns: 1fr;
+            }
+            .footer-grid {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+            .footer-column a {
+                justify-content: center;
+            }
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- Header / Navbar -->
+    <header class="main-header" id="main-header">
+        <div class="container">
+            <a href="#" class="logo">Scholarly</a>
+            <nav class="main-nav">
+                <ul>
+                    <li><a href="#hero" class="nav-link">Home</a></li>
+                    <li><a href="#features" class="nav-link">Features</a></li>
+                    <li><a href="#about" class="nav-link">Stats</a></li>
+                    <li><a href="#" class="nav-link">Partners</a></li>
+                    <li><a href="#contact" class="nav-link">Contact Us</a></li>
+                </ul>
+            </nav>
+            <button class="hamburger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+    </header>
+
+    <main>
+        <!-- Hero Section -->
+        <section id="hero">
+            <video autoplay muted loop playsinline class="video-background">
+                <source src="https://assets.mixkit.co/videos/preview/mixkit-a-girl-looking-at-the-stars-from-a-tent-41517-large.mp4" type="video/mp4">
+                Your browser does not support the video tag.
+            </video>
+            <div class="hero-overlay"></div>
+            <div class="hero-content">
+                <h1>Scholarly</h1>
+                <p>To do is to learn; that's fun and engaging</p>
+                <div class="vip-input-group">
+                    <input type="text" placeholder="Enter VIP Code">
+                    <button>CONTINUE</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Features Section -->
+        <section id="features" class="animate-on-scroll">
+            <canvas id="features-canvas"></canvas>
+            <div class="container">
+                <h2 style="text-align: left;">Interactive Learning Features</h2>
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <i class="ph-duotone ph-exam icon"></i>
+                        <h3>Interactive Quizzes</h3>
+                        <p>Test your knowledge with engaging quizzes that adapt to your skill level and help you master concepts through active recall.</p>
+                    </div>
+                    <div class="feature-card">
+                        <i class="ph-duotone ph-coins icon"></i>
+                        <h3>Earn Rewards</h3>
+                        <p>Stay motivated by earning points, unlocking achievements, and climbing the leaderboards as you learn and complete challenges.</p>
+                    </div>
+                    <div class="feature-card">
+                         <i class="ph-duotone ph-chart-line-up icon"></i>
+                        <h3>Personalized Feedback</h3>
+                        <p>Receive instant, AI-powered feedback on your answers, guiding you through difficult problems and reinforcing your understanding.</p>
+                    </div>
+                    <div class="feature-card">
+                         <i class="ph-duotone ph-presentation-chart icon"></i>
+                        <h3>Live Sessions</h3>
+                        <p>Join live, interactive sessions with expert instructors and peers to deep dive into complex topics and get your questions answered in real-time.</p>
+                    </div>
+                    <div class="feature-card">
+                        <i class="ph-duotone ph-users-three icon"></i>
+                        <h3>Community Learning</h3>
+                        <p>Engage with peers, join study groups, and learn collaboratively in our vibrant community forums and channels.</p>
+                    </div>
+                    {% comment %} emphasized - Add This class to emphasize the feature {% endcomment %}
+                    <div class="feature-card">
+                        <i class="ph-duotone ph-shield-check icon"></i>
+                        <h3>Progress Tracking</h3>
+                        <p>Visualize your learning journey with detailed analytics and track your progress towards mastering new skills and subjects.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- About Us Section -->
+        <section id="about" class="animate-on-scroll">
+            <div class="container">
+                <h2>About Scholarly</h2>
+                <p>Scholarly is a forward-thinking educational platform designed to make learning interactive, engaging, and rewarding. We believe in the power of 'learning by doing' and have built a suite of tools that empower students to take control of their educational journey. Our mission is to blend cutting-edge technology with proven pedagogical methods to create an unparalleled learning experience for everyone, everywhere.</p>
+            </div>
+        </section>
+        
+        <!-- Contact Us Section -->
+        <section id="contact" class="animate-on-scroll">
+            <div class="container">
+                <div class="contact-wrapper">
+                    <div class="contact-form-container">
+                        <h2>Connect with us!</h2>
+                        <form class="contact-form">
+                            <div class="form-group">
+                                <label for="name">Your Name</label>
+                                <input type="text" id="name" name="name" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="email">Your Email</label>
+                                <input type="email" id="email" name="email" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="message">Your Message</label>
+                                <textarea id="message" name="message" required></textarea>
+                            </div>
+                            <button type="submit">Send Message</button>
+                        </form>
+                    </div>
+                     <div class="social-links-container">
+                        <div class="social-links-grid">
+                           <div class="social-card">
+                               <i class="ph-duotone ph-discord-logo icon"></i>
+                               <p>Discord</p>
+                           </div>
+                           <div class="social-card">
+                                <i class="ph-duotone ph-telegram-logo icon"></i>
+                               <p>Telegram</p>
+                           </div>
+                           <div class="social-card">
+                               <i class="ph-duotone ph-medium-logo icon"></i>
+                               <p>Medium</p>
+                           </div>
+                           <div class="social-card">
+                               <i class="ph-duotone ph-instagram-logo icon"></i>
+                               <p>Instagram</p>
+                           </div>
+                           <div class="social-card">
+                               <i class="ph-duotone ph-dribbble-logo icon"></i>
+                               <p>Dribble</p>
+                           </div>
+                        </div>
+                     </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="main-footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-column">
+                    <h4>Social Links</h4>
+                    <ul>
+                        <li><a href="#">Discord <svg class="external-link-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg></a></li>
+                        <li><a href="#">Telegram <svg class="external-link-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg></a></li>
+                        <li><a href="#">Medium <svg class="external-link-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg></a></li>
+                        <li><a href="#">Instagram <svg class="external-link-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg></a></li>
+                        <li><a href="#">Dribble <svg class="external-link-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg></a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h4>Page Links</h4>
+                    <ul>
+                        <li><a href="#features">Features <svg class="external-link-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg></a></li>
+                        <li><a href="#about">Stats <svg class="external-link-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg></a></li>
+                        <li><a href="#">Partners <svg class="external-link-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg></a></li>
+                        <li><a href="#contact">Contact Us <svg class="external-link-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg></a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h4>Other Links</h4>
+                    <ul>
+                        <li><a href="#">Link 1 <svg class="external-link-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg></a></li>
+                        <li><a href="#">Link 2 <svg class="external-link-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg></a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-copyright">
+                <p>Copyrighted @ 2025 by Scholarly</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- SMOOTH SCROLL ---
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    document.querySelector(this.getAttribute('href')).scrollIntoView({
+                        behavior: 'smooth'
+                    });
+                });
+            });
+            
+            // --- HAMBURGER MENU ---
+            const hamburger = document.querySelector('.hamburger');
+            const nav = document.querySelector('.main-nav');
+            if (hamburger && nav) {
+                hamburger.addEventListener('click', () => {
+                    nav.classList.toggle('active-mobile');
+                    hamburger.classList.toggle('is-active');
+                });
+            }
+
+            // --- INTERSECTION OBSERVER FOR SCROLL ANIMATIONS ---
+            const sections = document.querySelectorAll('section');
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('is-visible');
+                    }
+                });
+            }, {
+                threshold: 0.1
+            });
+            sections.forEach(section => {
+                if (section.id !== 'hero') { // Don't animate hero section
+                    observer.observe(section);
+                }
+            });
+
+            // --- ON SCROLL LOGIC FOR NAV LINKS ---
+            const navLinks = document.querySelectorAll('.main-nav a');
+            const header = document.getElementById('main-header');
+            const onScroll = () => {
+                if (header) {
+                    if (window.scrollY > 50) {
+                        header.style.boxShadow = '0 4px 12px rgba(0,0,0,0.3)';
+                    } else {
+                        header.style.boxShadow = '0 2px 10px rgba(0,0,0,0.2)';
+                    }
+                }
+                let current = "";
+                sections.forEach((section) => {
+                    const sectionTop = section.offsetTop;
+                    if (pageYOffset >= sectionTop - 75) { 
+                        current = section.getAttribute("id");
+                    }
+                });
+                navLinks.forEach((a) => {
+                    a.classList.remove("active");
+                    if (a.getAttribute('href') == `#${current}`) {
+                        a.classList.add("active");
+                    }
+                });
+            };
+            window.addEventListener('scroll', onScroll);
+
+            // --- CANVAS ANIMATION FOR FEATURES SECTION ---
+            const canvasEl = document.getElementById('features-canvas');
+            if (canvasEl) {
+                const ctx = canvasEl.getContext('2d');
+                const numberOfParticules = 30;
+                let pointerX = 0;
+                let pointerY = 0;
+                let width = (canvasEl.width = window.innerWidth);
+                let height = (canvasEl.height = window.innerHeight);
+
+                const colors = ['#00e5ff', '#f72585', '#7209b7', '#3a0ca3', '#4361ee'];
+
+                const setCanvasSize = () => {
+                    width = canvasEl.width = window.innerWidth;
+                    height = canvasEl.height = window.innerHeight;
+                };
+
+                const updatePointer = (e) => {
+                    pointerX = e.clientX || (e.touches && e.touches[0].clientX);
+                    pointerY = e.clientY || (e.touches && e.touches[0].clientY);
+                };
+
+                const animeParticules = (x, y) => {
+                    const circle = {
+                        r: anime.random(10, 30),
+                        x: x,
+                        y: y,
+                        color: colors[anime.random(0, colors.length - 1)],
+                        alpha: 1,
+                        lineWidth: anime.random(1, 3)
+                    };
+                    
+                    anime({
+                        targets: circle,
+                        r: anime.random(80, 160),
+                        alpha: 0,
+                        easing: 'easeOutExpo',
+                        duration: anime.random(1200, 1800),
+                        update: (anim) => {
+                            ctx.beginPath();
+                            ctx.arc(circle.x, circle.y, circle.r, 0, 2 * Math.PI);
+                            ctx.lineWidth = circle.lineWidth;
+                            ctx.strokeStyle = `rgba(${anime.get(document.querySelector(":root"), `"--primary-color"`).r}, ${anime.get(document.querySelector(":root"), `"--primary-color"`).g}, ${anime.get(document.querySelector(":root"), `"--primary-color"`).b}, ${circle.alpha})`;
+                            ctx.stroke();
+                        },
+                    });
+                };
+                
+                const render = anime({
+                    duration: Infinity,
+                    update: () => {
+                        ctx.clearRect(0, 0, width, height);
+                    },
+                });
+
+                document.addEventListener('mousemove', updatePointer);
+                document.addEventListener('touchmove', updatePointer);
+                window.addEventListener('resize', setCanvasSize);
+                
+                // Add a gentle, continuous animation of particles
+                const particuleLoop = anime({
+                    duration: anime.random(1000, 3000),
+                    targets: 'body', // Dummy target to run the loop
+                    loop: true,
+                    easing: 'linear',
+                    update: () => {
+                        if (render.reversed) return;
+                        if(Math.random() > 0.95) { // Throttle particle creation
+                           animeParticules(anime.random(0, width), anime.random(0, height));
+                        }
+                    }
+                });
+            }
+        });
+    </script>
+    
+
+    <!-- Cat Climber -->
+<div id="cat-climber">
+    <div class="cat-head">
+      <div class="ear left"></div>
+      <div class="ear right"></div>
+      <div class="eye left"><div class="pupil" id="pupil-left"></div></div>
+      <div class="eye right"><div class="pupil" id="pupil-right"></div></div>
+      <div class="nose"></div>
+      {% comment %} <div class="paws">
+        <div class="paw"></div>
+        <div class="paw"></div>
+      </div> {% endcomment %}
+    </div>
+  </div>
+  
+  <style>
+  :root {
+    --cat-orange: #f4a261;
+    --eye-white: #ffffff;
+    --pupil-black: #222;
+    --nose-pink: #ffb3c1;
+  }
+  
+  #cat-climber {
+    position: fixed;
+    bottom: -3.5em;
+    right: 0;
+    z-index: 999;
+    width: 140px;
+    height: 120px;
+    transition: opacity 0.3s ease;
+  }
+  
+  #cat-climber:hover {
+    opacity: 0;
+  }
+  
+  .cat-head {
+    position: relative;
+    background: var(--cat-orange);
+    width: 100px;
+    height: 80px;
+    border-radius: 50% 50% 0 0;
+    margin: 0 auto;
+  }
+  
+  .ear {
+    width: 0;
+    height: 0;
+    border-left: 15px solid transparent;
+    border-right: 15px solid transparent;
+    border-bottom: 30px solid var(--cat-orange);
+    position: absolute;
+    top: -20px;
+  }
+  
+  .ear.left {
+    left: 5px;
+    transform: rotate(-25deg);
+  }
+  
+  .ear.right {
+    right: 5px;
+    transform: rotate(25deg);
+  }
+  
+  .eye {
+    width: 20px;
+    height: 20px;
+    background: var(--eye-white);
+    border-radius: 50%;
+    position: absolute;
+    top: 25px;
+    overflow: hidden;
+  }
+  
+  .eye.left { left: 20px; }
+  .eye.right { right: 20px; }
+  
+  .pupil {
+    width: 8px;
+    height: 8px;
+    background: var(--pupil-black);
+    border-radius: 50%;
+    position: relative;
+    top: 6px;
+    left: 6px;
+    transition: transform 0.1s ease;
+  }
+  
+  .nose {
+    width: 0;
+    height: 0;
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-top: 6px solid var(--nose-pink);
+    position: absolute;
+    top: 48px;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+  
+  .paws {
+    position: absolute;
+    bottom: -12px;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    padding: 0 15px;
+  }
+  
+  .paw {
+    width: 20px;
+    height: 20px;
+    background: var(--cat-orange);
+    border-radius: 50%;
+  }
+  </style>
+  
+  <script>
+  const leftPupil = document.getElementById('pupil-left');
+  const rightPupil = document.getElementById('pupil-right');
+  
+  document.addEventListener('mousemove', (e) => {
+    const moveEye = (eye, pupil) => {
+      const rect = eye.getBoundingClientRect();
+      const eyeCenterX = rect.left + rect.width / 2;
+      const eyeCenterY = rect.top + rect.height / 2;
+      const dx = e.clientX - eyeCenterX;
+      const dy = e.clientY - eyeCenterY;
+      const angle = Math.atan2(dy, dx);
+      const maxOffset = 4;
+      const x = Math.cos(angle) * maxOffset;
+      const y = Math.sin(angle) * maxOffset;
+      pupil.style.transform = `translate(${x}px, ${y}px)`;
+    };
+  
+    moveEye(document.querySelector('.eye.left'), leftPupil);
+    moveEye(document.querySelector('.eye.right'), rightPupil);
+  });
+  </script>
+  
+</body>
+</html>
