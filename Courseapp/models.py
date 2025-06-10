@@ -151,9 +151,9 @@ class Lesson(models.Model):
 
 
 class Quiz(models.Model):
-    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='quizzes', blank=True, null=True)
-    section = models.ForeignKey(Section, on_delete=models.CASCADE, related_name='quizzes', blank=True, null=True)
-    lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE, related_name='quizzes', blank=True, null=True)
+    course = models.ForeignKey(Course, on_delete=models.SET_NULL, related_name='quizzes', blank=True, null=True)
+    section = models.ForeignKey(Section, on_delete=models.SET_NULL, related_name='quizzes', blank=True, null=True)
+    lesson = models.ForeignKey(Lesson, on_delete=models.SET_NULL, related_name='quizzes', blank=True, null=True)
     title = models.CharField(max_length=200)
     questions = models.JSONField(blank=True, null=True)
     is_inside_video = models.BooleanField(default=False)

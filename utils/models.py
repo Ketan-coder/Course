@@ -1,4 +1,7 @@
+# Suggested code may be subject to a license. Learn more: ~LicenseLog:1418672254.
 from django.db import models
+from django.contrib.auth import get_user_model
+from django.contrib.auth.models import User
 
 # Create your models here.
 class Currency(models.Model):
@@ -37,3 +40,26 @@ class PhoneNoPrefix(models.Model):
 
     def __str__(self):
         return f"{self.country_name} ({self.phone_no_prefix})"
+
+
+class FeedBack(models.Model):
+    FEEDBACK_TYPE_CHOICES = [
+        ('Contact Us','Contact Us'),
+        ('Feedback','Feedback')
+    ]
+
+    name = models.CharField(max_length=100)
+    feedback_type = models.CharField(max_length=50, choices=FEEDBACK_TYPE_CHOICES)
+    email = models.EmailField()
+    message = models.TextField()
+    feedback_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_read = models.BooleanField(default=False) # To mark feedback as read
+
+    extra_fields = models.JSONField(blank=True, null=True, default=dict)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.name} - {self.email}"

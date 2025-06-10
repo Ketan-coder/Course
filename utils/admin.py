@@ -10,3 +10,8 @@ class CurrencyAdmin(admin.ModelAdmin):
 class PhoneNoPrefixAdmin(admin.ModelAdmin):
     list_display = ('country_code', 'country_name')
     search_fields = ('country_code', 'country_name')
+
+@admin.register(FeedBack)
+class FeedBackAdmin(admin.ModelAdmin):
+    list_display = ('name', 'email', 'message')
+    search_fields = ('name', 'email', 'message')

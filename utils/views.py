@@ -1,6 +1,8 @@
 from django.http import HttpResponse
 from django.shortcuts import render, get_object_or_404
 from Courseapp.models import Quiz
+from django.contrib.auth.models import User
+from utils.models import FeedBack
 import json
 
 # Create your views here.
@@ -126,4 +128,13 @@ def index(request) -> HttpResponse:
 def landing_page(request) -> HttpResponse:
     if request.method == "POST":
         print(request.POST)
+        name: str = request.POST.get("name")
+        email: str = request.POST.get("email")
+        message: str = request.POST.get("message")
+        if name != '' or email != '' or message != '':
+            user: User = User.objects.filter(email=email)
+            if user.exists() or user:
+                FeedBack.objects.create(name=name, email=email, message=message, user=user.first())
+            else:
+                FeedBack.objects.create(name=name, email=email, message=message)
     return render(request, 'landing_page.html')

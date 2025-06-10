@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -189,6 +190,8 @@
         }
 
         .video-background {
+            /* Ensure video covers the hero section */
+            object-fit: cover; 
             position: absolute;
             top: 50%;
             left: 50%;
@@ -207,7 +210,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(10, 25, 47, 0.7);
+            background: rgba(10, 25, 47, 0.1);
             z-index: -1;
         }
 
@@ -344,6 +347,42 @@
         .feature-card p {
             color: var(--text-color-muted);
         }
+
+        /* --- Partners Section --- */
+        #partners {
+            text-align: center;
+        }
+        #partners h2 {
+            display: inline-block;
+        }
+        .partners-grid {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            gap: 40px;
+            margin-top: 40px;
+        }
+        .partner-logo {
+            filter: grayscale(100%) brightness(1.5) contrast(0.8);
+            opacity: 0.7;
+            transition: all 0.4s ease;
+            animation: float 6s ease-in-out infinite;
+        }
+        .partner-logo:hover {
+            filter: grayscale(0%) brightness(1) contrast(1);
+            opacity: 1;
+            transform: scale(1.1) translateY(-5px) !important; /* Override float animation on hover */
+            animation-play-state: paused;
+        }
+        .partner-logo img {
+            max-width: 150px;
+            max-height: 60px;
+        }
+        .partner-logo:nth-child(2) { animation-delay: 1s; }
+        .partner-logo:nth-child(3) { animation-delay: 2s; }
+        .partner-logo:nth-child(4) { animation-delay: 3s; }
+        .partner-logo:nth-child(5) { animation-delay: 4s; }
 
         /* --- About Us Section --- */
         #about {
@@ -606,8 +645,8 @@
                 <ul>
                     <li><a href="#hero" class="nav-link">Home</a></li>
                     <li><a href="#features" class="nav-link">Features</a></li>
-                    <li><a href="#about" class="nav-link">Stats</a></li>
-                    <li><a href="#" class="nav-link">Partners</a></li>
+                    <li><a href="#partners" class="nav-link">Partners</a></li>
+                    <li><a href="#about" class="nav-link">About</a></li>
                     <li><a href="#contact" class="nav-link">Contact Us</a></li>
                 </ul>
             </nav>
@@ -623,7 +662,7 @@
         <!-- Hero Section -->
         <section id="hero">
             <video autoplay muted loop playsinline class="video-background">
-                <source src="https://assets.mixkit.co/videos/preview/mixkit-a-girl-looking-at-the-stars-from-a-tent-41517-large.mp4" type="video/mp4">
+                <source src="{% static 'resoures/videos/hero-section-video.mp4' %}" type="video/mp4">
                 Your browser does not support the video tag.
             </video>
             <div class="hero-overlay"></div>
@@ -678,6 +717,30 @@
             </div>
         </section>
 
+        <!-- Partners Section -->
+        <section id="partners" class="animate-on-scroll">
+            <div class="container">
+                <h2>Our Partners</h2>
+                <div class="partners-grid">
+                    <div class="partner-logo">
+                        <img src="{% static 'resoures/images/duo_logo.png' %}" alt="Brilliant.org">
+                    </div>
+                    <div class="partner-logo">
+                        <img src="{% static 'resoures/images/duo_logo.png' %}" alt="Duolingo">
+                    </div>
+                    <div class="partner-logo">
+                        <img src="{% static 'resoures/images/duo_logo.png' %}" alt="Coursera">
+                    </div>
+                    <div class="partner-logo">
+                        <img src="{% static 'resoures/images/duo_logo.png' %}" alt="Udemy">
+                    </div>
+                    <div class="partner-logo">
+                        <img src="{% static 'resoures/images/duo_logo.png' %}" alt="Khan Academy">
+                    </div>
+                </div>
+            </div>
+        </section>
+
         <!-- About Us Section -->
         <section id="about" class="animate-on-scroll">
             <div class="container">
@@ -692,7 +755,7 @@
                 <div class="contact-wrapper">
                     <div class="contact-form-container">
                         <h2>Connect with us!</h2>
-                        <form class="contact-form">
+                        <form class="contact-form" method="post">
                             <div class="form-group">
                                 <label for="name">Your Name</label>
                                 <input type="text" id="name" name="name" required>
@@ -918,146 +981,162 @@
     
 
     <!-- Cat Climber -->
-<div id="cat-climber">
-    <div class="cat-head">
-      <div class="ear left"></div>
-      <div class="ear right"></div>
-      <div class="eye left"><div class="pupil" id="pupil-left"></div></div>
-      <div class="eye right"><div class="pupil" id="pupil-right"></div></div>
-      <div class="nose"></div>
-      {% comment %} <div class="paws">
-        <div class="paw"></div>
-        <div class="paw"></div>
-      </div> {% endcomment %}
+    <div id="cat-climber">
+        <div class="cat-head">
+        <div class="ear left"><div class="inner-ear left"></div></div>
+        <div class="ear right"><div class="inner-ear right"></div></div>
+        <div class="eye left"><div class="pupil" id="pupil-left"></div></div>
+        <div class="eye right"><div class="pupil" id="pupil-right"></div></div>
+        <div class="nose"></div>
+        {% comment %} <div class="paws">
+ <div class="paw"></div>
+ <div class="paw"></div>
+ </div> {% endcomment %}
+        </div>
     </div>
-  </div>
-  
-  <style>
-  :root {
-    --cat-orange: #f4a261;
-    --eye-white: #ffffff;
-    --pupil-black: #222;
-    --nose-pink: #ffb3c1;
-  }
-  
-  #cat-climber {
-    position: fixed;
-    bottom: -3.5em;
-    right: 0;
-    z-index: 999;
-    width: 140px;
-    height: 120px;
-    transition: opacity 0.3s ease;
-  }
-  
-  #cat-climber:hover {
-    opacity: 0;
-  }
-  
-  .cat-head {
-    position: relative;
-    background: var(--cat-orange);
-    width: 100px;
-    height: 80px;
-    border-radius: 50% 50% 0 0;
-    margin: 0 auto;
-  }
-  
-  .ear {
-    width: 0;
-    height: 0;
-    border-left: 15px solid transparent;
-    border-right: 15px solid transparent;
-    border-bottom: 30px solid var(--cat-orange);
-    position: absolute;
-    top: -20px;
-  }
-  
-  .ear.left {
-    left: 5px;
-    transform: rotate(-25deg);
-  }
-  
-  .ear.right {
-    right: 5px;
-    transform: rotate(25deg);
-  }
-  
-  .eye {
-    width: 20px;
-    height: 20px;
-    background: var(--eye-white);
-    border-radius: 50%;
-    position: absolute;
-    top: 25px;
-    overflow: hidden;
-  }
-  
-  .eye.left { left: 20px; }
-  .eye.right { right: 20px; }
-  
-  .pupil {
-    width: 8px;
-    height: 8px;
-    background: var(--pupil-black);
-    border-radius: 50%;
-    position: relative;
-    top: 6px;
-    left: 6px;
-    transition: transform 0.1s ease;
-  }
-  
-  .nose {
-    width: 0;
-    height: 0;
-    border-left: 6px solid transparent;
-    border-right: 6px solid transparent;
-    border-top: 6px solid var(--nose-pink);
-    position: absolute;
-    top: 48px;
-    left: 50%;
-    transform: translateX(-50%);
-  }
-  
-  .paws {
-    position: absolute;
-    bottom: -12px;
-    width: 100%;
-    display: flex;
-    justify-content: space-between;
-    padding: 0 15px;
-  }
-  
-  .paw {
-    width: 20px;
-    height: 20px;
-    background: var(--cat-orange);
-    border-radius: 50%;
-  }
-  </style>
-  
-  <script>
-  const leftPupil = document.getElementById('pupil-left');
-  const rightPupil = document.getElementById('pupil-right');
-  
-  document.addEventListener('mousemove', (e) => {
-    const moveEye = (eye, pupil) => {
-      const rect = eye.getBoundingClientRect();
-      const eyeCenterX = rect.left + rect.width / 2;
-      const eyeCenterY = rect.top + rect.height / 2;
-      const dx = e.clientX - eyeCenterX;
-      const dy = e.clientY - eyeCenterY;
-      const angle = Math.atan2(dy, dx);
-      const maxOffset = 4;
-      const x = Math.cos(angle) * maxOffset;
-      const y = Math.sin(angle) * maxOffset;
-      pupil.style.transform = `translate(${x}px, ${y}px)`;
-    };
-  
-    moveEye(document.querySelector('.eye.left'), leftPupil);
-    moveEye(document.querySelector('.eye.right'), rightPupil);
-  });
-  </script>
+    
+    <style>
+    :root {
+        /* Hide on mobile devices */
+        @media (max-width: 768px) {
+            #cat-climber { display: none; }
+        }
+        --cat-color: #113255;
+        --eye-white: #ffffff;
+        --pupil-black: #222;
+        --nose-pink: #ffb3c1;
+    }
+    
+    #cat-climber {
+        position: fixed;
+        bottom: -3.5em;
+        right: 0;
+        z-index: 999;
+        width: 140px;
+        height: 120px;
+        transition: opacity 0.3s ease;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+    }
+
+    .inner-ear {
+        width: 14px;
+        height: 20px;
+        background: #ffb3c1;
+        border-radius: 50% 50% 0 0;
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+        clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+    }
+    
+    /*#cat-climber:hover {
+        opacity: 0;
+    }*/
+    
+    .cat-head {
+        position: relative;
+        background: var(--cat-color);
+        width: 100px;
+        height: 80px;
+        border-radius: 50% 50% 0 0;
+        margin: 0 auto;
+    }
+    
+    .ear {
+        width: 0;
+        height: 0;
+        border-left: 15px solid transparent;
+        border-right: 15px solid transparent;
+        border-bottom: 30px solid var(--cat-color);
+        position: absolute;
+        top: -20px;
+    }
+    
+    .ear.left {
+        left: 5px;
+        transform: rotate(-25deg);
+    }
+    
+    .ear.right {
+        right: 5px;
+        transform: rotate(25deg);
+    }
+    
+    .eye {
+        width: 20px;
+        height: 20px;
+        background: var(--eye-white);
+        border-radius: 50%;
+        position: absolute;
+        top: 25px;
+        overflow: hidden;
+    }
+    
+    .eye.left { left: 20px; }
+    .eye.right { right: 20px; }
+    
+    .pupil {
+        width: 8px;
+        height: 8px;
+        background: var(--pupil-black);
+        border-radius: 50%;
+        position: relative;
+        top: 6px;
+        left: 6px;
+        transition: transform 0.1s ease;
+    }
+    
+    .nose {
+        width: 0;
+        height: 0;
+        border-left: 6px solid transparent;
+        border-right: 6px solid transparent;
+        border-top: 6px solid var(--nose-pink);
+        position: absolute;
+        top: 48px;
+        left: 50%;
+        transform: translateX(-50%);
+    }
+    
+    .paws {
+        position: absolute;
+        bottom: -12px;
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
+        padding: 0 15px;
+    }
+    
+    .paw {
+        width: 20px;
+        height: 20px;
+        background: var(--cat-color);
+        border-radius: 50%;
+    }
+    </style>
+    
+    <script>
+    const leftPupil = document.getElementById('pupil-left');
+    const rightPupil = document.getElementById('pupil-right');
+    
+    document.addEventListener('mousemove', (e) => {
+        const moveEye = (eye, pupil) => {
+        const rect = eye.getBoundingClientRect();
+        const eyeCenterX = rect.left + rect.width / 2;
+        const eyeCenterY = rect.top + rect.height / 2;
+        const dx = e.clientX - eyeCenterX;
+        const dy = e.clientY - eyeCenterY;
+        const angle = Math.atan2(dy, dx);
+        const maxOffset = 4;
+        const x = Math.cos(angle) * maxOffset;
+        const y = Math.sin(angle) * maxOffset;
+        pupil.style.transform = `translate(${x}px, ${y}px)`;
+        };
+    
+        moveEye(document.querySelector('.eye.left'), leftPupil);
+        moveEye(document.querySelector('.eye.right'), rightPupil);
+    });
+    </script>
   
 </body>
 </html>
