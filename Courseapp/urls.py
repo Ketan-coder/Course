@@ -13,7 +13,7 @@ urlpatterns: list[URLPattern] = [
 
     path('courses/search_tags/', views.search_tags, name='search_tags'),
     path('courses/search_sections/', views.search_sections, name='search_sections'),
-    path('courses/search_lessons/', views.search_lessons, name='search_lessons'),
+    path('courses/search_lesson/', views.search_lessons, name='search_lessons'),
     path('courses/search_faqs/', views.search_faqs, name='search_faqs'),
 
     path("detail/<int:lesson_id>/", views.video_detail_page, name="video_detail_page"),

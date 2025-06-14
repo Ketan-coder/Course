@@ -118,6 +118,7 @@ def course_create(request) -> HttpResponseRedirect | HttpResponsePermanentRedire
 def course_update(request, pk) -> HttpResponseRedirect | HttpResponsePermanentRedirect | HttpResponse:
     course: Course = get_object_or_404(Course, pk=pk)
     instructors: BaseManager[Instructor] = Instructor.objects.all()
+    lessons = Lesson.objects.all() 
     if request.method == "POST":
         # Manually get data from request.POST for each field
         course.title = request.POST.get("title")
@@ -154,10 +155,11 @@ def course_update(request, pk) -> HttpResponseRedirect | HttpResponsePermanentRe
         # Pass existing course data and data for dropdowns
         languages: BaseManager[Language] = Language.objects.all()
         instructors = Instructor.objects.all()
+        lessons = Lesson.objects.all()
         return render(
             request,
             "course/course_form.html",
-            {"course": course, "languages": languages, "instructors": instructors},
+            {"course": course, "languages": languages, "instructors": instructors, 'lessons': lessons},
         )
 
 
@@ -265,23 +267,25 @@ def create_tag(request) -> HttpResponse:
 
 def create_section(request) -> HttpResponse:
     if request.method == "POST":
-        course_id = request.POST.get("course_id")
+        # course_id = request.POST.get("course_id")
         title = request.POST.get("title")
-        course = get_object_or_404(Course, pk=course_id)
-        section = Section.objects.create(course=course, title=title)
+        order = request.POST.get("order")
+        is_open = request.POST.get("is_open", False) == "on"
+        # course = get_object_or_404(Course, pk=course_id)
+        section = Section.objects.create(title=title, order=order, is_open=is_open)
         return JsonResponse({"id": section.pk, "title": section.title})
     return HttpResponse("Invalid request.", status=400)
 
 
 def create_lesson(request) -> HttpResponse:
     if request.method == "POST":
-        section_id = request.POST.get("section_id")
+        # section_id = request.POST.get("section_id")
         title = request.POST.get("title")
         description = request.POST.get("description")
         order = request.POST.get("order")
-        section = get_object_or_404(Section, pk=section_id)
+        section = get_object_or_404(Section, pk=1)
         lesson = Lesson.objects.create(
-            section=section, title=title, description=description, order=order
+             title=title, description=description, order=order
         )
         return JsonResponse({"id": lesson.pk, "title": lesson.title})
     return HttpResponse("Invalid request.", status=400)

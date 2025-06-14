@@ -17,7 +17,7 @@
         <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
       </div>
       <div class="offcanvas-body">
-        <form hx-post="/course/create_tag/" hx-target="#tag-select" hx-swap="outerHTML">
+        <form hx-post="{% url 'create_tag' %}" hx-target="#tag-select" hx-swap="outerHTML">
             {% csrf_token %}
             <div class="mb-3">
                 <label for="tag-name" class="form-label">Name</label>
@@ -25,6 +25,7 @@
             </div>
             <button type="submit" class="btn btn-primary">Save Tag</button>
         </form>
+        <div id="tag-select"></div>
       </div>
     </div>
 
@@ -35,7 +36,7 @@
         <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
       </div>
       <div class="offcanvas-body">
-        <form hx-post="/course/create_faq/" hx-target="#faq-select" hx-swap="outerHTML">
+        <form hx-post="{% url 'create_faq' %}" hx-target="#faq-select" hx-swap="outerHTML">
             {% csrf_token %}
             <div class="mb-3">
                 <label for="faq-question" class="form-label">Question</label>
@@ -47,6 +48,7 @@
             </div>
             <button type="submit" class="btn btn-success">Save FAQ</button>
         </form>
+        <div id="faq-select"></div>
       </div>
     </div>
 
@@ -57,7 +59,7 @@
         <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
       </div>
       <div class="offcanvas-body">
-        <form hx-post="/course/create_section/" hx-target="#section-select" hx-swap="outerHTML">
+        <form hx-post="{% url 'create_section' %}" hx-target="#section-select" hx-swap="outerHTML">
             {% csrf_token %}
             <div class="mb-3">
                 <label for="section-title" class="form-label">Title</label>
@@ -74,17 +76,75 @@
                     <option value="false">No</option>
                 </select>
             </div>
+            
             <div class="mb-3">
-                <label for="section-lessons" class="form-label">Lessons</label>
+                {% comment %} <label for="section-lessons" class="form-label">Lessons</label>
                 <select name="lessons" id="section-lessons" class="form-select" multiple>
                     {% for lesson in lessons %}
                         <option value="{{ lesson.id }}">{{ lesson.title }}</option>
                     {% endfor %}
-                </select>
+                </select> {% endcomment %}
+                <label for="id_lesson" class="form-label">Lesson:</label>
+                <input type="text" id="id_lesson_search" class="form-control" placeholder="Search and add Lessons">
+                <div id="lesson_search_results" class="list-group mt-2"></div>
+                <div id="selected_lesson" class="mt-2">
+                    {% for lesson in course.section.lesson.all %}
+                    <span class="badge bg-secondary mr-1 selected-lesson" data-lesson-id="{{ lesson.id }}">
+                        {{ lesson.name }} <button type="button" class="btn btn-sm btn-outline-light ml-1 p-0 border-0" aria-label="Remove" onclick="removeLesson(this)">&times;</button>
+                    </span>
+                    <input type="hidden" name="selected_lesson" value="{{ lessson.id }}">
+                    {% endfor %}
+                </div>
+                {% if form.tags.errors %}
+                <div class="invalid-feedback d-block">{{ form.tags.errors }}</div>
+                {% endif %}
             </div>
+            <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#modal-add-lesson">Add Lesson</button>
             <button type="submit" class="btn btn-warning">Save Section</button>
         </form>
+        <div id="section-select"></div> 
       </div>
+    </div>
+
+    <!-- Modal: Add Lesson -->
+    <div class="modal fade" id="modal-add-lesson" tabindex="-1" aria-labelledby="modal-add-lesson-label" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modal-add-lesson-label">Add Lesson</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="lesson-form" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="lesson-title" class="form-label">Title</label>
+                            <input type="text" class="form-control" name="title" id="lesson-title" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="lesson-description" class="form-label">Description</label>
+                            <textarea class="form-control" name="description" id="lesson-description" rows="4"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="lesson-video" class="form-label">Video File</label>
+                            <input type="file" class="form-control" name="video" id="lesson-video">
+                        </div>
+                        <div class="mb-3">
+                            <label for="lesson-order" class="form-label">Order</label>
+                            <input type="number" class="form-control" name="order" id="lesson-order" value="0">
+                        </div>
+                        {% comment %} <input type="hidden" name="section_id" value="{{ section.id }}"> {% endcomment %}
+
+                        <div class="progress mb-2" style="height: 8px;">
+                            <div id="upload-progress-bar" class="progress-bar" role="progressbar" style="width: 0%;"></div>
+                        </div>
+
+                        <button type="submit" class="btn btn-info">Save Lesson</button>
+                    </form>
+                    <div id="lesson-select"></div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <form method="post" enctype="multipart/form-data">
@@ -431,6 +491,60 @@
         }
     }
 
+    // JavaScript for Lessson search (example)
+    document.getElementById('id_lesson_search').addEventListener('input', function () {
+        const searchTerm = this.value;
+        const resultsDiv = document.getElementById('lesson_search_results');
+
+        if (searchTerm.length > 1) {
+            fetch(`/course/courses/search_lesson/?q=${searchTerm}`) // Replace with your actual URL
+                .then(response => response.json())
+                .then(data => {
+                    resultsDiv.innerHTML = '';
+                    data.forEach(lesson => {
+                        const lessonElement = document.createElement('a');
+                        lessonElement.href = '#';
+                        lessonElement.classList.add('list-group-item', 'list-group-item-action');
+                        lessonElement.textContent = lesson.title;
+                        lessonElement.dataset.lessonId = lesson.id;
+                        lessonElement.addEventListener('click', function (e) {
+                            e.preventDefault();
+                            const selectedLessonDiv = document.getElementById('selected_lesson');
+                            if (!selectedLessonDiv.querySelector(`span[data-lesson-id="${lesson.id}"]`)) {
+                                const selectedLessonElement = document.createElement('span');
+                                selectedLessonElement.classList.add('badge', 'bg-secondary', 'mr-1', 'selected-lesson');
+                                selectedLessonElement.dataset.lessonId = lesson.id; selectedLessonElement.classList.add('d-inline-flex', 'align-items-center'); // Add flex and align items
+                                selectedLessonElement.innerHTML = `${lesson.title} <button type="button" class="close ml-1" aria-label="Remove" onclick="removeLesson(this)">&times;</button>`;
+
+                                const hiddenInput = document.createElement('input');
+                                hiddenInput.type = 'hidden';
+                                hiddenInput.name = 'selected_lesson';
+                                hiddenInput.value = lesson.id;
+
+                                selectedLessonDiv.appendChild(selectedLessonElement);
+                                selectedLessonDiv.appendChild(hiddenInput);
+                            }
+                            document.getElementById('id_lesson_search').value = '';
+                            resultsDiv.innerHTML = '';
+                        });
+                        resultsDiv.appendChild(lessonElement);
+                    });
+                });
+        } else {
+            resultsDiv.innerHTML = '';
+        }
+    });
+
+    function removeLesson(button) {
+        const selectedLessonElement = button.closest('.selected-lesson');
+        const faqId = selectedLessonElement.dataset.faqId;
+        selectedLessonElement.remove();
+        const hiddenInput = document.querySelector(`input[name="selected_lesson"][value="${faqId}"]`);
+        if (hiddenInput) {
+            hiddenInput.remove();
+        }
+    }
+
     // JavaScript for Section search (example)
     document.getElementById('id_sections_search').addEventListener('input', function () {
         const searchTerm = this.value;
@@ -510,6 +624,47 @@
         };
         reader.readAsDataURL(event.target.files[0]);
     }
+
+    // Upload with progress bar
+    document.getElementById('lesson-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const form = e.target;
+        const formData = new FormData(form);
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', '{% url "create_lesson" %}', true);
+        xhr.setRequestHeader('X-CSRFToken', '{{ csrf_token }}');
+
+        xhr.upload.addEventListener('progress', function(e) {
+            if (e.lengthComputable) {
+                const percentComplete = (e.loaded / e.total) * 100;
+                document.getElementById('upload-progress-bar').style.width = percentComplete + '%';
+            }
+        });
+
+        xhr.onload = function () {
+            if (xhr.status === 200) {
+                document.getElementById('upload-progress-bar').classList.add('bg-success');
+                // Reload or update UI here
+                console.log('Upload successful', xhr.responseText);
+                // Close the modal
+                $('#modal-add-lesson').modal('hide');
+                // Optionally, you can reset the form
+                form.reset();
+                document.getElementById('upload-progress-bar').style.width = '0%';
+                document.getElementById('upload-progress-bar').classList.remove('bg-success');
+                // Optionally, you can update the lesson select dropdown or any other UI element
+                const lessonSelect = document.getElementById('lesson-select');
+                const newOption = document.createElement('option');
+                newOption.value = xhr.responseText;
+                newOption.textContent = xhr.responseText;
+                lessonSelect.appendChild(newOption);
+            } else {
+                console.error('Upload failed', xhr.responseText);
+            }
+        };
+
+        xhr.send(formData);
+    });
 </script>
 {% include "footer.html" %}
 {% endblock %}
