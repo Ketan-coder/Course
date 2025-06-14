@@ -79,13 +79,57 @@ WSGI_APPLICATION = 'Course.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
-}
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': BASE_DIR / 'db.sqlite3',
+#     }
+# }
 
+properly_configured = False
+if all([os.getenv("DB_DB"), os.getenv("DB_USER"), os.getenv("DB_PASSWORD"), os.getenv("DB_HOST"), os.getenv("DB_PORT")]):
+    properly_configured = True
+
+if os.getenv("USE_SQLITE3") == "1" or not properly_configured:
+    print("=============Using SQLite3 as the database.=============")
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
+elif os.getenv("USE_POSTGRESQL") == "1" and properly_configured:
+    print("=============Using PostgreSQL as the database.=============")
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.getenv("DB_DB"),
+            'USER': os.getenv("DB_USER"),
+            'PASSWORD': os.getenv("DB_PASSWORD"),
+            'HOST': os.getenv("DB_HOST", "localhost"),  # Default to localhost if not set
+            'PORT': os.getenv("DB_PORT", "5432"),      # Default to 5432 if not set
+        }
+    }
+elif os.getenv("USE_MYSQL") == "1" and properly_configured:
+    print("=============Using MySQL as the database.=============")
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': os.getenv("DB_DB"),
+            'USER': os.getenv("DB_USER"),
+            'PASSWORD': os.getenv("DB_PASSWORD"),
+            'HOST': os.getenv("DB_HOST", "localhost"),  # Default to localhost if not set
+            'PORT': os.getenv("DB_PORT", "3306"),      # Default to 3306 if not set
+        }
+    }
+else:
+    print("No valid database configuration found. Using SQLite3 as the default.")
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators

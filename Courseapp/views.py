@@ -3,8 +3,9 @@ from django.db.models.manager import BaseManager
 # from django.db.models.query import ValuesQuerySet
 from django.http import HttpResponse, HttpResponsePermanentRedirect, HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
-from Courseapp.models import FAQ, Course, Language, Section, Tag
-from Users.models import Instructor
+from Stock.models import Stock
+from Courseapp.models import FAQ, Course, Language, Section, Tag, Lesson
+from Users.models import Instructor, Profile
 def course_list(request) -> HttpResponse:
     courses: BaseManager[Course] = Course.objects.all()
 
@@ -180,6 +181,15 @@ def search_sections(request) -> JsonResponse:
         return JsonResponse(list(sections), safe=False)
     return JsonResponse([], safe=False)
 
+def search_lessons(request) -> JsonResponse:
+    search_term = request.GET.get("q")
+    if search_term:
+        lessons= Lesson.objects.filter(title__icontains=search_term).values(
+            "id", "title"
+        )
+        return JsonResponse(list(lessons), safe=False)
+    return JsonResponse([], safe=False)
+
 
 def search_faqs(request) -> JsonResponse:
     search_term = request.GET.get("q")
@@ -206,3 +216,81 @@ def course_detail(request, pk) -> HttpResponseRedirect | HttpResponsePermanentRe
     course = get_object_or_404(Course, pk=pk)
     # lessons = Lesson.objects.filter(course=course)
     return render(request, "course/course_detail.html", {"course": course})
+
+
+def video_detail_page(request,lesson_id) -> HttpResponseRedirect | HttpResponsePermanentRedirect | HttpResponse:
+    user = request.user
+    if not user.is_authenticated:
+        return redirect("login")
+    logged_in_profile = Profile.objects.get(user=user)
+    lesson = get_object_or_404(Lesson, pk=lesson_id)
+    course = get_object_or_404(Course, sections__lesson__id=lesson_id)
+    is_completed = lesson.completed_by_users.filter(pk=logged_in_profile.pk).exists()
+    stock = Stock.objects.all()
+    return render(request, "course/course_video_detail.html", locals())
+
+def mark_lesson_complete(request, lesson_id, user_profile) -> HttpResponseRedirect | HttpResponsePermanentRedirect | HttpResponse:
+    user = request.user
+    if not user.is_authenticated:
+        return redirect("login")
+    
+    lesson = get_object_or_404(Lesson, pk=lesson_id)
+    profile = get_object_or_404(Profile, pk=user_profile)
+
+    # Check if the lesson is already completed by the user
+    if lesson.completed_by_users.filter(pk=profile.pk).exists():
+        # If already completed, remove the user from completed users
+        return JsonResponse({"message": "Lesson already completed."}, status=400)
+    else:
+        # If not completed, add the user to completed users
+        lesson.completed_by_users.add(profile)
+
+    # rediect the user to the next video or lesson
+    section = get_object_or_404(Section, lesson__id=lesson_id)
+
+    next_lesson = section.lesson.filter(id__gt=lesson_id).exclude(completed_by_users=profile,id=lesson_id).first()
+    if next_lesson:
+        lesson_id = next_lesson.id
+        return JsonResponse({"next_lesson_id": lesson_id})
+    
+    return redirect("video_detail_page", lesson_id=lesson_id)
+
+def create_tag(request) -> HttpResponse:
+    if request.method == "POST":
+        name = request.POST.get("name")
+        tag = Tag.objects.create(name=name)
+        return JsonResponse({"id": tag.pk, "name": tag.name})
+    return HttpResponse("Invalid request.", status=400)
+
+
+def create_section(request) -> HttpResponse:
+    if request.method == "POST":
+        course_id = request.POST.get("course_id")
+        title = request.POST.get("title")
+        course = get_object_or_404(Course, pk=course_id)
+        section = Section.objects.create(course=course, title=title)
+        return JsonResponse({"id": section.pk, "title": section.title})
+    return HttpResponse("Invalid request.", status=400)
+
+
+def create_lesson(request) -> HttpResponse:
+    if request.method == "POST":
+        section_id = request.POST.get("section_id")
+        title = request.POST.get("title")
+        description = request.POST.get("description")
+        order = request.POST.get("order")
+        section = get_object_or_404(Section, pk=section_id)
+        lesson = Lesson.objects.create(
+            section=section, title=title, description=description, order=order
+        )
+        return JsonResponse({"id": lesson.pk, "title": lesson.title})
+    return HttpResponse("Invalid request.", status=400)
+
+
+def create_faq(request) -> HttpResponse:
+    if request.method == "POST":
+        question = request.POST.get("question")
+        answer = request.POST.get("answer")
+        faq = FAQ.objects.create(question=question, answer=answer)
+        return JsonResponse({"id": faq.pk, "question": faq.question})
+    return HttpResponse("Invalid request.", status=400)

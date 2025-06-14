@@ -13,6 +13,16 @@ urlpatterns: list[URLPattern] = [
 
     path('courses/search_tags/', views.search_tags, name='search_tags'),
     path('courses/search_sections/', views.search_sections, name='search_sections'),
+    path('courses/search_lessons/', views.search_lessons, name='search_lessons'),
     path('courses/search_faqs/', views.search_faqs, name='search_faqs'),
-    # path('check_drag_and_drop_answer/', views.check_drag_and_drop_answer, name='check_drag_and_drop_answer'),
+
+    path("detail/<int:lesson_id>/", views.video_detail_page, name="video_detail_page"),
+
+    # urls.py
+    path("lesson/<int:lesson_id>/<int:user_profile>/complete/", views.mark_lesson_complete, name="mark_lesson_complete"),
+
+    path("create_tag/", views.create_tag, name="create_tag"),
+    path("create_section/", views.create_section, name="create_section"),
+    path("create_lesson/", views.create_lesson, name="create_lesson"),
+    path("create_faq/", views.create_faq, name="create_faq"),
 ]

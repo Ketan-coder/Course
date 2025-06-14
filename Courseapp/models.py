@@ -34,7 +34,7 @@ class Course(models.Model):
         choices=[('beginner', 'Beginner'), ('intermediate', 'Intermediate'), ('advanced', 'Advanced'), ('all', 'All')],
         default='beginner'
     )
-    language = models.OneToOneField(Language, on_delete=models.CASCADE, default=1, related_name='courses', blank=True, null=True)
+    language = models.OneToOneField(Language, on_delete=models.CASCADE, related_name='courses', blank=True, null=True)
     instructor = models.ForeignKey('Users.Instructor', on_delete=models.CASCADE, related_name='courses') # Circular import fixed by using string
     thumbnail = models.ImageField(upload_to='course_thumbnails', blank=True, null=True)
     sections = models.ManyToManyField('Section', related_name='courses', blank=True)
@@ -85,7 +85,7 @@ class Course(models.Model):
             if resized_path:
                 # You might want to save this resized path to another field
                 # or just use it for processing.
-                self.thumbnail: str = resized_path
+                self.thumbnail = resized_path
             else:
                 pass
         super().save(*args, **kwargs)
@@ -111,6 +111,7 @@ class Section(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
+        
         return self.title
 
 

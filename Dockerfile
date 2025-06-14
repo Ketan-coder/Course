@@ -8,12 +8,25 @@ ENV PYTHONUNBUFFERED=1
 # Set the working directory
 WORKDIR /app
 
+RUN apt-get update && apt-get install -y \
+    curl \
+    gcc \
+    libxml2-dev \
+    libxslt1-dev \
+    python3-dev \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+
 # Copy and install dependencies
-COPY requirements.txt /app/
+# COPY requirements.txt /app/
+COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy the project files
-COPY . /app/
+# COPY . /app/
+COPY . .
 
 # Expose the port
 EXPOSE 8000

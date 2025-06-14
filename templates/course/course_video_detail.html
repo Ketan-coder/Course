@@ -1,0 +1,197 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ lesson.title }} - Course Video Detail{% endblock title %}
+
+{% block body %}
+<div class="container-fluid py-20">
+    <div class="row">
+        <!-- Left Column -->
+        <div class="col-12 col-lg-8">
+            <div class="content-wrapper">
+                <!-- Custom HTML5 Video Player -->
+                <div class="card shadow-sm mb-20">
+                    <div class="ratio ratio-16x9">
+                        {% if lesson.video %}
+                        <video id="lesson-video" class="w-100 h-100" controls controlsList="nodownload" preload="metadata" poster="{% static 'images/video-poster.jpg' %}">
+                            <source src="{{ lesson.video.url }}" type="video/mp4">
+                            Your browser does not support the video tag.
+                        </video>
+                        {% else %}
+                        <div class="alert alert-warning">
+                            No video available for this lesson.
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Title and Actions -->
+                <div class="m-2 mb-4">
+                <div class="d-flex flex-column flex-md-row justify-content-md-between align-items-md-center m-20">
+                    <h1 class="content-title fw-bold m-10 mb-md-0">{{ lesson.title }}</h1>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-outline-primary btn-sm"><i class="ph ph-thumbs-up"></i> Like</button>
+                        <button class="btn btn-outline-secondary btn-sm"><i class="ph ph-share-network"></i> Share</button>
+                        <button class="btn btn-outline-success btn-sm"><i class="ph ph-bookmark"></i> Save</button>
+                    </div>
+                </div>
+            </div>
+                <!-- Tabs Navigation -->
+                <div class="m-2">
+                    <ul class="nav nav-tabs mb-4" id="lessonTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="description-tab" data-bs-toggle="tab" data-bs-target="#description-tab-pane" type="button" role="tab" aria-controls="description-tab-pane" aria-selected="true">Description</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="stocks-tab" data-bs-toggle="tab" data-bs-target="#stocks-tab-pane" type="button" role="tab" aria-controls="stocks-tab-pane" aria-selected="false">Related Stocks</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="quiz-tab" data-bs-toggle="tab" data-bs-target="#quiz-tab-pane" type="button" role="tab" aria-controls="quiz-tab-pane" aria-selected="false">Quiz</button>
+                        </li>
+                    </ul>
+
+                    <div class="tab-content" id="lessonTabsContent">
+                        <!-- Description Tab -->
+                        <div class="tab-pane fade show active" id="description-tab-pane" role="tabpanel" aria-labelledby="description-tab" tabindex="0">
+                            <div class="card shadow-sm mb-20">
+                                <div class="card-body">
+                                    <h2 class="h5 fw-bold mb-3">Description</h2>
+                                    <p>{{ lesson.description|default:"No description available." }}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Related Stocks Tab -->
+                        <div class="tab-pane fade" id="stocks-tab-pane" role="tabpanel" aria-labelledby="stocks-tab" tabindex="0">
+                            <div class="card shadow-sm mb-20">
+                                <div class="card-body">
+                                    <h2 class="h5 fw-bold mb-3">Related Stocks</h2>
+                                    <div class="alert alert-info">
+                                        This is a placeholder for your stock component.
+                                        
+                                        
+                                            
+                                        
+                                    </div>
+                                    {% for share in stock %}
+                                            {% include "components/stock_card.html" with stock=share  %}    
+                                        {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Quiz Tab -->
+                        <div class="tab-pane fade" id="quiz-tab-pane" role="tabpanel" aria-labelledby="quiz-tab" tabindex="0">
+                            <div class="card shadow-sm">
+                                <div class="card-body">
+                                    <h2 class="h5 fw-bold mb-3">Test Your Knowledge</h2>
+                                    <div class="alert alert-success">
+                                        <h4 class="alert-heading">Ready for a Quiz?</h4>
+                                        <p>This is where your quiz component goes.</p>
+                                        <hr>
+                                        <button class="btn btn-success">Start Quiz</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+         <!-- Right Column: Sidebar with Tabs -->
+        <div class="col-12 col-lg-4 mt-20 mt-lg-0">
+            <div class="sticky-top" style="top: 1.25rem; z-index: 999 !important;">
+                <ul class="nav nav-tabs mb-3" id="sidebarTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="timeline-tab" data-bs-toggle="tab" data-bs-target="#timeline-tab-pane" type="button" role="tab" aria-controls="timeline-tab-pane" aria-selected="true">Timeline</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="notes-tab" data-bs-toggle="tab" data-bs-target="#notes-tab-pane" type="button" role="tab" aria-controls="notes-tab-pane" aria-selected="false">Notes</button>
+                    </li>
+                </ul>
+                <div class="tab-content" id="sidebarTabsContent">
+                    <!-- Timeline Tab -->
+                    <div class="tab-pane fade show active" id="timeline-tab-pane" role="tabpanel" aria-labelledby="timeline-tab">
+                        <div class="card shadow-sm mb-3">
+                            <div class="card-body">
+                                <h2 class="h6 fw-bold mb-3">Course Timeline</h2>
+                                <div class="list-group">
+                                    {% for i in course.sections.all %}
+                                            <h5 class="mb-2">{{i.title}}</h5>
+                                        {% for l in i.lesson.all %}
+                                            <a href="{% url 'video_detail_page' l.id %}" class="ps-lg-3 list-group-item list-group-item-action {% if l.id == lesson.id %}active{% endif %}">
+                                                <div class="d-flex justify-content-between">
+                                                    <h6 class="mb-1">{{ l.title }}</h6>
+                                                    <small>{{ l.d }}</small>
+                                                </div>
+                                                <div class="progress mt-2" style="height: 6px;" role="progressbar" aria-label="Basic example" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+                                                    <div class="progress-bar {% if logged_in_profile in l.completed_by_users.all %}bg-primary{% else %}bg-secondary{% endif %}" role="progressbar" style="width: {% if logged_in_profile in l.completed_by_users.all %}100{% else %}0{% endif %}%"
+></div> 
+                                                </div>
+                                            </a>
+                                        {% empty %}
+                                            <p class="text-muted">No lessons available.</p>
+                                        {% endfor %}
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Notes Tab -->
+                    <div class="tab-pane fade" id="notes-tab-pane" role="tabpanel" aria-labelledby="notes-tab">
+                        <div class="card shadow-sm">
+                            <div class="card-body">
+                                <h2 class="h6 fw-bold mb-3">Shared Notes</h2>
+                                <div class="mb-3">
+                                    <textarea class="form-control" rows="3" placeholder="Write your notes here..."></textarea>
+                                    <button class="btn btn-sm btn-primary mt-2">Save Note</button>
+                                </div>
+                                <div class="mt-3">
+                                    <!-- Example Notes -->
+                                    <p class="small border-bottom pb-2">This is a note left by another student.</p>
+                                    <p class="small border-bottom pb-2">Don't forget to check moving averages.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const video = document.getElementById('lesson-video');
+        let isMarkedComplete = {{ is_completed|yesno:"true,false" }};
+
+        if (video) {
+            video.addEventListener('timeupdate', () => {
+                const percent = (video.currentTime / video.duration) * 100;
+                if (percent >= 85 && !isMarkedComplete) {
+                    isMarkedComplete = true;
+                    user_profile = "{{ logged_in_profile.id }}";
+                    lesson = "{{ lesson.id }}";
+                    fetch("{% url 'mark_lesson_complete' lesson_id=lesson.id user_profile=logged_in_profile.id %}", {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': '{{ csrf_token }}'
+                        },
+                        body: JSON.stringify({ lesson: lesson, user_profile: user_profile })
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        console.log("Lesson marked complete:", data);
+                        if (data.next_lesson_id) {
+                            window.location.href = `http://127.0.0.1:8000/course/detail/${data.next_lesson_id}/`;
+                        }
+                    })
+                    .catch(err => console.error("Error marking complete:", err));
+                }
+            });
+        }
+    });
+</script>
+{% endblock body %}

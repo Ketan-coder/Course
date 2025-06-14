@@ -1,82 +1,289 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
 {% load static %}
 {% block body %}
-
-<div class="video-header">
-    <video autoplay muted loop playsinline class="bg-video">
-      <source src="{{ course.intro_video.url }}" type="video/mp4">
-      Your browser does not support the video tag.
-    </video>
-    <div class="overlay-gradient"></div>
-    <div class="header-title">
-      {{ course.title }}
-    </div>
-  </div>
-  
-
-<div class="tabs">
-    <button>Description</button>
-    <button>Syllabus</button>
-    <button>Reviews</button>
-</div>
-
-<!-- <div class="chapters">
-    {% for chapter in course.sections.all %}
-    <div class="chapter">
-        <button class="collapsible">
-            <span style="color:green;">&#9670;</span> Chapter {{ forloop.counter }}: {{ chapter.title }}
-        </button>
-        <div class="content">
-            {% for lessons in chapter.lesson.all %}
-            <h4 style="margin-top: 10px; color: green;">{{ section.title }}</h4>
-                <div class="lesson-box">
-                    <div class="lesson-number">{{ forloop.counter }}.</div>
-                    <div class="lesson-details">
-                        <strong>{{ lessons.title }}</strong><br>
-                        <button class="watch-button">Watch Video</button>
+    <div class="container-fluid p-0">
+        <!-- Video Header -->
+        <!-- Video Header Section -->
+        <div class="position-relative w-100"
+             style="height: 75vh;
+                    overflow: hidden">
+            <!-- Background Video -->
+            <video autoplay
+                   muted
+                   loop 
+                   playsinline
+                   class="position-absolute top-0 start-0 w-100 h-100 object-fit-cover z-n1">
+                <source src="{% if course.intro_video %}{{ course.intro_video.url }}{% else %}{% static 'resoures/videos/hero-section-video.mp4' %}{% endif %}"
+                        type="video/mp4">
+                Your browser does not support the video tag.
+            </video>
+            <!-- Dark Overlay -->
+            <div class="position-absolute top-0 start-0 w-100 h-100 bg-black opacity-75 z-0"></div>
+            <!-- Text and Button Container -->
+            <div class="position-absolute top-50 start-0 translate-middle-y text-white p-5 z-1"
+                 style="max-width: 600px">
+                <h1 class="display-1 fw-bold">{{ course.title|default:"Stock Market Basics" }}</h1>
+                <p class="lead">{{ course.description|default:"A simple and fun way to learn finance." }}</p>
+                {% if not course.is_free %}<a href="#" class="btn btn-info btn-lg rounded-pill px-4 mt-3">Buy Now</a>{% endif %}
+            </div>
+        </div>
+        <!-- Instructor Card - Responsive -->
+        <a href="#" class="text-decoration-none d-block">
+            <div class="instructor-card card shadow-lg rounded overflow-hidden mx-4 my-3"
+                 style="max-width: 300px">
+                <img src="{{ course.instructor.profile.image.url }}"
+                     class="card-img object-fit-cover"
+                     style="height: 25em"
+                     alt="{{ instructor.name }}">
+                <div class="card-img-overlay d-flex flex-column justify-content-end bg-dark bg-opacity-50 text-white">
+                    <h5 class="card-title text-center mb-0 fw-bold">{{ course.instructor.profile.user.username }}</h5>
+                    <p class="card-text text-center small">{{ course.instructor.profile.bio|truncatewords:12 }}</p>
+                </div>
+            </div>
+        </a>
+        <!-- Tabs Navigation -->
+        <div class="container my-4">
+            <ul class="nav nav-pills justify-content-center my-5"
+                id="courseTab"
+                role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active"
+                            id="description-tab"
+                            data-bs-toggle="tab"
+                            data-bs-target="#description"
+                            type="button"
+                            role="tab">Description</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link"
+                            id="syllabus-tab"
+                            data-bs-toggle="tab"
+                            data-bs-target="#syllabus"
+                            type="button"
+                            role="tab">Syllabus</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link"
+                            id="reviews-tab"
+                            data-bs-toggle="tab"
+                            data-bs-target="#reviews"
+                            type="button"
+                            role="tab">Reviews</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link"
+                            id="faq-tab"
+                            data-bs-toggle="tab"
+                            data-bs-target="#faq"
+                            type="button"
+                            role="tab">Frequently Asked Questions</button>
+                </li>
+            </ul>
+            <!-- Tab Content -->
+            <div class="tab-content">
+                <!-- Description Tab -->
+                <div class="tab-pane fade show active" id="description" role="tabpanel">
+                    <div class="card card-body mb-4">
+                        <h3 class="fw-bold">Course Description</h3>
+                        <p>{{ course.description|linebreaksbr }}</p>
                     </div>
                 </div>
-                {% endfor %}
-        </div>
-    </div>
-    {% endfor %}
-</div> -->
-
-<div class="chapters">
-    {% for chapter in course.sections.all %}
-    <div class="chapter">
-      <button type="button" class="btn btn-link" data-bs-toggle="collapse" data-bs-target="#chapter-{{ forloop.counter }}" aria-expanded="true" aria-controls="chapter-{{ forloop.counter }}">
-        <span style="color:green;">&#9670;</span> Chapter {{ forloop.counter }}: {{ chapter.title }} <i class="fa-light fa-angle-down"></i>
-      </button>
-  
-      <div class="collapse show" id="chapter-{{ forloop.counter }}">
-        <div class="ps-4 mt-2">
-          {% for lessons in chapter.lesson.all %}
-          <h4 style="margin-top: 10px; color: green;">{{ section.title }}</h4>
-          <div class="lesson-box">
-            <div class="lesson-number">{{ forloop.counter }}.</div>
-            <div class="lesson-details">
-              <strong>{{ lessons.title }}</strong><br>
-              <button class="watch-button">Watch Video</button>
+                <!-- Syllabus Tab -->
+                <div class="tab-pane fade" id="syllabus" role="tabpanel">
+                    <div class="accordion" id="courseAccordion">
+                        {% for chapter in course.sections.all %}
+                            <div class="accordion-item">
+                                <h2 class="accordion-header" id="heading-{{ forloop.counter }}">
+                                    <button class="accordion-button {% if not forloop.first %}collapsed{% endif %}"
+                                            type="button"
+                                            data-bs-toggle="collapse"
+                                            data-bs-target="#collapse-{{ forloop.counter }}"
+                                            aria-expanded="{% if forloop.first %}true{% else %}false{% endif %}"
+                                            aria-controls="collapse-{{ forloop.counter }}">
+                                        <span class="text-primary me-2 fw-bold fs-5">◆</span> Chapter {{ forloop.counter }}: {{ chapter.title }}
+                                    </button>
+                                </h2>
+                                <div id="collapse-{{ forloop.counter }}"
+                                     class="accordion-collapse collapse {% if forloop.first %}show{% endif %}"
+                                     aria-labelledby="heading-{{ forloop.counter }}"
+                                     data-bs-parent="#courseAccordion">
+                                    <div class="accordion-body ps-4">
+                                        <p class="mb-3">{{ chapter.description|default:"No description available." }}</p>
+                                        {% for lesson in chapter.lesson.all %}
+                                            <div class="d-flex align-items-center p-2 mb-2 bg-body-tertiary rounded">
+                                                <div class="lesson-number fw-bold text-primary me-3">{{ forloop.counter }}.</div>
+                                                <div class="lesson-details flex-grow-1">
+                                                    <strong class="fw-semibold">{{ lesson.title|default:"Lesson Sub-Topic" }}</strong>
+                                                    <br>
+                                                    <small>{{ lesson.description|default:"No lesson description." }}</small>
+                                                </div>
+                                                    <a href="{% url 'video_detail_page' lesson_id=lesson.id %}" class="btn btn-primary btn-sm rounded-pill">Watch Video</a>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                        {% empty %}
+                            <div class="card">
+                                <div class="card-body text-center">
+                                    <p>The syllabus for this course is not yet available. Please check back later.</p>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                <!-- Reviews Tab -->
+                <div class="tab-pane fade" id="reviews" role="tabpanel">
+                    <h2 class="text-center mb-4 fw-bold">What people are saying!</h2>
+                    <div id="testimonialCarousel"
+                         class="carousel slide"
+                         data-bs-ride="carousel">
+                        <div class="carousel-inner">
+                            <div class="carousel-item active">
+                                <div class="row justify-content-center g-3">
+                                    <div class="col-md-4">
+                                        <div class="card h-100 shadow-sm">
+                                            <div class="card-body">
+                                                <p class="card-text">"This course was fantastic! Highly recommended for anyone looking to get started with stocks."</p>
+                                                <footer class="blockquote-footer mt-2">
+                                                    Jane Doe
+                                                </footer>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4 d-none d-md-block">
+                                        <div class="card h-100 shadow-sm">
+                                            <div class="card-body">
+                                                <p class="card-text">"Learned so much about the stock market. Great for beginners."</p>
+                                                <footer class="blockquote-footer mt-2">
+                                                    John Smith
+                                                </footer>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4 d-none d-md-block">
+                                        <div class="card h-100 shadow-sm">
+                                            <div class="card-body">
+                                                <p class="card-text">"The instructor was clear and concise. A++."</p>
+                                                <footer class="blockquote-footer mt-2">
+                                                    Emily Jones
+                                                </footer>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="carousel-item">
+                                <div class="row justify-content-center g-3">
+                                    <div class="col-md-4">
+                                        <div class="card h-100 shadow-sm">
+                                            <div class="card-body">
+                                                <p class="card-text">"I finally understand the basics of trading and feel confident enough to start investing."</p>
+                                                <footer class="blockquote-footer mt-2">
+                                                    Maria Garcia
+                                                </footer>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4 d-none d-md-block">
+                                        <div class="card h-100 shadow-sm">
+                                            <div class="card-body">
+                                                <p class="card-text">"The practical examples were the best part."</p>
+                                                <footer class="blockquote-footer mt-2">
+                                                    Chen Wang
+                                                </footer>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4 d-none d-md-block">
+                                        <div class="card h-100 shadow-sm">
+                                            <div class="card-body">
+                                                <p class="card-text">"Exceeded all my expectations!"</p>
+                                                <footer class="blockquote-footer mt-2">
+                                                    Sam Wilson
+                                                </footer>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <button class="carousel-control-prev"
+                                type="button"
+                                data-bs-target="#testimonialCarousel"
+                                data-bs-slide="prev">
+                            <span class="carousel-control-prev-icon"></span>
+                            <span class="visually-hidden">Previous</span>
+                        </button>
+                        <button class="carousel-control-next"
+                                type="button"
+                                data-bs-target="#testimonialCarousel"
+                                data-bs-slide="next">
+                            <span class="carousel-control-next-icon"></span>
+                            <span class="visually-hidden">Next</span>
+                        </button>
+                    </div>
+                </div>
+                <!-- FAQ Tab -->
+                <div class="tab-pane fade" id="faq" role="tabpanel">
+                    <div class="card card-body mb-4">
+                        <h3 class="fw-bold">Frequently Asked Questions</h3>
+                        {% if course.faqs.all %}
+                            <div class="accordion" id="faqAccordion">
+                                {% for faq in course.faqs.all %}
+                                    <div class="accordion-item">
+                                        <h2 class="accordion-header" id="faq-heading-{{ forloop.counter }}">
+                                            <button class="accordion-button {% if not forloop.first %}collapsed{% endif %}"
+                                                    type="button"
+                                                    data-bs-toggle="collapse"
+                                                    data-bs-target="#faq-collapse-{{ forloop.counter }}"
+                                                    aria-expanded="{{ forloop.first|yesno:'true,false' }}"
+                                                    aria-controls="faq-collapse-{{ forloop.counter }}">
+                                                {{ faq.question }}
+                                            </button>
+                                        </h2>
+                                        <div id="faq-collapse-{{ forloop.counter }}"
+                                             class="accordion-collapse collapse {% if forloop.first %}show{% endif %}"
+                                             aria-labelledby="faq-heading-{{ forloop.counter }}"
+                                             data-bs-parent="#faqAccordion">
+                                            <div class="accordion-body">{{ faq.answer|linebreaksbr }}</div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <p class="text-muted">No FAQs available for this course at the moment.</p>
+                        {% endif %}
+                    </div>
+                </div>
             </div>
-          </div>
-          {% endfor %}
         </div>
-      </div>
     </div>
-    {% endfor %}
-  </div>
-  
+    <style>
+    /* Ensure primary color is blue */
+    :root {
+      --bs-primary-hsl: 216, 100%, 50%;
+      --bs-primary: hsl(var(--bs-primary-hue), var(--bs-primary-saturation), 50%);
+      --bs-primary-rgb: 0, 86, 255;
+    }
 
-<style>
+    /* Video Header Styling */
     .video-header {
         position: relative;
         width: 100%;
-        height: 300px;
+        height: 45vh; /* Responsive height */
+        min-height: 250px;
+        max-height: 400px;
         overflow: hidden;
-        }
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .object-fit-cover {
+    object-fit: cover;
+    }
 
-        .bg-video {
+    .bg-video {
         position: absolute;
         top: 50%;
         left: 50%;
@@ -85,108 +292,121 @@
         transform: translate(-50%, -50%);
         object-fit: cover;
         z-index: 1;
-        }
-
-        .overlay-gradient {
+    }
+    .overlay-gradient {
         position: absolute;
+        top: 0;
+        left: 0;
         width: 100%;
         height: 100%;
-        background: linear-gradient(to bottom, rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.9));
+        background: linear-gradient(to bottom, rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.8));
         z-index: 2;
-        }
+    }
+    .header-content {
+  position: relative;
+  z-index: 3;
+  width: 100%;
+  padding: 1rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  text-align: left; /* optional */
+}
 
-        .header-title {
-        position: relative;
+.buy-now-btn {
+  font-weight: 600;
+  /* removed: position: absolute, top, right */
+}
+
+    
+    /* Custom Accordion Styling to match image */
+    .accordion-button {
+      font-weight: bold;
+      font-size: 1.25rem;
+      color: var(--bs-body-color);
+      background-color: transparent;
+      box-shadow: none;
+      padding: 1rem 0; /* Vertical padding only */
+    }
+    .accordion-button:not(.collapsed) {
+        color: var(--bs-primary);
+        background-color: transparent;
+        box-shadow: inset 0 -1px 0 var(--bs-border-color);
+    }
+    .accordion-button:focus {
         z-index: 3;
-        color: white;
-        font-size: 2.5em;
-        font-weight: bold;
-        text-align: center;
-        line-height: 300px;
-        }
-
-
-    .tabs {
-        text-align: center;
-        margin: 20px 0;
+        border-color: transparent;
+        outline: 0;
+        box-shadow: none;
+    }
+    .accordion-button::after {
+        /* Custom accordion icon (down arrow) */
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23212529'%3e%3cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3e%3c/svg%3e");
+    }
+    .accordion-button:not(.collapsed)::after {
+         /* Custom accordion icon (up arrow) */
+         background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%230d6efd'%3e%3cpath fill-rule='evenodd' d='M8 15a.5.5 0 0 0 .5-.5V2.707l3.146 3.147a.5.5 0 0 0 .708-.708l-4-4a.5.5 0 0 0-.708 0l-4 4a.5.5 0 1 0 .708.708L7.5 2.707V14.5a.5.5 0 0 0 .5.5z' transform='rotate(180 8 8)'/%3e%3c/svg%3e");
+         transform: rotate(-180deg);
+    }
+    .accordion-item {
+      background-color: transparent;
+      border: 0;
+      border-bottom: 1px solid var(--bs-border-color-translucent);
+    }
+    .accordion-item:first-of-type, .accordion-item:last-of-type {
+      border-radius: 0;
+    }
+    .accordion-item:last-of-type {
+      border-bottom: 0;
+    }
+    .accordion-body {
+        padding-top: 1rem;
+        padding-bottom: 1rem;
     }
 
-    .tabs button {
-        background: white;
-        border: 1px solid #aaa;
-        padding: 8px 16px;
-        margin: 0 5px;
-        cursor: pointer;
-        border-radius: 20px;
-        color: green;
-        font-weight: bold;
+    /* Carousel controls styling */
+    .carousel-control-prev, .carousel-control-next {
+      width: 5%;
+    }
+    .carousel-control-prev-icon, .carousel-control-next-icon {
+      background-color: rgba(0, 0, 0, 0.3);
+      border-radius: 50%;
+      padding: 1.2rem;
+    }
+    
+    /* Customizing pill nav links */
+    .nav-pills .nav-link {
+        color: var(--bs-primary);
+        font-weight: 500;
+        border: 1px solid var(--bs-primary);
+        margin: 0 0.3rem;
+        border-radius: var(--bs-border-radius-pill);
+        padding: 0.375rem 1rem;
+    }
+    .nav-pills .nav-link.active, .nav-pills .show > .nav-link {
+        color: var(--bs-white);
+        background-color: var(--bs-primary);
+        border-color: var(--bs-primary);
     }
 
-    /* .collapsible {
-        background-color: #f1f1f1;
-        color: #333;
-        cursor: pointer;
-        padding: 18px;
-        width: 100%;
-        border: none;
-        text-align: left;
-        outline: none;
-        font-size: 18px;
-        font-weight: bold;
+    /* Replaces position-absolute to work across devices */
+    .instructor-card {
+    position: absolute;
+    bottom: 1rem;
+    right: 1rem;
     }
 
-    .collapsible::after {
-        content: '\002B';
-        float: right;
+    /* On mobile, make it static and full-width */
+    @media (max-width: 576px) {
+    .instructor-card {
+        position: static !important;
+        margin-left: auto;
+        margin-right: auto;
+        width: 90% !important;
+        height: auto !important;
+    }
     }
 
-    .active::after {
-        content: "\2212";
-    }
-
-    .content {
-        padding: 0 18px;
-        background-color: white;
-        display: none;
-        overflow: hidden;
-    }
-
-    .lesson-box {
-        display: flex;
-        align-items: center;
-        background: #eee;
-        padding: 10px;
-        margin-bottom: 8px;
-        border-radius: 5px;
-    }
-
-    .lesson-number {
-        font-weight: bold;
-        margin-right: 10px;
-        color: green;
-    }
-
-    .watch-button {
-        background: #32CD32;
-        color: white;
-        border: none;
-        padding: 6px 12px;
-        border-radius: 20px;
-        cursor: pointer;
-    } */
-</style>
-
-<script>
-    document.addEventListener("DOMContentLoaded", () => {
-        const collapsibles = document.querySelectorAll(".collapsible");
-        collapsibles.forEach(btn => {
-            btn.addEventListener("click", () => {
-                btn.classList.toggle("active");
-                const content = btn.nextElementSibling;
-                content.style.display = content.style.display === "block" ? "none" : "block";
-            });
-        });
-    });
-</script>
-
-{% endblock %}
+    </style>
+    {% include "footer.html" %}
+{% endblock body %}
