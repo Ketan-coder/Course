@@ -4,7 +4,7 @@ from django.db.models.manager import BaseManager
 from django.http import HttpResponse, HttpResponsePermanentRedirect, HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from Stock.models import Stock
-from Courseapp.models import FAQ, Course, Language, Section, Tag, Lesson
+from .models import FAQ, Course, Language, Quiz, Section, Tag, Lesson
 from Users.models import Instructor, Profile
 def course_list(request) -> HttpResponse:
     courses: BaseManager[Course] = Course.objects.all()
@@ -229,6 +229,14 @@ def video_detail_page(request,lesson_id) -> HttpResponseRedirect | HttpResponseP
     course = get_object_or_404(Course, sections__lesson__id=lesson_id)
     is_completed = lesson.completed_by_users.filter(pk=logged_in_profile.pk).exists()
     stock = Stock.objects.all()
+    quizes = Quiz.objects.filter(lesson=lesson)
+    # question_list = quizes.values_list('question', flat=True)
+    questions_list = []
+    for quiz in quizes:
+        if quiz.questions:
+            for qid, question_data in quiz.questions.items():
+                question_data['quiz_id'] = quiz.pk  # optional
+                questions_list.append(question_data)
     return render(request, "course/course_video_detail.html", locals())
 
 def mark_lesson_complete(request, lesson_id, user_profile) -> HttpResponseRedirect | HttpResponsePermanentRedirect | HttpResponse:

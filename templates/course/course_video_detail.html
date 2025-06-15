@@ -123,7 +123,51 @@
                                             <a href="{% url 'video_detail_page' l.id %}" class="ps-lg-3 list-group-item list-group-item-action {% if l.id == lesson.id %}active{% endif %}">
                                                 <div class="d-flex justify-content-between">
                                                     <h6 class="mb-1">{{ l.title }}</h6>
-                                                    <small>{{ l.d }}</small>
+                                                    
+                                                    {% for quiz in quizes %}
+
+                                                    
+                                                    {% if quiz.lesson.id == l.id %}
+                                                        <a>{{ quiz.title }} {{ question_list }}</a>
+                                                        {% for questions in questions_list %}
+                                                            {% if questions.question_type == "SINGLE_SELECT" %}
+                                                            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modal-mcq-{{ questions.id }}">
+                                                                Open MCQ Quiz
+                                                            </button>
+                                                            {% include "components/modal_mcq.html" with quiz_data=questions %}
+
+                                                            {% elif questions.question_type == "IMAGE_MC" %}
+                                                            <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#modal-imcq-{{ questions.id }}">
+                                                                Open Image MCQ Quiz
+                                                            </button>
+                                                            {% include "components/image_modal_mcq.html" with quiz_data=questions %}
+
+                                                            {% elif questions.question_type == "TEXT" %}
+                                                            <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#modal-text-quiz-{{ questions.id }}">
+                                                                Open Text Quiz
+                                                            </button>
+                                                            {% include "components/text_quiz_modal.html" with quiz_data=questions %}
+
+                                                            {% elif questions.question_type == "MULTIPLE_SELECT" %}
+                                                            <button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#modal-msq-{{ questions.id }}">
+                                                                Open Multiple Select Quiz
+                                                            </button>
+                                                            {% include "components/multiple_select_modal.html" with quiz_data=questions %}
+
+                                                            {% elif questions.question_type == "DRAG_DROP" %}
+                                                            <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modal-drag-drop-{{ questions.id }}">
+                                                                Open Drag & Drop Quiz
+                                                            </button>
+                                                            {% include "components/drag_and_drop_quiz_modal.html" with quiz_data=questions correct_mapping=questions.correct_mapping %}
+                                                            {% else %}
+                                                            <p class="text-danger">Unsupported quiz type: {{ questions.question_type }}</p>
+                                                            {% endif %}
+                                                        {% endfor %}
+                                                    {% endif %}
+                                                        
+                                                        
+                                                    {% endfor %}
+                                                    
                                                 </div>
                                                 <div class="progress mt-2" style="height: 6px;" role="progressbar" aria-label="Basic example" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
                                                     <div class="progress-bar {% if logged_in_profile in l.completed_by_users.all %}bg-primary{% else %}bg-secondary{% endif %}" role="progressbar" style="width: {% if logged_in_profile in l.completed_by_users.all %}100{% else %}0{% endif %}%"

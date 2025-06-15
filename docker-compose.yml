@@ -22,11 +22,11 @@ services:
     volumes:
       - sajan_giri_db:/var/lib/postgresql/data
     environment:
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_DB}
     healthcheck:
-      test: ["CMD", "pg_isready", "-U", "${POSTGRES_USER}", "-d", "${POSTGRES_DB}"] 
+      test: ["CMD", "pg_isready", "-U", "${DB_USER}", "-d", "${DB_DB}"] 
       interval: 10s
       timeout: 10s
       retries: 5
