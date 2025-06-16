@@ -135,95 +135,51 @@
                 <!-- Reviews Tab -->
                 <div class="tab-pane fade" id="reviews" role="tabpanel">
                     <h2 class="text-center mb-4 fw-bold">What people are saying!</h2>
-                    <div id="testimonialCarousel"
-                         class="carousel slide"
-                         data-bs-ride="carousel">
+
+                    {% if course.reviews.all %}
+                    {% with course.reviews.all as reviews %}
+                    {% if reviews %}
+                    <div id="testimonialCarousel" class="carousel slide" data-bs-ride="carousel">
                         <div class="carousel-inner">
-                            <div class="carousel-item active">
+                            {% for review in reviews|slice:"0:9" %}
+                            {% if forloop.first or forloop.counter0|divisibleby:3 %}
+                            <div class="carousel-item {% if forloop.first %}active{% endif %}">
                                 <div class="row justify-content-center g-3">
-                                    <div class="col-md-4">
+                            {% endif %}
+                                    <div class="col-md-4 {% if not forloop.first and not forloop.counter0|divisibleby:3 %}d-none d-md-block{% endif %}">
                                         <div class="card h-100 shadow-sm">
                                             <div class="card-body">
-                                                <p class="card-text">"This course was fantastic! Highly recommended for anyone looking to get started with stocks."</p>
+                                                <p class="card-text">"{{ review.review_text|default:"No review text provided." }}"</p>
                                                 <footer class="blockquote-footer mt-2">
-                                                    Jane Doe
+                                                    {{ review.user.user.username }}
                                                 </footer>
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="col-md-4 d-none d-md-block">
-                                        <div class="card h-100 shadow-sm">
-                                            <div class="card-body">
-                                                <p class="card-text">"Learned so much about the stock market. Great for beginners."</p>
-                                                <footer class="blockquote-footer mt-2">
-                                                    John Smith
-                                                </footer>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-4 d-none d-md-block">
-                                        <div class="card h-100 shadow-sm">
-                                            <div class="card-body">
-                                                <p class="card-text">"The instructor was clear and concise. A++."</p>
-                                                <footer class="blockquote-footer mt-2">
-                                                    Emily Jones
-                                                </footer>
-                                            </div>
-                                        </div>
-                                    </div>
+                            {% if forloop.counter|divisibleby:3 or forloop.last %}
                                 </div>
                             </div>
-                            <div class="carousel-item">
-                                <div class="row justify-content-center g-3">
-                                    <div class="col-md-4">
-                                        <div class="card h-100 shadow-sm">
-                                            <div class="card-body">
-                                                <p class="card-text">"I finally understand the basics of trading and feel confident enough to start investing."</p>
-                                                <footer class="blockquote-footer mt-2">
-                                                    Maria Garcia
-                                                </footer>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-4 d-none d-md-block">
-                                        <div class="card h-100 shadow-sm">
-                                            <div class="card-body">
-                                                <p class="card-text">"The practical examples were the best part."</p>
-                                                <footer class="blockquote-footer mt-2">
-                                                    Chen Wang
-                                                </footer>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-4 d-none d-md-block">
-                                        <div class="card h-100 shadow-sm">
-                                            <div class="card-body">
-                                                <p class="card-text">"Exceeded all my expectations!"</p>
-                                                <footer class="blockquote-footer mt-2">
-                                                    Sam Wilson
-                                                </footer>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                            {% endif %}
+                            {% endfor %}
                         </div>
-                        <button class="carousel-control-prev"
-                                type="button"
-                                data-bs-target="#testimonialCarousel"
-                                data-bs-slide="prev">
+                        <button class="carousel-control-prev" type="button" data-bs-target="#testimonialCarousel" data-bs-slide="prev">
                             <span class="carousel-control-prev-icon"></span>
                             <span class="visually-hidden">Previous</span>
                         </button>
-                        <button class="carousel-control-next"
-                                type="button"
-                                data-bs-target="#testimonialCarousel"
-                                data-bs-slide="next">
+                        <button class="carousel-control-next" type="button" data-bs-target="#testimonialCarousel" data-bs-slide="next">
                             <span class="carousel-control-next-icon"></span>
                             <span class="visually-hidden">Next</span>
                         </button>
                     </div>
+                    {% else %}
+                        {% include "course/components/static_testimonials.html" %}
+                    {% endif %}
+                    {% endwith %}
+                    {% else %}
+                        {% include "course/components/static_testimonials.html" %}
+                    {% endif %}
                 </div>
+
                 <!-- FAQ Tab -->
                 <div class="tab-pane fade" id="faq" role="tabpanel">
                     <div class="card card-body mb-4">

@@ -3,6 +3,7 @@ from django.db.models.manager import BaseManager
 # from django.db.models.query import ValuesQuerySet
 from django.http import HttpResponse, HttpResponsePermanentRedirect, HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.db.models import Q
 from Stock.models import Stock
 from .models import FAQ, Course, Language, Quiz, Section, Tag, Lesson
 from Users.models import Instructor, Profile
@@ -227,9 +228,12 @@ def video_detail_page(request,lesson_id) -> HttpResponseRedirect | HttpResponseP
     logged_in_profile = Profile.objects.get(user=user)
     lesson = get_object_or_404(Lesson, pk=lesson_id)
     course = get_object_or_404(Course, sections__lesson__id=lesson_id)
+    to_search_sections = course.sections.all().values_list('id', flat=True)
+    print(to_search_sections)
+    section = get_object_or_404(Section, id__in=to_search_sections)
     is_completed = lesson.completed_by_users.filter(pk=logged_in_profile.pk).exists()
     stock = Stock.objects.all()
-    quizes = Quiz.objects.filter(lesson=lesson)
+    quizes = Quiz.objects.filter(Q(lesson=lesson) | Q(course=course) | Q(section=section)).distinct()
     # question_list = quizes.values_list('question', flat=True)
     questions_list = []
     for quiz in quizes:
