@@ -138,3 +138,21 @@ def landing_page(request) -> HttpResponse:
             else:
                 FeedBack.objects.create(name=name, email=email, message=message)
     return render(request, 'landing_page.html')
+
+def custom_404(request, exception):
+    return render(request, 'middleware/custom_debug.html', {
+        "exception": "Page not found",
+        "traceback": "No traceback. URL did not match any pattern.",
+        "path": request.path,
+        "method": request.method,
+        "error_code": 404
+    }, status=404)
+
+def custom_500(request):
+    return render(request, 'middleware/custom_debug.html', {
+        "exception": "Internal Server Error",
+        "traceback": "Unhandled server error occurred.",
+        "path": request.path,
+        "method": request.method,
+        "error_code": 500
+    }, status=500)

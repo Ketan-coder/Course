@@ -3,6 +3,9 @@ from django.contrib import admin
 from django.conf.urls.static import static
 from django.conf import settings
 
+handler404 = 'utils.views.custom_404'
+handler500 = 'utils.views.custom_500'
+
 urlpatterns = [
 	path('admin/', admin.site.urls),
 	path('accounts/', include('Users.urls')),
