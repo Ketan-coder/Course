@@ -9,7 +9,7 @@ wheels/
 # Virtual environments
 .venv
 IDPassword.txt
-migrations/
+# migrations/
 .env
 
 # Ignore unnecessary scripts (optional)
@@ -30,8 +30,8 @@ WebsiteTester.py
 *.json
 
 # Ignore Django migrations except __init__.py
-**/migrations/
-!**/migrations/__init__.py
+*/migrations/*
+!*/migrations/__init__.py
 
 media/
 .idx/
