@@ -31,10 +31,11 @@ COPY . .
 # Expose the port
 EXPOSE 8000
 
-RUN python manage.py collectstatic --noinput
-
 # Run the Django server
-CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+# CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
 
 # For Production
-# CMD ["gunicorn", "--workers=3", "--bind=0.0.0.0:8000", "Course.wsgi:application"]
+
+RUN python manage.py collectstatic --noinput
+
+CMD ["gunicorn", "--workers=3", "--bind=0.0.0.0:8000", "Course.wsgi:application"]
