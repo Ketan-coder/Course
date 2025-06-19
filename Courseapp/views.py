@@ -53,7 +53,6 @@ def course_list(request) -> HttpResponse:
 #         form = CourseForm(instance=course)
 #     return render(request, 'course/course_form.html', {'form': form})
 
-
 @user_passes_test(lambda u: Instructor.objects.filter(profile=u.profile).exists())
 def course_create(request) -> HttpResponseRedirect | HttpResponsePermanentRedirect | HttpResponse:
     instructors = Instructor.objects.all()
@@ -162,6 +161,60 @@ def course_update(request, pk) -> HttpResponseRedirect | HttpResponsePermanentRe
             "course/course_form.html",
             {"course": course, "languages": languages, "instructors": instructors, 'lessons': lessons},
         )
+
+@user_passes_test(lambda u: Instructor.objects.filter(profile=u.profile).exists())
+def create_quiz(request) -> HttpResponse:
+    if request.method == "POST":
+        # Either update or create new quiz
+        quiz_id = request.POST.get("quiz_id")
+        course_id = request.POST.get("course_id")
+        section_id = request.POST.get("section_id")
+        lesson_id = request.POST.get("lesson_id")
+        title = request.POST.get("title", "Untitled Quiz")
+
+        if quiz_id:
+            quiz = get_object_or_404(Quiz, id=quiz_id)
+        else:
+            quiz = Quiz.objects.create(title=title)
+
+        if course_id:
+            quiz.course = get_object_or_404(Course, id=course_id)
+        if section_id:
+            quiz.section = get_object_or_404(Section, id=section_id)
+        if lesson_id:
+            quiz.lesson = get_object_or_404(Lesson, id=lesson_id)
+
+        # Build JSON structure
+        questions = {}
+        i = 1
+        while request.POST.get(f"question_text_{i}"):
+            q_text = request.POST.get(f"question_text_{i}")
+            q_type = request.POST.get(f"type_{i}")
+            q_answer = request.POST.get(f"answer_{i}")
+            print(q_text, q_type, q_answer)
+            # Collect options
+            options = []
+            opt_index = 0
+            while request.POST.get(f"option_{i}_{opt_index}"):
+                opt = request.POST.get(f"option_{i}_{opt_index}")
+                options.append({"id": opt, "text": opt})
+                opt_index += 1
+
+            questions[str(i)] = {
+                "id": str(i),
+                "question": q_text,
+                "type": q_type,
+                "answer": q_answer,
+                "options": options
+            }
+            i += 1
+
+        print(questions)
+
+        quiz.questions = questions
+        quiz.save()
+        return redirect("course_list")
+    return render(request, "course/quiz_form.html",locals())
 
 
 def search_tags(request) -> JsonResponse:

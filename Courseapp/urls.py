@@ -10,7 +10,6 @@ urlpatterns: list[URLPattern] = [
     path('courses/<int:pk>/edit/', views.course_update, name='course_update'),
     path('courses/<int:pk>/delete/', views.course_delete, name='course_delete'),
 
-
     path('courses/search_tags/', views.search_tags, name='search_tags'),
     path('courses/search_sections/', views.search_sections, name='search_sections'),
     path('courses/search_lesson/', views.search_lessons, name='search_lessons'),
@@ -25,4 +24,6 @@ urlpatterns: list[URLPattern] = [
     path("create_section/", views.create_section, name="create_section"),
     path("create_lesson/", views.create_lesson, name="create_lesson"),
     path("create_faq/", views.create_faq, name="create_faq"),
+
+    path("quiz/new/", views.create_quiz, name="create_quiz"),
 ]

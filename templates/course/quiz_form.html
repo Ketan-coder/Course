@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Quiz Builder{% endblock %}
+
+{% block head %}
+<style>
+  .question-card { background-color: #f8f9fa; padding: 1rem; border-radius: 8px; margin-bottom: 1rem; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
+  .remove-btn { cursor: pointer; color: red; float: right; }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="container mt-5">
+  <h2 class="mb-4">Quiz Builder</h2>
+
+  <form method="POST" action="" id="quizForm">
+    {% csrf_token %}
+    <input type="hidden" name="quiz_id" value="{{ quiz.id }}">
+    <div id="questions-wrapper">
+      <!-- Questions will appear here -->
+    </div>
+
+    <button type="button" class="btn btn-outline-primary mb-3" onclick="addQuestion()">+ Add Question</button>
+    <button type="submit" class="btn btn-success">Save Quiz</button>
+  </form>
+</div>
+
+<script>
+let questionCount = 0;
+
+function addQuestion(data = {}) {
+  const wrapper = document.getElementById('questions-wrapper');
+  const id = `q${questionCount}`;
+
+  const html = `
+  <div class="question-card" id="${id}" style="background-color: ${data.color || '#444'};">
+    <span class="remove-btn" onclick="removeQuestion('${id}')">&times;</span>
+    <div class="form-group">
+      <label class="pb-2">Question</label>
+      <input type="text" name="question_${id}" class="form-control" value="${data.question || ''}" required>
+    </div>
+    <div class="form-group">
+      <label class="pb-2">Type</label>
+      <select name="type_${id}" class="form-control">
+        <option value="SINGLE_SELECT">Single Select</option>
+        <option value="MULTIPLE_SELECT">Multiple Select</option>
+        <option value="TEXT">Text</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="pb-2">Answer</label>
+      <input type="text" name="answer_${id}" class="form-control" value="${data.answer || ''}" required>
+    </div>
+    <div class="form-group">
+      <label class="pb-2">Options (comma separated)</label>
+      <input type="text" name="options_${id}" class="form-control" value="${data.options || ''}">
+    </div>
+  </div>
+  `;
+
+  wrapper.insertAdjacentHTML('beforeend', html);
+  questionCount++;
+}
+
+function removeQuestion(id) {
+  document.getElementById(id).remove();
+}
+</script>
+{% endblock %}
