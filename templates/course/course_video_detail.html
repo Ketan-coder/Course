@@ -144,31 +144,31 @@
                                                             <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modal-mcq-{{ questions.id }}">
                                                                 Open MCQ Quiz
                                                             </button>
-                                                            {% include "components/modal_mcq.html" with quiz_data=questions %}
+                                                            {% comment %} {% include "components/modal_mcq.html" with quiz_data=questions %} {% endcomment %}
 
                                                             {% elif questions.type == "IMAGE_MC" %}
                                                             <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#modal-imcq-{{ questions.id }}">
                                                                 Open Image MCQ Quiz
                                                             </button>
-                                                            {% include "components/image_modal_mcq.html" with quiz_data=questions %}
+                                                            {% comment %} {% include "components/image_modal_mcq.html" with quiz_data=questions %} {% endcomment %}
 
                                                             {% elif questions.type == "TEXT" %}
                                                             <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#modal-text-quiz-{{ questions.id }}">
                                                                 Open Text Quiz
                                                             </button>
-                                                            {% include "components/text_quiz_modal.html" with quiz_data=questions %}
+                                                            {% comment %} {% include "components/text_quiz_modal.html" with quiz_data=questions %} {% endcomment %}
 
                                                             {% elif questions.type == "MULTIPLE_SELECT" %}
                                                             <button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#modal-msq-{{ questions.id }}">
                                                                 Open Multiple Select Quiz
                                                             </button>
-                                                            {% include "components/multiple_select_modal.html" with quiz_data=questions %}
+                                                            {% comment %} {% include "components/multiple_select_modal.html" with quiz_data=questions %} {% endcomment %}
 
                                                             {% elif questions.type == "DRAG_DROP" %}
                                                             <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modal-drag-drop-{{ questions.id }}">
                                                                 Open Drag & Drop Quiz
                                                             </button>
-                                                            {% include "components/drag_and_drop_quiz_modal.html" with quiz_data=questions correct_mapping=questions.correct_mapping %}
+                                                            {% comment %} {% include "components/drag_and_drop_quiz_modal.html" with quiz_data=questions correct_mapping=questions.correct_mapping %} {% endcomment %}
                                                             {% else %}
                                                             <p class="text-danger">Unsupported quiz type: {{ questions.question_type }}</p>
                                                             {% endif %}
@@ -205,6 +205,21 @@
         </div>
     </div>
 </div>
+{% for quiz in quizes %}
+    {% for questions in questions_list %}
+        {% if questions.type == "SINGLE_SELECT" %}
+            {% include "components/modal_mcq.html" with quiz_data=questions %}
+        {% elif questions.type == "IMAGE_MC" %}
+            {% include "components/image_modal_mcq.html" with quiz_data=questions %}
+        {% elif questions.type == "TEXT" %}
+            {% include "components/text_quiz_modal.html" with quiz_data=questions %}
+        {% elif questions.type == "MULTIPLE_SELECT" %}
+            {% include "components/multiple_select_modal.html" with quiz_data=questions %}
+        {% elif questions.type == "DRAG_DROP" %}
+            {% include "components/drag_and_drop_quiz_modal.html" with quiz_data=questions correct_mapping=questions.correct_mapping %}
+        {% endif %}
+    {% endfor %}
+  {% endfor %}
 <script>
     document.addEventListener('DOMContentLoaded', () => {
         const video = document.getElementById('lesson-video');
@@ -246,5 +261,8 @@
     .progress-bar-height {
         height: 6px;
     }
+    .modal {
+        z-index: 1055 !important; /* Bootstrap modal z-index */
+      }      
 </style>
 {% endblock body %}

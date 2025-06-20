@@ -19,9 +19,9 @@
         <form id="form-mcq-{{ quiz_data.id }}">
           {% for option in quiz_data.options %}
           <div class="form-check mb-2">
-            <input class="form-check-input" type="radio" name="mcq-option-{{ quiz_data.id }}" id="mcq-{{ quiz_data.id }}-option-{{ forloop.counter }}" value="{{ option }}">
+            <input class="form-check-input" type="radio" name="mcq-option-{{ quiz_data.id }}" id="mcq-{{ quiz_data.id }}-option-{{ forloop.counter }}" value="{{ option.id }}">
             <label class="form-check-label w-100 border rounded p-2 hover-bg-light-gray cursor-pointer" for="mcq-{{ quiz_data.id }}-option-{{ forloop.counter }}">
-              {{ option }}
+              {{ option.text }}
             </label>
           </div>
           {% endfor %}
@@ -86,6 +86,19 @@ document.addEventListener('DOMContentLoaded', function () {
       submitBtn.textContent = "Correct!";
       submitBtn.disabled = true;
       form.querySelectorAll('input').forEach(r => r.disabled = true);
+        // ✅ Send to backend to mark as completed
+        fetch(`/course/quiz/submit/${quizId}/`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}'
+          },
+          body: JSON.stringify({ answer: value })
+        }).then(response => {
+          if (!response.ok) {
+            console.warn("Failed to mark quiz as complete.");
+          }
+        }).catch(console.error);
     } else {
       feedback.textContent = incorrectFeedback;
       feedback.classList.add('text-danger');

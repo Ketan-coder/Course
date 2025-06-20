@@ -1,12 +1,15 @@
 from django.contrib.auth.decorators import user_passes_test
 from django.db.models.manager import BaseManager
-# from django.db.models.query import ValuesQuerySet
+import json
 from django.http import HttpResponse, HttpResponsePermanentRedirect, HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.db.models import Q
 from Stock.models import Stock
 from .models import FAQ, Course, Language, Quiz, Section, Tag, Lesson
 from Users.models import Instructor, Profile
+from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth.decorators import login_required
+
 def course_list(request) -> HttpResponse:
     courses: BaseManager[Course] = Course.objects.all()
 
@@ -165,10 +168,11 @@ def course_update(request, pk) -> HttpResponseRedirect | HttpResponsePermanentRe
 @user_passes_test(lambda u: Instructor.objects.filter(profile=u.profile).exists())
 def create_quiz(request) -> HttpResponse:
     if request.method == "POST":
+        print(request.POST)
         # Either update or create new quiz
         quiz_id = request.POST.get("quiz_id")
         course_id = request.POST.get("course_id")
-        section_id = request.POST.get("section_id")
+        section_id = request.POST.get("selected_sections")
         lesson_id = request.POST.get("lesson_id")
         title = request.POST.get("title", "Untitled Quiz")
 
@@ -187,24 +191,27 @@ def create_quiz(request) -> HttpResponse:
         # Build JSON structure
         questions = {}
         i = 1
-        while request.POST.get(f"question_text_{i}"):
-            q_text = request.POST.get(f"question_text_{i}")
+        while request.POST.get(f"question_{i}"):
+            q_text = request.POST.get(f"question_{i}")
             q_type = request.POST.get(f"type_{i}")
             q_answer = request.POST.get(f"answer_{i}")
             print(q_text, q_type, q_answer)
             # Collect options
             options = []
             opt_index = 0
-            while request.POST.get(f"option_{i}_{opt_index}"):
-                opt = request.POST.get(f"option_{i}_{opt_index}")
+            for opt in request.POST.getlist(f"options_{i}")[0].split(','):
                 options.append({"id": opt, "text": opt})
                 opt_index += 1
+            # while request.POST.get(f"options_{i}"):
+            #     opt = request.POST.get(f"options_{i}_{opt_index}")
+            #     options.append({"id": opt, "text": opt})
+            #     opt_index += 1
 
             questions[str(i)] = {
                 "id": str(i),
                 "question": q_text,
                 "type": q_type,
-                "answer": q_answer,
+                "correct_answer": q_answer,
                 "options": options
             }
             i += 1
@@ -363,3 +370,33 @@ def create_faq(request) -> HttpResponse:
         faq = FAQ.objects.create(question=question, answer=answer)
         return JsonResponse({"id": faq.pk, "question": faq.question})
     return HttpResponse("Invalid request.", status=400)
+
+
+@csrf_exempt
+@login_required
+def submit_quiz(request, quiz_id):
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+            user_answer = data.get('answer')
+
+            if not user_answer:
+                return JsonResponse({"error": "Answer is required"}, status=400)
+
+            quiz = get_object_or_404(Quiz, id=quiz_id)
+            profile = get_object_or_404(Profile, user=request.user)
+
+            for qid, qdata in (quiz.questions or {}).items():
+                correct_answer = qdata.get("answer") if qdata.get("type") != 'DRAG_DROP' else qdata.get("correct_mapping")
+                if correct_answer and str(user_answer).strip().lower() == str(correct_answer).strip().lower():
+                    quiz.completed_by_users.add(profile)
+                    return JsonResponse({"status": "completed"})
+
+            return JsonResponse({"status": "incorrect"}, status=200)
+
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            return JsonResponse({"error": str(e)}, status=400)
+
+    return JsonResponse({"error": "Invalid request method"}, status=405)

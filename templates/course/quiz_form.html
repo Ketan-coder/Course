@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Quiz Builder{% endblock %}
+{% block title %}Quiz Builder{% endblock title %}
 
 {% block head %}
 <style>
@@ -17,6 +17,26 @@
   <form method="POST" action="" id="quizForm">
     {% csrf_token %}
     <input type="hidden" name="quiz_id" value="{{ quiz.id }}">
+    <div class="form-group mb-2">
+      <label class="pb-2">Title</label>
+      <input type="text" name="title" class="form-control" value="{{quiz.title|default:''}}" required>
+    </div>
+    <div class="form-group mb-4">
+        <label for="id_sections" class="form-label">Sections:</label>
+        <input type="text" id="id_sections_search" class="form-control" placeholder="Search and add sections">
+        <div id="sections_search_results" class="list-group mt-2"></div>
+        <div id="selected_sections" class="mt-2">
+            {% if quiz.section %}
+            <span class="badge bg-secondary mr-1 selected-section" data-section-id="{{ section.id }}">
+                {{ section.title }} | <button type="button" class="btn btn-sm btn-outline-light ml-1 p-0 border-0" data-bs-toggle="offcanvas" data-bs-target="#offcanvas-add-section">Edit</button> | <button type="button" class="btn btn-sm btn-outline-light ml-1 p-0 border-0" aria-label="Remove" onclick="removeSection(this)">&times;</button>
+            </span>
+            <input type="hidden" name="selected_sections" value="{{ section.id }}">
+            {% endif %}
+        </div>
+        {% if form.sections.errors %}
+        <div class="invalid-feedback d-block">{{ form.sections.errors }}</div>
+        {% endif %}
+    </div>
     <div id="questions-wrapper">
       <!-- Questions will appear here -->
     </div>
@@ -27,11 +47,11 @@
 </div>
 
 <script>
-let questionCount = 0;
+let questionCount = 1;
 
 function addQuestion(data = {}) {
   const wrapper = document.getElementById('questions-wrapper');
-  const id = `q${questionCount}`;
+  const id = `${questionCount}`;
 
   const html = `
   <div class="question-card" id="${id}" style="background-color: ${data.color || '#444'};">
@@ -66,5 +86,59 @@ function addQuestion(data = {}) {
 function removeQuestion(id) {
   document.getElementById(id).remove();
 }
+
+// JavaScript for Section search (example)
+document.getElementById('id_sections_search').addEventListener('input', function () {
+  const searchTerm = this.value;
+  const resultsDiv = document.getElementById('sections_search_results');
+
+  if (searchTerm.length > 1) {
+      fetch(`/course/courses/search_sections/?q=${searchTerm}`) // Replace with your actual URL
+          .then(response => response.json())
+          .then(data => {
+              resultsDiv.innerHTML = '';
+              data.forEach(section => {
+                  const sectionElement = document.createElement('a');
+                  sectionElement.href = '#';
+                  sectionElement.classList.add('list-group-item', 'list-group-item-action');
+                  sectionElement.textContent = section.title;
+                  sectionElement.dataset.sectionId = section.id;
+                  sectionElement.addEventListener('click', function (e) {
+                      e.preventDefault();
+                      const selectedSectionsDiv = document.getElementById('selected_sections');
+                      if (!selectedSectionsDiv.querySelector(`span[data-section-id="${section.id}"]`)) {
+                          const selectedSectionElement = document.createElement('span');
+                          selectedSectionElement.classList.add('badge', 'bg-secondary', 'mr-1', 'selected-section');
+                          selectedSectionElement.dataset.sectionId = section.id; selectedSectionElement.classList.add('d-inline-flex', 'align-items-center'); // Add flex and align items
+                          selectedSectionElement.innerHTML = `${section.title} <button type="button" class="close ml-1" aria-label="Remove" onclick="removeSection(this)">&times;</button>`;
+
+                          const hiddenInput = document.createElement('input');
+                          hiddenInput.type = 'hidden';
+                          hiddenInput.name = 'selected_sections';
+                          hiddenInput.value = section.id;
+
+                          selectedSectionsDiv.appendChild(selectedSectionElement);
+                          selectedSectionsDiv.appendChild(hiddenInput);
+                      }
+                      document.getElementById('id_sections_search').value = '';
+                      resultsDiv.innerHTML = '';
+                  });
+                  resultsDiv.appendChild(sectionElement);
+              });
+          });
+  } else {
+      resultsDiv.innerHTML = '';
+  }
+});
+
+function removeSection(button) {
+  const selectedSectionElement = button.closest('.selected-section');
+  const sectionId = selectedSectionElement.dataset.sectionId;
+  selectedSectionElement.remove();
+  const hiddenInput = document.querySelector(`input[name="selected_sections"][value="${sectionId}"]`);
+  if (hiddenInput) {
+      hiddenInput.remove();
+  }
+}
 </script>
-{% endblock %}
+{% endblock body %}
