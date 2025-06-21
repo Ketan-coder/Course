@@ -19,6 +19,7 @@ from django.urls import reverse_lazy
 from django.views.generic import ListView
 # from Notes.models import Activity
 from utils.utils import send_email
+from utils.models import Currency
 
 from Course import settings as project_settings
 from utils.media_handler import MediaHandler
@@ -62,6 +63,11 @@ def updateUser(request):
         return redirect("email_confirmation_pending")
 
     profile = Profile.objects.get(user=user)
+    if Student.objects.filter(profile=profile).exists():
+        is_student = True
+    elif Instructor.objects.filter(profile=profile).exists():
+        is_student = False
+        instructor = Instructor.objects.get(profile=profile)
 
     if request.method == "POST":
         username: str = request.POST.get("username", "").strip() or user.username
@@ -86,22 +92,34 @@ def updateUser(request):
             return redirect("update_user")
 
         #  Save Updates
-        # user.username = username
-        # user.email = email
+        user.username = username
+        user.email = email
         user.first_name = first_name
         user.last_name = last_name
         user.save()
 
         profile.bio = bio
-        profile.firstName = first_name
-        profile.lastName = last_name
-        profile.email = email
+        profile.phone_no = request.POST.get("phone_no", "").strip() or profile.phone_no
+        profile.phone_no_prefix = request.POST.get(
+            "phone_no_prefix", ""
+        ).strip() or profile.phone_no_prefix
+        profile.address = request.POST.get("address", "").strip() or profile.address
+        profile.date_of_birth = request.POST.get("date_of_birth", profile.date_of_birth).strip()
+        profile.image = request.FILES.get("profile_pic", profile.image)
+        if request.POST.get("currency_id"):
+            currency = get_object_or_404(Currency, pk=request.POST.get("currency_id"))
+            profile.currency = currency or profile.currency
+        profile.is_profile_complete = all([profile.phone_no,profile.phone_no_prefix, profile.address, profile.date_of_birth, profile.image, profile.currency])
+        profile.is_email_verified = (
+            bool(profile.user.email and user.is_active and profile.email_confirmation_token is None)
+        )
+        profile.is_phone_verified = bool(profile.phone_no and user.is_active)
         profile.save()
 
-        #  Log Activity
-        Activity.objects.create(
-            author=profile, title="Updated Profile", body="Updated Profile"
-        )
+        if not is_student:
+            instructor = Instructor.objects.get(profile=profile)
+            instructor.experience = request.POST.get("experience", instructor.experience).strip()
+            instructor.save()
 
         if project_settings.DEBUG is False:
             send_email(
@@ -116,8 +134,8 @@ def updateUser(request):
         messages.success(request, "Profile updated successfully")
         return redirect("home")
 
-    context = {"user": user, "profile": profile}
-    return render(request, "user/user_update.html", context)
+    context = {"user": user, "profile": profile, "is_student": is_student, "instructor": instructor if not is_student else None}
+    return render(request, "user/userupdate.html", context)
 
 
 def login_form(request):
@@ -357,7 +375,7 @@ def profile_setup_view(request):
         }
 
         if profile_pic_path:
-            profile_data["profile_pic"] = profile_pic_path
+            profile_data["image"] = profile_pic_path
 
         Profile.objects.update_or_create(user=user, defaults=profile_data)
 
@@ -452,7 +470,6 @@ def confirm_new_email(request, token, new_email):
     # Update email and clear token
     profile.user.email = new_email
     profile.user.save()
-    profile.email = new_email
     profile.email_confirmation_token = None
     profile.save()
 

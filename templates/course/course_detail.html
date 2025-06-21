@@ -24,7 +24,13 @@
                  style="max-width: 600px">
                 <h1 class="display-1 fw-bold">{{ course.title|default:"Stock Market Basics" }}</h1>
                 <p class="lead">{{ course.description|default:"A simple and fun way to learn finance." }}</p>
-                {% if not course.is_free %}<a href="#" class="btn btn-info btn-lg rounded-pill px-4 mt-3">Buy Now</a>{% endif %}
+                {% if not course.is_free %}
+                    {% if course.instructor.profile.user.id == request.user.id %}
+                        <a href="{% url 'course_update' pk=course.id %}" class="btn btn-primary btn-lg rounded-pill px-4 mt-3">Edit Course</a>
+                    {% else %}
+                        <a href="#" class="btn btn-info btn-lg rounded-pill px-4 mt-3">Buy Now</a>
+                    {% endif %}
+                {% endif %}
             </div>
         </div>
         <!-- Instructor Card - Responsive -->

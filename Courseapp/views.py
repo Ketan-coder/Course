@@ -9,6 +9,8 @@ from .models import FAQ, Course, Language, Quiz, Section, Tag, Lesson, CourseNot
 from Users.models import Instructor, Profile, Student
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
+from django.utils.html import format_html
+from django.urls import reverse
 
 def course_list(request) -> HttpResponse:
     courses: BaseManager[Course] = Course.objects.all()
@@ -274,7 +276,6 @@ def course_delete(request, pk) -> HttpResponseRedirect | HttpResponsePermanentRe
 
 def course_detail(request, pk) -> HttpResponseRedirect | HttpResponsePermanentRedirect | HttpResponse:
     course = get_object_or_404(Course, pk=pk)
-    # lessons = Lesson.objects.filter(course=course)
     return render(request, "course/course_detail.html", {"course": course})
 
 
@@ -300,6 +301,55 @@ def video_detail_page(request,lesson_id) -> HttpResponseRedirect | HttpResponseP
                 question_data['quiz_id'] = quiz.pk  # optional
                 questions_list.append(question_data)
     return render(request, "course/course_video_detail.html", locals())
+
+def bookmarked_courses(request) -> HttpResponseRedirect | HttpResponsePermanentRedirect | HttpResponse:
+    user = request.user
+    if not user.is_authenticated:
+        return redirect("login")
+    
+    profile = get_object_or_404(Profile, user=user)
+    bookmarked_courses = Course.objects.filter(bookmarked_by_users=profile).all()
+    
+    return render(request, "course/bookmarked_courses.html", {"bookmarked_courses": bookmarked_courses})
+
+def bookmark_course(request, course_id):
+    user = request.user
+    if not user.is_authenticated:
+        return JsonResponse({"redirect": "/login"}, status=401)
+
+    course = get_object_or_404(Course, pk=course_id)
+    profile = get_object_or_404(Profile, user=user)
+
+    is_bookmarked = course.bookmarked_by_users.filter(pk=profile.pk).exists()
+
+    if is_bookmarked:
+        course.bookmarked_by_users.remove(profile)
+        # Return HTML for "Save" button
+        html = format_html('''
+            <div id="save-button">
+                <button class="btn btn-outline-success btn-sm"
+                    hx-post="{}"
+                    hx-target="#save-button"
+                    hx-swap="outerHTML">
+                    <i class="ph ph-floppy-disk"></i> Save
+                </button>
+            </div>
+        ''', reverse("bookmark_course", args=[course.pk]))
+    else:
+        course.bookmarked_by_users.add(profile)
+        # Return HTML for "Remove" button
+        html = format_html('''
+            <div id="save-button">
+                <button class="btn btn-outline-danger btn-sm"
+                    hx-post="{}"
+                    hx-target="#save-button"
+                    hx-swap="outerHTML">
+                    <i class="ph ph-x-circle"></i> Remove
+                </button>
+            </div>
+        ''', reverse("bookmark_course", args=[course.pk]))
+
+    return HttpResponse(html)
 
 def mark_lesson_complete(request, lesson_id, user_profile) -> HttpResponseRedirect | HttpResponsePermanentRedirect | HttpResponse:
     user = request.user

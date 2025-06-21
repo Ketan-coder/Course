@@ -1,0 +1,161 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block body %}
+<div class="container my-5">
+    <div class="mt-4 mb-4 text-start"> 
+      <h1 class="fw-bold">Liked Courses</h1>
+        {% comment %} <p class="text-muted">Browse our extensive catalog of courses designed to enhance your skills and knowledge.</p> {% endcomment %}
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center my-4 flex-wrap"> <div class="d-flex flex-wrap gap-2"> <div class="dropdown">
+                <button class="btn btn-primary" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    Topic <span class="ms-1">&darr;</span>
+                </button>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="#">All Topics</a></li>
+                    <li><a class="dropdown-item" href="#">Investing</a></li>
+                    <li><a class="dropdown-item" href="#">Trading</a></li>
+                    <li><a class="dropdown-item" href="#">Personal Finance</a></li>
+                    <li><a class="dropdown-item" href="#">Cryptocurrency</a></li>
+                    <li><a class="dropdown-item" href="#">Real Estate</a></li>
+                </ul>
+            </div>
+
+            <div class="dropdown">
+                <button class="btn btn-primary" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    Difficulty <span class="ms-1">&darr;</span>
+                </button>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="#">Any</a></li>
+                    <li><a class="dropdown-item" href="#">Beginner</a></li>
+                    <li><a class="dropdown-item" href="#">Intermediate</a></li>
+                    <li><a class="dropdown-item" href="#">Advanced</a></li>
+                </ul>
+            </div>
+
+            <div class="dropdown">
+                <button class="btn btn-primary" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    Duration <span class="ms-1">&darr;</span>
+                </button>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="#">Any</a></li>
+                    <li><a class="dropdown-item" href="#">1-4 Weeks</a></li>
+                    <li><a class="dropdown-item" href="#">1-3 Months</a></li>
+                    <li><a class="dropdown-item" href="#">3+ Months</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <button class="btn btn-light border" data-bs-toggle="modal" data-bs-target="#filterModal"> <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-sliders" viewBox="0 0 16 16"> <path fill-rule="evenodd" d="M11.5 2a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3M9.05 3a2.5 2.5 0 0 1 4.9 0H16v1h-2.05a2.5 2.5 0 0 1-4.9 0H0V3zM4.5 7a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3M2.05 8a2.5 2.5 0 0 1 4.9 0H16v1H6.95a2.5 2.5 0 0 1-4.9 0H0V8zm9.45 4a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3m-2.5 1a2.5 2.5 0 0 1 4.9 0H16v1h-2.05a2.5 2.5 0 0 1-4.9 0H0v-1z"/>
+            </svg>
+            More Filters
+        </button>
+        <a href="{% url 'course_create' %}" class="btn btn-success">Create Course</a>
+
+    </div>
+    <hr class="my-4"> <div class="row g-4">
+        {% for course in bookmarked_courses %}
+            <div class="col-12 col-sm-6 col-lg-4 col-xl-3"> {% include "course/components/course_card.html" with course=course %}
+            </div>
+        {% empty %}
+            <div class="col-12">
+                <p class="text-center">No courses available.</p>
+            </div>
+        {% endfor %}
+    </div>
+
+    {% if is_paginated %}
+    <div class="d-flex justify-content-center my-4">
+        <nav aria-label="Course navigation">
+            <ul class="pagination">
+                {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}" aria-label="Previous">
+                            <span>&laquo;</span>
+                        </a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link" aria-hidden="true">&laquo;</span>
+                    </li>
+                {% endif %}
+
+                {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                        <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                    {% elif num > page_obj.number|add:'-2' and num < page_obj.number|add:'2' or num == 1 or num == page_obj.paginator.num_pages %} {% ifchanged %}
+                            {% if num != 1 and page_obj.number|add:'-2' > 1 and forloop.first %}
+                                <li class="page-item disabled"><span class="page-link">...</span></li>
+                            {% endif %}
+                        {% endifchanged %}
+                        <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+                        {% ifchanged %}
+                             {% if num != page_obj.paginator.num_pages and page_obj.number|add:'2' < page_obj.paginator.num_pages and forloop.last %}
+                                <li class="page-item disabled"><span class="page-link">...</span></li>
+                            {% endif %}
+                        {% endifchanged %}
+                    {% endif %}
+                {% endfor %}
+
+                {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Next">
+                           <span>&raquo;</span>
+                        </a>
+                    </li>
+                {% else %}
+                     <li class="page-item disabled">
+                        <span class="page-link" aria-hidden="true">&raquo;</span>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+    {% endif %}
+    </div>
+
+<div class="modal fade" id="filterModal" tabindex="-1" aria-labelledby="filterModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="filterModalLabel">Filter Courses</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="GET">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="courseLevelModal" class="form-label">Level</label> <select class="form-select" id="courseLevelModal" name="course_level">
+                            <option value="any">Any</option>
+                            <option value="beginner">Beginner</option>
+                            <option value="intermediate">Intermediate</option>
+                            <option value="advanced">Advanced</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="courseTypeModal" class="form-label">Type</label> <select class="form-select" id="courseTypeModal" name="course_type">
+                            <option value="any">Any</option>
+                            <option value="free">Free</option>
+                            <option value="paid">Paid</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="courseRatingModal" class="form-label">Rating</label> <select class="form-select" id="courseRatingModal" name="course_rating">
+                            <option value="">Any</option>
+                            <option value="4.5">4.5 & up</option>
+                            <option value="4.0">4.0 & up</option>
+                            <option value="3.5">3.5 & up</option>
+                            <option value="3.0">3.0 & up</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer justify-content-between">
+                    <button type="reset" class="btn btn-outline-secondary">Reset</button> <button type="submit" class="btn btn-primary">Apply Filters</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<footer class="text-center py-3 mt-5 border-top">
+    <p class="mb-0 text-muted">&copy; {% now "Y" %} Scholarly. All rights reserved. Partnered with Tiger Brokers.</p> </footer>
+{% endblock %}

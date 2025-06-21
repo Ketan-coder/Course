@@ -32,7 +32,15 @@
                     <div class="d-flex gap-2">
                         {% comment %} <button class="btn btn-outline-primary btn-sm"><i class="ph ph-thumbs-up"></i> Like</button> {% endcomment %}
                         <button class="btn btn-outline-secondary btn-sm"><i class="ph ph-share-network"></i> Share</button>
-                        <button class="btn btn-outline-success btn-sm"><i class="ph ph-bookmark"></i> Save</button>
+                        <div id="save-button">
+                            <button class="btn btn-outline-success btn-sm"
+                                hx-post="{% url 'bookmark_course' course.id %}"
+                                hx-target="#save-button"
+                                hx-swap="outerHTML">
+                                <i class="ph ph-floppy-disk"></i> Save
+                            </button>
+                        </div>
+
                     </div>
                 </div>
             </div>
@@ -326,6 +334,14 @@
                 }
             });
         }
+    });
+</script>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const token = document.querySelector('meta[name="csrf-token"]').content;
+        document.body.addEventListener('htmx:configRequest', (event) => {
+            event.detail.headers['X-CSRFToken'] = token;
+        });
     });
 </script>
 <style>

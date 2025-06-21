@@ -193,7 +193,7 @@
                         <img src="https://placehold.co/40x40/666/fff?text=U" alt="User" class="rounded-circle ms-2" style="width: 20px; height: 20px;">
                       </a style="z-index: 1050;">
                       <ul class="dropdown-menu dropdown-menu-end mt-md-2 rounded-top-0">
-                        <li><a class="dropdown-item" href="#">Liked Courses</a></li>
+                        <li><a class="dropdown-item" href="{% url 'bookmarked_courses' %}">Liked Courses</a></li>
                         <li><a class="dropdown-item" href="{% url 'update_user' %}">Update Profile</a></li>
                         <li><hr class="dropdown-divider" /></li>
                         <li><a class="dropdown-item" href="{% url 'logout' %}">Log out</a></li>

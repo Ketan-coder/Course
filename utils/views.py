@@ -132,7 +132,7 @@ def landing_page(request) -> HttpResponse:
         email: str = request.POST.get("email")
         message: str = request.POST.get("message")
         if name != '' or email != '' or message != '':
-            user: User = User.objects.filter(email=email)
+            user = User.objects.filter(email=email)
             if user.exists() or user:
                 FeedBack.objects.create(name=name, email=email, message=message, user=user.first())
             else:

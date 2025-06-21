@@ -7,7 +7,7 @@
 {% block body %}
 <div class="container mt-4">
     <div class="row justify-content-center">
-        <div class="col-md-6">
+        <div class="col-md-10">
             <div class="card">
                 <div class="card-header">
                     <h5 class="card-title">Update Profile</h5>
@@ -42,9 +42,16 @@
                             <label>Last Name</label>
                             <input type="text" name="last_name" value="{{ user.last_name }}" class="form-control">
                         </div>
+                        
+                        {% if not is_student or instuructor %}
+                        <div class="form-group">
+                            <label>Experience</label>
+                            <input type="text" name="experience" value="{{ user.experience }}" class="form-control">
+                        </div>
+                        {% endif %}
                         <div class="form-group">
                             <label>Bio</label>
-                            <textarea name="bio" class="form-control">{{ profile.bio }}</textarea>
+                            <textarea name="bio" id="id_bio" class="form-control">{{ profile.bio }}</textarea>
                         </div>
                         <button type="submit" class="btn btn-primary mt-3">Update Profile</button>
                     </form>
@@ -75,4 +82,32 @@
     </div>
   </div>
 </div>
+
+<!-- Quill Styles -->
+<link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+<!-- Quill Script -->
+<script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const quillFields = ["bio"];
+        quillFields.forEach(field => {
+            const textArea = document.getElementById(`id_${field}`);
+            if (!textArea) return;
+            const parent = textArea.parentNode;
+            const wrapper = document.createElement("div");
+            wrapper.innerHTML = `<div id="editor_${field}" class="quill-editor" style="height: 200px;">${textArea.value}</div>`;
+            parent.insertBefore(wrapper, textArea);
+            textArea.style.display = "none";
+
+            const quill = new Quill(`#editor_${field}`, {
+                theme: 'snow'
+            });
+
+            quill.on('text-change', () => {
+                textArea.value = quill.root.innerHTML;
+            });
+        });
+    });
+</script>
+
 {% endblock body %}

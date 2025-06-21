@@ -8,6 +8,8 @@ urlpatterns: list[URLPattern] = [
     path('courses/', views.course_list, name='course_list'),
     path("course/<int:pk>/", views.course_detail, name="course_detail"),
     path('courses/new/', login_required(views.course_create), name='course_create'),
+
+    path('courses/bookmarked/', login_required(views.bookmarked_courses), name='bookmarked_courses'),
     path('courses/<int:pk>/edit/', login_required(views.course_update), name='course_update'),
     path('courses/<int:pk>/delete/', login_required(views.course_delete), name='course_delete'),
 
@@ -29,4 +31,5 @@ urlpatterns: list[URLPattern] = [
 
     path("quiz/new/", login_required(views.create_quiz), name="create_quiz"),
     path("quiz/submit/<int:quiz_id>/", login_required(views.submit_quiz), name="submit_quiz"),
+    path("course/bookmark/<int:course_id>/", login_required(views.bookmark_course), name="bookmark_course"),
 ]
