@@ -5,8 +5,8 @@ from django.http import HttpResponse, HttpResponsePermanentRedirect, HttpRespons
 from django.shortcuts import get_object_or_404, redirect, render
 from django.db.models import Q
 from Stock.models import Stock
-from .models import FAQ, Course, Language, Quiz, Section, Tag, Lesson
-from Users.models import Instructor, Profile
+from .models import FAQ, Course, Language, Quiz, Section, Tag, Lesson, CourseNotes
+from Users.models import Instructor, Profile, Student
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
 
@@ -232,9 +232,6 @@ def search_tags(request) -> JsonResponse:
     return JsonResponse([], safe=False)
 
 
-# ... Add similar views for searching other ManyToMany models
-
-
 def search_sections(request) -> JsonResponse:
     search_term = request.GET.get("q")
     if search_term:
@@ -286,6 +283,7 @@ def video_detail_page(request,lesson_id) -> HttpResponseRedirect | HttpResponseP
     if not user.is_authenticated:
         return redirect("login")
     logged_in_profile = Profile.objects.get(user=user)
+    student_profile = Student.objects.filter(profile=logged_in_profile).first() or None
     lesson = get_object_or_404(Lesson, pk=lesson_id)
     course = get_object_or_404(Course, sections__lesson__id=lesson_id)
     to_search_sections = course.sections.all().values_list('id', flat=True)
@@ -294,7 +292,7 @@ def video_detail_page(request,lesson_id) -> HttpResponseRedirect | HttpResponseP
     is_completed = lesson.completed_by_users.filter(pk=logged_in_profile.pk).exists()
     stock = Stock.objects.all()
     quizes = Quiz.objects.filter(Q(lesson=lesson) | Q(course=course) | Q(section=section)).distinct()
-    # question_list = quizes.values_list('question', flat=True)
+    course_notes = CourseNotes.objects.filter(course_id=course.id, section_id=section.id)
     questions_list = []
     for quiz in quizes:
         if quiz.questions:
@@ -371,6 +369,24 @@ def create_faq(request) -> HttpResponse:
         return JsonResponse({"id": faq.pk, "question": faq.question})
     return HttpResponse("Invalid request.", status=400)
 
+def create_course_notes(request) -> HttpResponse:
+    try:
+        if request.method == "POST":
+            student_id = request.POST.get("student_id")
+            if student_id:
+                student = Student.objects.get(pk=student_id)
+            else:
+                return JsonResponse({"error": "Student not found."}, status=400)
+            course_id = request.POST.get("course_id")
+            section_id = request.POST.get("section_id")
+            notes = request.POST.get("notes")
+            course_notes = CourseNotes.objects.create(user=student,section_id=section_id, course_id=course_id, note_text=notes)
+            # return JsonResponse({"id": course_notes.pk, "notes": course_notes.notes})
+            return HttpResponse(f"{student.profile.user.first_name} left a note: {notes}")
+        return HttpResponse("Invalid request.", status=400)
+    except Exception as e:
+        print(str(e))
+        return JsonResponse({"error": str(e)}, status=400)
 
 @csrf_exempt
 @login_required

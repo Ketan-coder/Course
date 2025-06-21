@@ -25,6 +25,7 @@ urlpatterns: list[URLPattern] = [
     path("create_section/", login_required(views.create_section), name="create_section"),
     path("create_lesson/", login_required(views.create_lesson), name="create_lesson"),
     path("create_faq/", login_required(views.create_faq), name="create_faq"),
+    path("create_course_notes/", login_required(views.create_course_notes), name="create_course_notes"),
 
     path("quiz/new/", login_required(views.create_quiz), name="create_quiz"),
     path("quiz/submit/<int:quiz_id>/", login_required(views.submit_quiz), name="submit_quiz"),

@@ -105,7 +105,7 @@ class Student(models.Model):
         self.extra_fields['is_active'] = self.profile.user.is_active
         self.extra_fields['date_joined'] = self.profile.user.date_joined.strftime('%Y-%m-%d %H:%M:%S') if self.profile.user.date_joined else None
         self.extra_fields['full_name'] = f"{self.profile.user.first_name} {self.profile.user.last_name}".strip()
-        self.extra_fields['is_verified'] = self.profile.is_verified
+        self.extra_fields['is_verified'] = self.profile.is_email_verified and self.profile.is_phone_verified or self.profile.is_profile_complete
         self.extra_fields['is_active'] = self.profile.user.is_active
         self.extra_fields['age'] = self.profile.extra_fields.get('age', None)
         # calculate streak days with respect to todays date

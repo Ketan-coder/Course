@@ -362,3 +362,17 @@ class CourseCertificate(models.Model):
         self.certificate_code = str(uuid.uuid4())
         self.extra_fields['last_updated'] = str(self.issued_at)
         super().save(*args, **kwargs)
+
+
+class CourseNotes(models.Model):
+    user = models.ForeignKey('Users.Student', on_delete=models.CASCADE, related_name='course_notes')
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='notes')
+    section = models.ForeignKey(Section, on_delete=models.CASCADE)
+    note_text = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering: list[str] = ['-created_at']
+
+    def __str__(self) -> str:
+        return f"{self.user.profile.user.first_name} left a note on {self.course.title} - {self.section.title} - {self.note_text[:20]}"

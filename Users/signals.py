@@ -43,7 +43,7 @@ def update_profile_on_user_save(sender, instance, **kwargs):
 
 @receiver(post_save, sender=Profile)
 def update_profile_extra_fields_on_save(sender, instance, **kwargs):
-    instance.extra_fields['whole_phone_no'] = instance.phone_no_prefix + instance.phone_no if instance.phone_no_prefix and instance.phone_no else None
+    instance.extra_fields['whole_phone_no'] = instance.phone_no_prefix.phone_no_prefix + instance.phone_no if instance.phone_no_prefix and instance.phone_no else None
     if instance.date_of_birth:
         # Use timezone.now().date() for current date to avoid naive datetime issues
         from django.utils import timezone
@@ -52,15 +52,15 @@ def update_profile_extra_fields_on_save(sender, instance, **kwargs):
     else:
         instance.extra_fields['age'] = None
     # Only save if extra_fields has changed to avoid potential infinite loops
-    if instance.has_changed('extra_fields'):
-        instance.save()
+    # if instance.has_changed('extra_fields'):
+    #     instance.save()
 
 @receiver(post_save, sender=User)
 def create_instructor_on_user_save(sender, instance, created, **kwargs):
     if created:
         try:
             Profile.objects.get(user=instance)
-            Instructor.objects.create(profile=Profile.objects.get(user=instance))
+            Student.objects.create(profile=Profile.objects.get(user=instance))
         except Profile.DoesNotExist:
             pass # Profile will be created by its own signal
 
@@ -73,8 +73,8 @@ def update_instructor_on_profile_save(sender, instance, **kwargs):
         instructor.extra_fields['date_joined'] = instance.user.date_joined.strftime('%Y-%m-%d %H:%M:%S') if instance.user.date_joined else None
         instructor.extra_fields['full_name'] = f"{instance.user.first_name} {instance.user.last_name}".strip()
         # Only save if extra_fields has changed
-        if instructor.has_changed('extra_fields'):
-            instructor.save()
+        # if instructor.has_changed('extra_fields'):
+        #     instructor.save()
     except Instructor.DoesNotExist:
         pass
 
@@ -94,7 +94,7 @@ def update_student_on_user_save(sender, instance, **kwargs):
 def update_student_on_profile_save(sender, instance, **kwargs):
     try:
         student = Student.objects.get(profile=instance)
-        student.extra_fields['is_verified'] = instance.is_verified
+        student.extra_fields['is_verified'] = instance.is_email_verified and instance.is_phone_verified or instance.is_profile_complete
         student.extra_fields['age'] = instance.extra_fields.get('age', None)
         student.save()
     except Student.DoesNotExist:
@@ -107,5 +107,5 @@ def update_student_streak_on_save(sender, instance, **kwargs):
         delta = today - instance.streak_started_date
         instance.extra_fields['streak_days'] = delta.days
         # Only save if streak_days has changed to avoid infinite loops
-        if instance.has_changed('extra_fields'):
-            instance.save()
+        # if instance.has_changed('extra_fields'):
+        #     instance.save()
