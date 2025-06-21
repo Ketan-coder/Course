@@ -26,6 +26,8 @@ services:
     container_name: sajan_giri_db
     volumes:
       - sajan_giri_db:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
     environment:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
