@@ -159,14 +159,14 @@ class Quiz(models.Model):
     questions = models.JSONField(blank=True, null=True)
     is_inside_video = models.BooleanField(default=False)
     completed_by_users = models.ManyToManyField('Users.Profile', related_name='completed_quizzes', blank=True)
-    max_score = models.DecimalField(max_digits=5, decimal_places=2, default=0.0)
-    passing_score = models.DecimalField(max_digits=5, decimal_places=2, default=0.0)
+    max_score = models.DecimalField(max_digits=5, decimal_places=2, default=Decimal('0.0'))
+    passing_score = models.DecimalField(max_digits=5, decimal_places=2, default=Decimal('0.0'))
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     extra_fields = models.JSONField(blank=True, null=True, default=dict)
 
     class Meta:
-        ordering: list[str] = ['-created_at']
+        ordering: list[str] = ['-created_at'] 
 
     def __str__(self) -> str:
         if self.section:

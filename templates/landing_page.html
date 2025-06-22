@@ -672,7 +672,11 @@
                 <p>To do is to learn; that's fun and engaging</p>
                 <div class="vip-input-group">
                     <input type="text" placeholder="Enter VIP Code">
-                    <button>CONTINUE</button>
+                    {% comment %} <button>CONTINUE</button> {% endcomment %}
+                    <form method="get" action="{% url 'quiz_warmup_start' %}">
+                        <button type="submit">CONTINUE</button>
+                    </form>
+
                 </div>
             </div>
         </section>

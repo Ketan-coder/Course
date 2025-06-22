@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% load static %}
+{% block body %}
+{# 🔁 Dynamically include the correct modal template based on question type #}
+{% with quiz_data.id as qid %}
+  {% if quiz_data.type == "SINGLE_SELECT" %}
+    {% include "components/modal_mcq.html" with quiz_data=quiz_data %}
+  {% elif quiz_data.type == "IMAGE_MC" %}
+    {% include "components/image_modal_mcq.html" with quiz_data=quiz_data %}
+  {% elif quiz_data.type == "TEXT" %}
+    {% include "components/text_quiz_modal.html" with quiz_data=quiz_data %}
+  {% elif quiz_data.type == "MULTIPLE_SELECT" %}
+    {% include "components/multiple_select_modal.html" with quiz_data=quiz_data %}
+  {% elif quiz_data.type == "DRAG_DROP" %}
+    {% include "components/drag_and_drop_quiz_modal.html" with quiz_data=quiz_data correct_mapping=quiz_data.correct_mapping %}
+  {% else %}
+    <p class="text-danger">Unsupported question type: {{ quiz_data.type }}</p>
+  {% endif %}
+{% endwith %}
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const type = "{{ quiz_data.type }}";
+  const id = "{{ quiz_data.id }}";
+  let modalId = "";
+
+  switch (type) {
+    case "SINGLE_SELECT":
+      modalId = `modal-mcq-${id}`;
+      break;
+    case "IMAGE_MC":
+      modalId = `modal-imcq-${id}`;
+      break;
+    case "TEXT":
+      modalId = `modal-text-quiz-${id}`;
+      break;
+    case "MULTIPLE_SELECT":
+      modalId = `modal-msq-${id}`;
+      break;
+    case "DRAG_DROP":
+      modalId = `modal-drag-drop-${id}`;
+      break;
+  }
+
+  if (modalId) {
+    const modalEl = document.getElementById(modalId);
+    if (modalEl) {
+      const bsModal = new bootstrap.Modal(modalEl);
+      bsModal.show();
+    }
+  }
+});
+</script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var modalId = 'modal-mcq-{{ quiz_data.id }}';
+        var modal = new bootstrap.Modal(document.getElementById(modalId));
+        modal.show();
+
+        document.getElementById('submit-mcq-{{ quiz_data.id }}').addEventListener('click', function () {
+            const selected = document.querySelector(`input[name="mcq-option-{{ quiz_data.id }}"]:checked`);
+            const feedback = document.getElementById("feedback-mcq-{{ quiz_data.id }}");
+
+            if (selected && selected.value.toLowerCase() === "{{ quiz_data.answer|lower }}") {
+                // Redirect to next question
+                setTimeout(() => {
+                    window.location.href = "{% url 'quiz_warmup_question' quiz_id next_qid %}";
+                }, 800);
+            } else {
+                feedback.textContent = "Try again.";
+                feedback.classList.add('text-danger');
+            }
+        });
+    });
+</script>
+    
+{% endblock body %}
+    

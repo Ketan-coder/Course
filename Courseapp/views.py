@@ -466,3 +466,36 @@ def submit_quiz(request, quiz_id):
             return JsonResponse({"error": str(e)}, status=400)
 
     return JsonResponse({"error": "Invalid request method"}, status=405)
+
+def quiz_warmup_start(request):
+    quiz = Quiz.objects.first()  # or filter by course/lesson if needed
+    if not quiz:
+        return redirect("signup")  # fallback
+
+    return redirect("quiz_warmup_question", quiz_id=quiz.pk, qid=1)
+
+# views.py
+def quiz_warmup_question(request, quiz_id, qid):
+    quiz = get_object_or_404(Quiz, id=quiz_id)
+    questions = quiz.questions or {}
+    current_q = str(qid)
+
+    if current_q not in questions:
+        return redirect("signup")
+
+    qdata = questions[current_q]
+    total = len(questions)
+    qdata.update({
+        "id": current_q,
+        "progress_percentage": int((int(current_q) / total) * 100),
+        "current_question_number": int(current_q),
+        "total_questions": total,
+        "type": qdata.get("type") or "SINGLE_SELECT",
+        "correct_mapping": qdata.get("correct_mapping", {})
+    })
+
+    return render(request, "components/quiz_warmup_page.html", {
+        "quiz_data": qdata,
+        "quiz_id": quiz_id,
+        "next_qid": int(current_q) + 1
+    })

@@ -32,4 +32,7 @@ urlpatterns: list[URLPattern] = [
     path("quiz/new/", login_required(views.create_quiz), name="create_quiz"),
     path("quiz/submit/<int:quiz_id>/", login_required(views.submit_quiz), name="submit_quiz"),
     path("course/bookmark/<int:course_id>/", login_required(views.bookmark_course), name="bookmark_course"),
+
+    path('warmup/', views.quiz_warmup_start, name='quiz_warmup_start'),
+    path('warmup/<int:quiz_id>/<int:qid>/', views.quiz_warmup_question, name='quiz_warmup_question'),
 ]
