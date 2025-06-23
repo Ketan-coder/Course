@@ -14,7 +14,7 @@
                     <div class="ratio ratio-16x9">
                         {% if lesson.video %}
                         <video id="lesson-video" class="w-100 h-100" controls controlsList="nodownload" preload="metadata" poster="{% static 'images/video-poster.jpg' %}">
-                            <source src="{{ lesson.video.url }}" type="video/mp4">
+                            {% comment %} <source src="{{ lesson.video.url }}" type="video/mp4"> {% endcomment %}
                             Your browser does not support the video tag.
                         </video>
                         {% else %}
@@ -304,6 +304,17 @@
     {% endfor %}
   {% endfor %}
 <script>
+document.addEventListener('DOMContentLoaded', function () {
+    const videoEl = document.getElementById('lesson-video');
+    const source = document.createElement('source');
+    source.src = "{{ lesson.video.url }}";
+    source.type = "video/mp4";
+    videoEl.appendChild(source);
+    videoEl.load();
+});
+</script>
+{% if lesson.video %}
+<script>
     document.addEventListener('DOMContentLoaded', () => {
         const video = document.getElementById('lesson-video');
         let isMarkedComplete = {{ is_completed|yesno:"true,false" }};
@@ -336,6 +347,7 @@
         }
     });
 </script>
+{% endif %}
 <script>
     document.addEventListener("DOMContentLoaded", function () {
         const token = document.querySelector('meta[name="csrf-token"]').content;

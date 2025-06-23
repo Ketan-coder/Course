@@ -18,13 +18,14 @@
         <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
       </div>
       <div class="offcanvas-body">
-        <form hx-post="{% url 'create_tag' %}" hx-target="#tag-select" hx-swap="outerHTML">
+        <form hx-post="{% url 'create_tag' %}" hx-target="#tag-select" hx-swap="outerHTML" id="tag-form">
             {% csrf_token %}
+            <input type="hidden" id="tag-id" name="id"> <!-- used for edit -->
             <div class="mb-3">
                 <label for="tag-name" class="form-label">Name</label>
                 <input type="text" class="form-control" name="name" id="tag-name" required>
             </div>
-            <button type="submit" class="btn btn-primary">Save Tag</button>
+            <button type="submit" class="btn btn-primary" id="tag-submit-btn">Save Tag</button>
         </form>
         <div id="tag-select"></div>
       </div>
@@ -262,7 +263,7 @@
             <div id="selected_tags" class="mt-2">
                 {% for tag in course.tags.all %}
                 <span class="badge bg-secondary mr-1 selected-tag" data-tag-id="{{ tag.id }}">
-                    {{ tag.name }} | <button type="button" class="btn btn-sm btn-outline-light ml-1 p-0 border-0" data-bs-toggle="offcanvas" data-bs-target="#offcanvas-add-tag">Edit</button> | <button type="button" class="btn btn-sm btn-outline-light ml-1 p-0 border-0" aria-label="Remove" onclick="removeTag(this)">&times;</button>
+                    {{ tag.name }} | <button type="button" class="btn btn-sm btn-outline-light" onclick="openEditTag('{{ tag.id }}', '{{ tag.name }}')">Edit</button> | <button type="button" class="btn btn-sm btn-outline-light ml-1 p-0 border-0" aria-label="Remove" onclick="removeTag(this)">&times;</button>
                 </span>
                 <input type="hidden" name="selected_tags" value="{{ tag.id }}">
                 {% endfor %}
@@ -667,5 +668,28 @@
         xhr.send(formData);
     });
 </script>
+<script>
+// Function to open the offcanvas for adding/editing tags
+function openEditTag(id, name) {
+  document.getElementById('tag-id').value = id;
+  document.getElementById('tag-name').value = name;
+
+  const form = document.getElementById('tag-form');
+  form.setAttribute('hx-post', `/course/tags/edit/${id}/`); // dynamic edit URL
+
+  document.getElementById('tag-submit-btn').textContent = "Update Tag";
+
+  // Open the offcanvas
+  const tagCanvas = new bootstrap.Offcanvas('#offcanvas-add-tag');
+  tagCanvas.show();
+}
+document.getElementById('offcanvas-add-tag').addEventListener('hidden.bs.offcanvas', function () {
+    const form = document.getElementById('tag-form');
+    form.reset();
+    form.setAttribute('hx-post', '{% url "create_tag" %}');
+    document.getElementById('tag-submit-btn').textContent = "Save Tag";
+});
+</script>
+
 {% include "footer.html" %}
 {% endblock %}

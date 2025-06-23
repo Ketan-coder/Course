@@ -509,3 +509,14 @@ def quiz_warmup_question(request, quiz_id, qid):
         "quiz_id": quiz_id,
         "next_qid": int(current_q) + 1
     })
+
+
+def edit_tag(request, tag_id):
+    if request.method != "POST":
+        return HttpResponse("Invalid request method.", status=405)
+    tag = get_object_or_404(Tag, id=tag_id)
+    tag.name = request.POST.get("name")
+    tag.save()
+
+    # Return updated tag UI or just a success message
+    return render(request, "components/updated_tag_list.html", {"tags": Tag.objects.all()})
