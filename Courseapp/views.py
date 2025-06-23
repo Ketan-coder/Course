@@ -14,6 +14,7 @@ from django.urls import reverse
 
 def course_list(request) -> HttpResponse:
     courses: BaseManager[Course] = Course.objects.all()
+    request.session["page"] = "course"
 
     if request.method == "POST" and "search_term" in request.POST:
         search_term = request.POST["search_term"]
@@ -61,6 +62,7 @@ def course_list(request) -> HttpResponse:
 @user_passes_test(lambda u: Instructor.objects.filter(profile=u.profile).exists())
 def course_create(request) -> HttpResponseRedirect | HttpResponsePermanentRedirect | HttpResponse:
     instructors = Instructor.objects.all()
+    request.session["page"] = "course"
     if request.method == "POST":
         # Manually get data from request.POST for each field
         title = request.POST.get("title")
@@ -124,6 +126,7 @@ def course_update(request, pk) -> HttpResponseRedirect | HttpResponsePermanentRe
     course: Course = get_object_or_404(Course, pk=pk)
     instructors: BaseManager[Instructor] = Instructor.objects.all()
     lessons = Lesson.objects.all() 
+    request.session["page"] = "course"
     if request.method == "POST":
         # Manually get data from request.POST for each field
         course.title = request.POST.get("title")
@@ -169,6 +172,7 @@ def course_update(request, pk) -> HttpResponseRedirect | HttpResponsePermanentRe
 
 @user_passes_test(lambda u: Instructor.objects.filter(profile=u.profile).exists())
 def create_quiz(request) -> HttpResponse:
+    request.session["page"] = "course"
     if request.method == "POST":
         print(request.POST)
         # Either update or create new quiz
@@ -265,6 +269,7 @@ def search_faqs(request) -> JsonResponse:
 
 @user_passes_test(lambda u: Instructor.objects.filter(profile=u.profile).exists())
 def course_delete(request, pk) -> HttpResponseRedirect | HttpResponsePermanentRedirect | HttpResponse:
+    request.session["page"] = "course"
     course = get_object_or_404(Course, pk=pk)
     if (
         request.method == "POST"
@@ -276,6 +281,11 @@ def course_delete(request, pk) -> HttpResponseRedirect | HttpResponsePermanentRe
 
 def course_detail(request, pk) -> HttpResponseRedirect | HttpResponsePermanentRedirect | HttpResponse:
     course = get_object_or_404(Course, pk=pk)
+    user = request.user
+    if not user.is_authenticated:
+        return redirect("login")
+    request.session["page"] = "course"
+    logged_in_profile = Profile.objects.get(user=user)
     return render(request, "course/course_detail.html", {"course": course})
 
 
@@ -283,12 +293,12 @@ def video_detail_page(request,lesson_id) -> HttpResponseRedirect | HttpResponseP
     user = request.user
     if not user.is_authenticated:
         return redirect("login")
+    request.session["page"] = "course"
     logged_in_profile = Profile.objects.get(user=user)
     student_profile = Student.objects.filter(profile=logged_in_profile).first() or None
     lesson = get_object_or_404(Lesson, pk=lesson_id)
     course = get_object_or_404(Course, sections__lesson__id=lesson_id)
     to_search_sections = course.sections.all().values_list('id', flat=True)
-    print(to_search_sections)
     section = get_object_or_404(Section, id__in=to_search_sections)
     is_completed = lesson.completed_by_users.filter(pk=logged_in_profile.pk).exists()
     stock = Stock.objects.all()
@@ -306,13 +316,13 @@ def bookmarked_courses(request) -> HttpResponseRedirect | HttpResponsePermanentR
     user = request.user
     if not user.is_authenticated:
         return redirect("login")
-    
+    request.session["page"] = "course"
     profile = get_object_or_404(Profile, user=user)
     bookmarked_courses = Course.objects.filter(bookmarked_by_users=profile).all()
     
     return render(request, "course/bookmarked_courses.html", {"bookmarked_courses": bookmarked_courses})
 
-def bookmark_course(request, course_id):
+def bookmark_course(request, course_id) -> HttpResponseRedirect | HttpResponsePermanentRedirect | HttpResponse | JsonResponse:
     user = request.user
     if not user.is_authenticated:
         return JsonResponse({"redirect": "/login"}, status=401)
@@ -468,7 +478,7 @@ def submit_quiz(request, quiz_id):
     return JsonResponse({"error": "Invalid request method"}, status=405)
 
 def quiz_warmup_start(request):
-    quiz = Quiz.objects.first()  # or filter by course/lesson if needed
+    quiz = Quiz.objects.filter(course__isnull=True, section__isnull=True, lesson__isnull=True).first()  # or filter by course/lesson if needed
     if not quiz:
         return redirect("signup")  # fallback
 
@@ -479,7 +489,7 @@ def quiz_warmup_question(request, quiz_id, qid):
     quiz = get_object_or_404(Quiz, id=quiz_id)
     questions = quiz.questions or {}
     current_q = str(qid)
-
+    request.session["page"] = "course"
     if current_q not in questions:
         return redirect("signup")
 

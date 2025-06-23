@@ -266,7 +266,7 @@
             border: none;
             background-color: var(--primary-color);
             color: var(--dark-blue);
-            padding: 15px 25px;
+            padding: 17px 25px;
             cursor: pointer;
             border-radius: 0 12px 12px 0;
             font-weight: 700;
@@ -761,6 +761,7 @@
                     <div class="contact-form-container">
                         <h2>Connect with us!</h2>
                         <form class="contact-form" method="post">
+                            {% csrf_token %}
                             <div class="form-group">
                                 <label for="name">Your Name</label>
                                 <input type="text" id="name" name="name" required>

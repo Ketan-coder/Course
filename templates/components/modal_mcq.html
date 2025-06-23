@@ -86,19 +86,20 @@ document.addEventListener('DOMContentLoaded', function () {
       submitBtn.textContent = "Correct!";
       submitBtn.disabled = true;
       form.querySelectorAll('input').forEach(r => r.disabled = true);
-        // ✅ Send to backend to mark as completed
-        fetch(`/course/quiz/submit/${quizId}/`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': '{{ csrf_token }}'
-          },
-          body: JSON.stringify({ answer: value })
-        }).then(response => {
-          if (!response.ok) {
-            console.warn("Failed to mark quiz as complete.");
-          }
-        }).catch(console.error);
+      // ✅ Send to backend to mark as completed
+      fetch(`/course/quiz/submit/${quizId}/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: JSON.stringify({ answer: value })
+      }).then(response => {
+        if (!response.ok) {
+          console.warn("Failed to mark quiz as complete.");
+        }
+      }).catch(console.error);
+      submitBtn.dispatchEvent(new CustomEvent('correctAnswer', { bubbles: true }));
     } else {
       feedback.textContent = incorrectFeedback;
       feedback.classList.add('text-danger');

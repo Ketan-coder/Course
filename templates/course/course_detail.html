@@ -24,13 +24,15 @@
                  style="max-width: 600px">
                 <h1 class="display-1 fw-bold">{{ course.title|default:"Stock Market Basics" }}</h1>
                 <p class="lead">{{ course.description|default:"A simple and fun way to learn finance." }}</p>
-                {% if not course.is_free %}
                     {% if course.instructor.profile.user.id == request.user.id %}
                         <a href="{% url 'course_update' pk=course.id %}" class="btn btn-primary btn-lg rounded-pill px-4 mt-3">Edit Course</a>
                     {% else %}
-                        <a href="#" class="btn btn-info btn-lg rounded-pill px-4 mt-3">Buy Now</a>
+                        {% if course.course_type == 'free' %}
+                            <a href="#" class="btn btn-info btn-lg rounded-pill px-4 mt-3">Enroll Now</a>
+                        {% else %}
+                            <a href="#" class="btn btn-info btn-lg rounded-pill px-4 mt-3">Buy Now</a>
+                        {% endif %}
                     {% endif %}
-                {% endif %}
             </div>
         </div>
         <!-- Instructor Card - Responsive -->
@@ -98,6 +100,7 @@
                 <div class="tab-pane fade" id="syllabus" role="tabpanel">
                     <div class="accordion" id="courseAccordion">
                         {% for chapter in course.sections.all %}
+                            {% if course.course_type == 'free' or course.instructor.profile.user.id == request.user.id or logged_in_profile in course.is_bought_by_users.all or course.is_open_to_all %}
                             <div class="accordion-item">
                                 <h2 class="accordion-header" id="heading-{{ forloop.counter }}">
                                     <button class="accordion-button {% if not forloop.first %}collapsed{% endif %}"
@@ -129,6 +132,7 @@
                                     </div>
                                 </div>
                             </div>
+                            {% endif %}
                         {% empty %}
                             <div class="card">
                                 <div class="card-body text-center">

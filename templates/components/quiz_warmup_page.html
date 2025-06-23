@@ -45,6 +45,15 @@ document.addEventListener('DOMContentLoaded', function () {
   if (modalId) {
     const modalEl = document.getElementById(modalId);
     if (modalEl) {
+      // Listen for the 'correctAnswer' custom event from the modal
+      modalEl.addEventListener('correctAnswer', function (event) {
+        // Redirect to the next question after a short delay
+        setTimeout(() => {
+          // Access quiz_id and next_qid from the template context
+          window.location.href = "{% url 'quiz_warmup_question' quiz_id next_qid %}";
+        }, 800); // Adjust the delay as needed
+      });
+
       const bsModal = new bootstrap.Modal(modalEl);
       bsModal.show();
     }
@@ -53,27 +62,5 @@ document.addEventListener('DOMContentLoaded', function () {
 </script>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        var modalId = 'modal-mcq-{{ quiz_data.id }}';
-        var modal = new bootstrap.Modal(document.getElementById(modalId));
-        modal.show();
-
-        document.getElementById('submit-mcq-{{ quiz_data.id }}').addEventListener('click', function () {
-            const selected = document.querySelector(`input[name="mcq-option-{{ quiz_data.id }}"]:checked`);
-            const feedback = document.getElementById("feedback-mcq-{{ quiz_data.id }}");
-
-            if (selected && selected.value.toLowerCase() === "{{ quiz_data.answer|lower }}") {
-                // Redirect to next question
-                setTimeout(() => {
-                    window.location.href = "{% url 'quiz_warmup_question' quiz_id next_qid %}";
-                }, 800);
-            } else {
-                feedback.textContent = "Try again.";
-                feedback.classList.add('text-danger');
-            }
-        });
-    });
-</script>
-    
 {% endblock body %}
     

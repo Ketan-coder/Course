@@ -1,39 +1,245 @@
-{% extends "base.html" %}
+{% extends 'base.html' %}
 {% load static %}
 
-{% block body %}
-  {% for questions in questions_list %}
-    {% if questions.question_type == "SINGLE_SELECT" %}
-      <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modal-mcq-{{ questions.id }}">
-        Open MCQ Quiz
-      </button>
-      {% include "components/modal_mcq.html" with quiz_data=questions %}
-
-    {% elif questions.question_type == "IMAGE_MC" %}
-      <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#modal-imcq-{{ questions.id }}">
-        Open Image MCQ Quiz
-      </button>
-      {% include "components/image_modal_mcq.html" with quiz_data=questions %}
-
-    {% elif questions.question_type == "TEXT" %}
-      <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#modal-text-quiz-{{ questions.id }}">
-        Open Text Quiz
-      </button>
-      {% include "components/text_quiz_modal.html" with quiz_data=questions %}
-
-      {% elif questions.question_type == "MULTIPLE_SELECT" %}
-      <button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#modal-msq-{{ questions.id }}">
-        Open Multiple Select Quiz
-      </button>
-      {% include "components/multiple_select_modal.html" with quiz_data=questions %}
-
-    {% elif questions.question_type == "DRAG_DROP" %}
-      <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modal-drag-drop-{{ questions.id }}">
-        Open Drag & Drop Quiz
-      </button>
-      {% include "components/drag_and_drop_quiz_modal.html" with quiz_data=questions correct_mapping=questions.correct_mapping %}
+{% block title %}
+    {% if user_role == 'instructor' %}
+        Instructor Dashboard
     {% else %}
-      <p class="text-danger">Unsupported quiz type: {{ questions.question_type }}</p>
+        My Learning Journey
     {% endif %}
-  {% endfor %}
+{% endblock title %}
+
+{% block body %}
+
+<div class="container-fluid py-30">
+
+    {# =============================================================================== #}
+    {# INSTRUCTOR DASHBOARD VIEW                                                       #}
+    {# This section will render if the 'user_role' context variable is 'instructor'. #}
+    {# =============================================================================== #}
+    {% if user_role == 'instructor' %}
+    <div class="content-wrapper">
+        <div class="d-flex align-items-center justify-content-between mb-10">
+            <h1 class="fs-1 content-title font-weight-bold">Instructor Dashboard</h1>
+            <a href="#" class="btn btn-primary">
+                <i class="ph-bold ph-plus-circle mr-5"></i>
+                Create New Course
+            </a>
+        </div>
+        <p class="text-muted mb-30">An overview of your course performance and earnings.</p>
+        
+        <!-- Key Metrics -->
+        <div class="row row-eq-spacing-lg">
+            <div class="col-lg-3">
+                <div class="card shadow-sm p-3 m-3">
+                    <h4 class="content-title font-size-16 text-muted">
+                        <i class="ph ph-student text-primary mr-5"></i> Total Students
+                    </h4>
+                    <div class="fs-1 font-weight-bold ms-1">1,250</div>
+                    <p class="text-muted mb-0 mt-1">+50 this month</p>
+                </div>
+            </div>
+            <div class="col-lg-3">
+                <div class="card shadow-sm p-3 m-3">
+                    <h4 class="content-title font-size-16 text-muted">
+                        <i class="ph ph-money text-success mr-5"></i> Total Revenue
+                    </h4>
+                    <div class="flex flex-row align-items-start">
+                      <small class="font-weight-bold mr-1">{{ instructor_currency }}</small> <span class="fs-1 font-weight-bold"> 8,450.00</span>
+                    </div>
+                    <p class="text-muted mb-0 mt-1">+$720 this month</p>
+                </div>
+            </div>
+            <div class="col-lg-3">
+                <div class="card shadow-sm p-3 m-3">
+                    <h4 class="content-title font-size-16 text-muted">
+                        <i class="ph ph-heart text-danger mr-5"></i> Total Likes
+                    </h4>
+                    <div class="fs-1 font-weight-bold ms-1">4,800</div>
+                     <p class="text-muted mb-0 mt-1">+210 this month</p>
+                </div>
+            </div>
+            <div class="col-lg-3">
+                <div class="card shadow-sm p-3 m-3">
+                    <h4 class="content-title font-size-16 text-muted">
+                        <i class="ph ph-book-open text-info mr-5"></i> Courses
+                    </h4>
+                    <div class="fs-1 font-weight-bold ms-1">8</div>
+                    <p class="text-muted mb-0 mt-1">+1 this month</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Course Performance Table -->
+        <div class="card shadow-sm mt-3 p-3">
+            <h2 class="content-title p-20 pb-10">Course Performance</h2>
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th class="p-20">Course Name</th>
+                            <th class="p-20">Students</th>
+                            <th class="p-20">Likes</th>
+                            <th class="p-20">Purchases</th>
+                            <th class="p-20">Status</th>
+                            <th class="text-right p-20">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="align-middle">Investment Strategies for Beginners</td>
+                            <td class="align-middle">450</td>
+                            <td class="align-middle">1.2k</td>
+                            <td class="align-middle">300</td>
+                            <td class="align-middle"><span class="badge badge-success">Published</span></td>
+                            <td class="text-right align-middle"><a href="#" class="btn btn-sm">Manage</a></td>
+                        </tr>
+                        <tr>
+                            <td class="align-middle">Advanced Trading Techniques</td>
+                            <td class="align-middle">300</td>
+                            <td class="align-middle">980</td>
+                            <td class="align-middle">210</td>
+                            <td class="align-middle"><span class="badge badge-success">Published</span></td>
+                            <td class="text-right align-middle"><a href="#" class="btn btn-sm">Manage</a></td>
+                        </tr>
+                        <tr>
+                            <td class="align-middle">Options Trading Masterclass</td>
+                            <td class="align-middle">150</td>
+                            <td class="align-middle">650</td>
+                            <td class="align-middle">110</td>
+                            <td class="align-middle"><span class="badge badge-warning">Draft</span></td>
+                            <td class="text-right align-middle"><a href="#" class="btn btn-sm">Manage</a></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% else %}
+
+    {# =============================================================================== #}
+    {# STUDENT DASHBOARD VIEW (DEFAULT)                                                #}
+    {# This section will render for any user role other than 'instructor'.           #}
+    {# =============================================================================== #}
+    <div class="content-wrapper">
+      <h1 class="fs-1 content-title font-weight-bolder">My Learning Journey</h1>
+      
+      <div class="row mt-4">
+          <!-- Left Column: Enrolled Courses -->
+          <div class="col-lg-8">
+              <h2 class="content-title font-size-22 mb-3">Enrolled Courses</h2>
+              
+              <!-- Course Card 1 -->
+              <div class="card shadow-sm mb-3 p-1">
+                  <div class="row g-0">
+                      <div class="col-md-4 p-3">
+                          <img src="https://placehold.co/400x300/d1e7dd/343a40?text=Course%20Image" class="img-fluid rounded-left rounded-1" alt="Course thumbnail" style="object-fit: cover; height: 100%;">
+                      </div>
+                      <div class="col-md-8 d-flex flex-column">
+                          <div class="content p-4">
+                              <span class="badge badge-primary-light text-primary font-weight-bold mb-2">In Progress</span>
+                              <h4 class="mb-2 font-weight-bold">Investment Strategies for Beginners</h4>
+                              <p class="text-muted font-size-14 mb-3">Learn the fundamentals of investing, including asset allocation, risk management, and portfolio diversification.</p>
+                              <a href="#" class="btn btn-primary">Continue Learning <i class="ph ph-arrow-right ml-1"></i></a>
+                          </div>
+                          <div class="px-4 pb-3 mt-auto">
+                              <div class="d-flex justify-content-between font-size-12 text-muted mb-1">
+                                  <span>Progress</span>
+                                  <span>60%</span>
+                              </div>
+                              <div class="progress" style="height: 0.5rem;">
+                                  <div class="progress-bar" role="progressbar" style="width: 60%;" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100"></div>
+                              </div>
+                          </div>
+                      </div>
+                  </div>
+              </div>
+
+              <!-- Course Card 2 -->
+              <div class="card shadow-sm mb-3">
+                  <div class="row g-0">
+                      <div class="col-md-4 p-3">
+                          <img src="https://placehold.co/400x300/fff4d6/343a40?text=Course%20Image" class="img-fluid rounded-left rounded-1" alt="Course thumbnail" style="object-fit: cover; height: 100%;">
+                      </div>
+                      <div class="col-md-8 d-flex flex-column">
+                          <div class="content p-4">
+                              <span class="badge badge-primary-light text-primary font-weight-bold mb-2">In Progress</span>
+                              <h4 class="mb-2 font-weight-bold">Advanced Trading Techniques</h4>
+                              <p class="text-muted font-size-14 mb-3">Master advanced trading strategies, including technical analysis, algorithmic trading, and options trading.</p>
+                              <a href="#" class="btn btn-primary">Continue Learning <i class="ph ph-arrow-right ml-1"></i></a>
+                          </div>
+                           <div class="px-4 pb-3 mt-auto">
+                              <div class="d-flex justify-content-between font-size-12 text-muted mb-1">
+                                  <span>Progress</span>
+                                  <span>30%</span>
+                              </div>
+                              <div class="progress" style="height: 0.5rem;">
+                                  <div class="progress-bar" role="progressbar" style="width: 30%;" aria-valuenow="30" aria-valuemin="0" aria-valuemax="100"></div>
+                              </div>
+                          </div>
+                      </div>
+                  </div>
+              </div>
+          </div>
+
+          <!-- Right Column: Tournaments & Leaderboard -->
+          <div class="col-lg-4">
+              <h2 class="content-title font-size-22 mb-3">Trading Tournaments</h2>
+              <div class="card shadow-sm mb-3 p-3">
+                  <h4 class="content-title font-size-16 mb-3"><i class="ph-fill ph-trophy mr-1"></i> Active Tournaments</h4>
+                  <div class="d-flex justify-content-between align-items-center mb-2">
+                      <span>Weekly Stock Challenge</span>
+                      <a href="#" class="font-weight-bold">Join Now</a>
+                  </div>
+                   <div class="d-flex justify-content-between align-items-center">
+                      <span>Monthly Portfolio Battle</span>
+                      <a href="#" class="font-weight-bold">Join Now</a>
+                  </div>
+              </div>
+              
+              <div class="card shadow-sm p-3">
+                  <h4 class="content-title font-size-16 mb-2"><i class="ph-fill ph-list-numbers mr-1"></i> Leaderboard</h4>
+                  <p class="font-size-14 text-muted mb-2">Your Rank: #12 <a href="#" class="ml-1 font-weight-bold">View Full Leaderboard</a></p>
+                  <ul class="list-group list-group-flush">
+                      <li class="list-group-item d-flex justify-content-between align-items-center">1. TraderPro123 <span class="text-success font-weight-bold">+15.2%</span></li>
+                      <li class="list-group-item d-flex justify-content-between align-items-center">2. StockMaster <span class="text-success font-weight-bold">+12.8%</span></li>
+                      <li class="list-group-item d-flex justify-content-between align-items-center">3. AlphaSeeker <span class="text-success font-weight-bold">+10.5%</span></li>
+                  </ul>
+              </div>
+          </div>
+      </div>
+
+      <!-- Rewards Status Section -->
+      <h2 class="content-title font-size-22 mt-5 mb-3">Rewards Status</h2>
+      <div class="row row-eq-spacing mb-3">
+          <div class="col-lg-3">
+              <div class="card shadow-sm p-3 m-0">
+                  <h4 class="content-title font-size-16 text-muted"><i class="ph ph-bank mr-1"></i> Stocks Earned</h4>
+                  <div class="fs-2 font-weight-bold ms-1">$50.00</div>
+                  <p class="text-success font-size-14 mb-0 mt-1">+10% this month</p>
+              </div>
+          </div>
+           <div class="col-lg-3">
+              <div class="card shadow-sm p-3 m-0">
+                  <h4 class="content-title font-size-16 text-muted"><i class="ph ph-ticket mr-1"></i> Vouchers Collected</h4>
+                  <div class="fs-2 font-weight-bold ms-1">2 Vouchers</div>
+                  <p class="text-success font-size-14 mb-0 mt-1">+1 this month</p>
+              </div>
+          </div>
+          <div class="col-lg-6">
+               <div class="card shadow-sm h-full m-0">
+                  <div class="content p-3 d-flex align-items-center h-full">
+                      <img src="https://placehold.co/80x80/fff4d6/343a40?text=Reward" alt="Reward" class="rounded-circle mr-3">
+                      <div class="p-3">
+                           <h4 class="content-title mb-1 font-weight-bold">Claim Your Rewards!</h4>
+                           <p class="text-muted font-size-14 mb-2">You've earned rewards by completing courses. Claim your stocks and vouchers now to enjoy the benefits.</p>
+                           <button class="btn btn-success">Claim Rewards <i class="ph ph-gift ml-1"></i></button>
+                      </div>
+                  </div>
+              </div>
+          </div>
+      </div>
+  </div>
+    {% endif %}
+</div>
 {% endblock body %}

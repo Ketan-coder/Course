@@ -3,10 +3,11 @@ from django.shortcuts import render, get_object_or_404
 from Courseapp.models import Quiz
 from django.contrib.auth.models import User
 from utils.models import FeedBack
+from Users.models import Profile, Student, Instructor
 import json
 
 # Create your views here.
-def index(request) -> HttpResponse:
+def quiz_helper(request) -> HttpResponse:
     # mcq_quiz = {
     #     "id": "science_q1",
     #     "title": "Science Quiz!",
@@ -123,9 +124,31 @@ def index(request) -> HttpResponse:
         "total_questions": total_questions,
         "questions_list": questions_list, # Pass the list of all questions to the template
     }
-    return render(request, 'index.html', context)
+    return render(request, 'components/quiz_helper.html', context)
+
+def index(request):
+    request.session["page"] = "home"
+    
+    current_user = request.user
+    if current_user.is_authenticated:
+        context = {} # Initialize context for authenticated users
+        try:
+            profile = Profile.objects.get(user=current_user)
+            if Student.objects.filter(profile=profile).exists():
+                context = {
+                    'user_role': 'student',
+                }
+            elif Instructor.objects.filter(profile=profile).exists():
+                context = {
+                    'user_role': 'instructor',
+                    'instructor_currency': profile.currency.symbol
+                }  
+        except Profile.DoesNotExist:
+            messages.error("Profile Cannot be Found!")
+    return render(request, 'index.html',context)
 
 def landing_page(request) -> HttpResponse:
+    request.session["page"] = "home"
     if request.method == "POST":
         print(request.POST)
         name: str = request.POST.get("name")
