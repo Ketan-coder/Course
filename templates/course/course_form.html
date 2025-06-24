@@ -38,8 +38,9 @@
         <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
       </div>
       <div class="offcanvas-body">
-        <form hx-post="{% url 'create_faq' %}" hx-target="#faq-select" hx-swap="outerHTML">
+        <form hx-post="{% url 'create_faq' %}" hx-target="#faq-select" hx-swap="outerHTML" id="faq-form">
             {% csrf_token %}
+            <input type="hidden" id="faq-id" name="id"> <!-- used for edit -->
             <div class="mb-3">
                 <label for="faq-question" class="form-label">Question</label>
                 <input type="text" class="form-control" name="question" id="faq-question" required>
@@ -48,7 +49,7 @@
                 <label for="faq-answer" class="form-label">Answer</label>
                 <textarea class="form-control" name="answer" id="faq-answer" rows="4" required></textarea>
             </div>
-            <button type="submit" class="btn btn-success">Save FAQ</button>
+            <button type="submit" class="btn btn-success" id="faq-submit-btn">Save FAQ</button>
         </form>
         <div id="faq-select"></div>
       </div>
@@ -61,8 +62,9 @@
         <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
       </div>
       <div class="offcanvas-body">
-        <form hx-post="{% url 'create_section' %}" hx-target="#section-select" hx-swap="outerHTML">
+        <form hx-post="{% url 'create_section' %}" hx-target="#section-select" hx-swap="outerHTML" id="section-form">
             {% csrf_token %}
+            <input type="hidden" id="section-id" name="id"> <!-- used for edit -->
             <div class="mb-3">
                 <label for="section-title" class="form-label">Title</label>
                 <input type="text" class="form-control" name="title" id="section-title" required>
@@ -102,7 +104,7 @@
                 {% endif %}
             </div>
             <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#modal-add-lesson">Add Lesson</button>
-            <button type="submit" class="btn btn-warning">Save Section</button>
+            <button type="submit" class="btn btn-warning" id="section-submit-btn">Save Section</button>
         </form>
         <div id="section-select"></div> 
       </div>
@@ -296,7 +298,7 @@
             <div id="selected_faqs" class="mt-2">
                  {% for faq in course.faqs.all %}
                 <span class="badge bg-secondary mr-1 selected-faq" data-faq-id="{{ faq.id }}">
-                    {{ faq.question }} | <button type="button" class="btn btn-sm btn-outline-light ml-1 p-0 border-0" data-bs-toggle="offcanvas" data-bs-target="#offcanvas-add-faq">Edit</button> | <button type="button" class="btn btn-sm btn-outline-light ml-1 p-0 border-0" aria-label="Remove" onclick="removeFaq(this)">&times;</button>
+                    {{ faq.question }} | <button type="button" class="btn btn-sm btn-outline-light" onclick="openEditFAQ('{{ faq.id }}', '{{ faq.question }}', '{{ faq.answer }}')">Edit</button> | <button type="button" class="btn btn-sm btn-outline-light ml-1 p-0 border-0" aria-label="Remove" onclick="removeFaq(this)">&times;</button>
                 </span>
                 <input type="hidden" name="selected_faqs" value="{{ faq.id }}">
                 {% endfor %}
@@ -356,12 +358,33 @@
             <input type="text" id="id_sections_search" class="form-control" placeholder="Search and add sections">
             <div id="sections_search_results" class="list-group mt-2"></div>
             <div id="selected_sections" class="mt-2">
-                {% for section in course.sections.all %}
+                {% comment %} {% for section in course.sections.all %}
                 <span class="badge bg-secondary mr-1 selected-section" data-section-id="{{ section.id }}">
-                    {{ section.title }} | <button type="button" class="btn btn-sm btn-outline-light ml-1 p-0 border-0" data-bs-toggle="offcanvas" data-bs-target="#offcanvas-add-section">Edit</button> | <button type="button" class="btn btn-sm btn-outline-light ml-1 p-0 border-0" aria-label="Remove" onclick="removeSection(this)">&times;</button>
+                    {{ section.title }} | <button type="button" class="btn btn-sm btn-outline-light" onclick="openEditSection('{{ section.id }}', '{{ section.title }}', '{{ section.order }}', '{{ section.is_open }}', '{{ section.lesson.all|safe }}')">Edit</button> | <button type="button" class="btn btn-sm btn-outline-light ml-1 p-0 border-0" aria-label="Remove" onclick="removeSection(this)">&times;</button>
                 </span>
                 <input type="hidden" name="selected_sections" value="{{ section.id }}">
-                {% endfor %}
+                {% endfor %} {% endcomment %}
+                {% for section in course.sections.all %}
+                <span class="badge bg-secondary mr-1 selected-section" data-section-id="{{ section.id }}">
+                    {{ section.title }} | 
+                    <button type="button" 
+                            class="btn btn-sm btn-outline-light" 
+                            onclick="openEditSection(
+                                '{{ section.id }}', 
+                                '{{ section.title }}', 
+                                '{{ section.order }}', 
+                                '{{ section.is_open }}',
+                                '{% for lesson in section.lesson.all %}{{ lesson.id }}{% if not forloop.last %},{% endif %}{% endfor %}',
+                                '{% for lesson in section.lesson.all %}{{ lesson.title }}{% if not forloop.last %}|{% endif %}{% endfor %}'
+                            )">
+                        Edit
+                    </button> | 
+                    <button type="button" class="btn btn-sm btn-outline-light ml-1 p-0 border-0" aria-label="Remove" onclick="removeSection(this)">
+                        &times;
+                    </button>
+                </span>
+                <input type="hidden" name="selected_sections" value="{{ section.id }}">
+            {% endfor %}
             </div>
             {% if form.sections.errors %}
             <div class="invalid-feedback d-block">{{ form.sections.errors }}</div>
@@ -375,7 +398,7 @@
  <button type="submit" class="btn btn-primary btn-lg mt-3 float-right">{% if course %}Update Course{% else %}Create Course{% endif %}</button>
 </form>
 </div>
-{% endblock %}
+{% endblock body %}
 
 {% block script %}
 <script>
@@ -675,7 +698,7 @@ function openEditTag(id, name) {
   document.getElementById('tag-name').value = name;
 
   const form = document.getElementById('tag-form');
-  form.setAttribute('hx-post', `/course/tags/edit/${id}/`); // dynamic edit URL
+  //form.setAttribute('hx-post', `/course/tags/edit/${id}/`); // dynamic edit URL
 
   document.getElementById('tag-submit-btn').textContent = "Update Tag";
 
@@ -683,13 +706,80 @@ function openEditTag(id, name) {
   const tagCanvas = new bootstrap.Offcanvas('#offcanvas-add-tag');
   tagCanvas.show();
 }
-document.getElementById('offcanvas-add-tag').addEventListener('hidden.bs.offcanvas', function () {
-    const form = document.getElementById('tag-form');
-    form.reset();
-    form.setAttribute('hx-post', '{% url "create_tag" %}');
-    document.getElementById('tag-submit-btn').textContent = "Save Tag";
-});
+
+// Function to open the offcanvas for adding/editing fags
+function openEditFAQ(id, question, answer) {
+    document.getElementById('faq-id').value = id;
+    document.getElementById('faq-question').value = question;
+    document.getElementById('faq-answer').value = answer;
+  
+    const form = document.getElementById('faq-form');
+  
+    document.getElementById('faq-submit-btn').textContent = "Update FAQ";
+  
+    // Open the offcanvas
+    const tagCanvas = new bootstrap.Offcanvas('#offcanvas-add-faq');
+    tagCanvas.show();
+  }
+
+// Function to open the offcanvas for adding/editing sections
+function openEditSection(id, title, order, is_open, lesson_ids, lesson_titles) {
+    // Set basic fields
+    document.getElementById('section-id').value = id;
+    document.getElementById('section-title').value = title;
+    document.getElementById('section-order').value = order;
+    
+    // Set is_open toggle switch
+    const isOpenSwitch = document.getElementById('section-is_open');
+    isOpenSwitch.checked = (is_open === 'True' || is_open === true);
+    
+    // Clear previous selected lessons
+    const selectedLessonContainer = document.getElementById('selected_lesson');
+    selectedLessonContainer.innerHTML = '';
+    
+    try {
+        // Parse lesson IDs and titles if they exist
+        if (lesson_ids && lesson_titles) {
+            const idsArray = lesson_ids.split(',');
+            const titlesArray = lesson_titles.split('|');
+            
+            idsArray.forEach((id, index) => {
+                if (id && titlesArray[index]) {
+                    const lessonBadge = document.createElement('span');
+                    lessonBadge.className = 'badge bg-secondary mr-1 selected-lesson mb-1';
+                    lessonBadge.setAttribute('data-lesson-id', id.trim());
+                    lessonBadge.innerHTML = `
+                        ${titlesArray[index].trim()} 
+                        <button type="button" 
+                                class="btn btn-sm btn-outline-light ml-1 p-0 border-0" 
+                                aria-label="Remove" 
+                                onclick="removeLesson(this)">
+                            &times;
+                        </button>
+                    `;
+                    
+                    const hiddenInput = document.createElement('input');
+                    hiddenInput.type = 'hidden';
+                    hiddenInput.name = 'selected_lesson';
+                    hiddenInput.value = id.trim();
+                    
+                    selectedLessonContainer.appendChild(lessonBadge);
+                    selectedLessonContainer.appendChild(hiddenInput);
+                }
+            });
+        }
+    } catch (e) {
+        console.error('Error parsing lessons:', e);
+    }
+  
+    // Update button text
+    document.getElementById('section-submit-btn').textContent = id ? "Update Section" : "Add Section";
+  
+    // Open the offcanvas
+    const tagCanvas = new bootstrap.Offcanvas('#offcanvas-add-section');
+    tagCanvas.show();
+}
 </script>
 
 {% include "footer.html" %}
-{% endblock %}
+{% endblock script %}

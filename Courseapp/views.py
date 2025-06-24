@@ -387,47 +387,239 @@ def mark_lesson_complete(request, lesson_id, user_profile) -> HttpResponseRedire
     
     return redirect("video_detail_page", lesson_id=lesson_id)
 
-def create_tag(request) -> HttpResponse:
-    if request.method == "POST":
-        name = request.POST.get("name")
-        tag = Tag.objects.create(name=name)
-        return JsonResponse({"id": tag.pk, "name": tag.name})
-    return HttpResponse("Invalid request.", status=400)
+from django.http import HttpResponse
+from django.shortcuts import get_object_or_404
+from django.core.exceptions import ValidationError
 
+def create_tag(request) -> HttpResponse:
+    if request.method != "POST":
+        return HttpResponse(
+            """<div class="alert alert-danger border-0 rounded-0 d-flex align-items-center" role="alert">
+                <i class="fa-light fa-exclamation-circle text-danger-emphasis me-2"></i>
+                <div>Invalid request method.</div>
+            </div>""",
+            status=405
+        )
+
+    name = request.POST.get("name")
+    if not name:
+        return HttpResponse(
+            """<div class="alert alert-danger border-0 rounded-0 d-flex align-items-center" role="alert">
+                <i class="fa-light fa-exclamation-circle text-danger-emphasis me-2"></i>
+                <div>Tag name is required.</div>
+            </div>""",
+            status=400
+        )
+
+    try:
+        tag_id = request.POST.get("id")
+        if tag_id:
+            tag = get_object_or_404(Tag, id=tag_id)
+            tag.name = name
+            tag.save()
+            return HttpResponse(
+                """<div class="alert alert-success border-0 rounded-0 d-flex align-items-center" role="alert">
+                    <i class="fa-light fa-check-circle text-success-emphasis me-2"></i>
+                    <div>Tag <strong>{}</strong> updated successfully.</div>
+                </div>""".format(name)
+            )
+        else:
+            tag = Tag.objects.create(name=name)
+            return HttpResponse(
+                """<div class="alert alert-success border-0 rounded-0 d-flex align-items-center" role="alert">
+                    <i class="fa-light fa-check-circle text-success-emphasis me-2"></i>
+                    <div>Tag <strong>{}</strong> created successfully.</div>
+                </div>""".format(name),
+                status=201
+            )
+    except ValidationError as e:
+        return HttpResponse(
+            """<div class="alert alert-danger border-0 rounded-0 d-flex align-items-center" role="alert">
+                <i class="fa-light fa-exclamation-circle text-danger-emphasis me-2"></i>
+                <div>Validation error: {}</div>
+            </div>""".format(', '.join(e.messages)),
+            status=400
+        )
+    except Exception as e:
+        return HttpResponse(
+            """<div class="alert alert-danger border-0 rounded-0 d-flex align-items-center" role="alert">
+                <i class="fa-light fa-exclamation-circle text-danger-emphasis me-2"></i>
+                <div>Error: {}</div>
+            </div>""".format(str(e)),
+            status=500
+        )
 
 def create_section(request) -> HttpResponse:
-    if request.method == "POST":
-        # course_id = request.POST.get("course_id")
-        title = request.POST.get("title")
-        order = request.POST.get("order")
+    if request.method != "POST":
+        return HttpResponse(
+            """<div class="alert alert-danger border-0 rounded-0 d-flex align-items-center" role="alert">
+                <i class="fa-light fa-exclamation-circle text-danger-emphasis me-2"></i>
+                <div>Invalid request method.</div>
+            </div>""",
+            status=405
+        )
+
+    title = request.POST.get("title")
+    if not title:
+        return HttpResponse(
+            """<div class="alert alert-danger border-0 rounded-0 d-flex align-items-center" role="alert">
+                <i class="fa-light fa-exclamation-circle text-danger-emphasis me-2"></i>
+                <div>Title is required.</div>
+            </div>""",
+            status=400
+        )
+
+    try:
+        section_id = request.POST.get("id")
+        order = request.POST.get("order", 0)
         is_open = request.POST.get("is_open", False) == "on"
-        # course = get_object_or_404(Course, pk=course_id)
-        section = Section.objects.create(title=title, order=order, is_open=is_open)
-        return JsonResponse({"id": section.pk, "title": section.title})
-    return HttpResponse("Invalid request.", status=400)
+
+        if section_id:
+            section = get_object_or_404(Section, id=section_id)
+            section.title = title
+            section.order = order
+            section.is_open = is_open
+            section.save()
+            return HttpResponse(
+                """<div class="alert alert-success border-0 rounded-0 d-flex align-items-center" role="alert">
+                    <i class="fa-light fa-check-circle text-success-emphasis me-2"></i>
+                    <div>Section <strong>{}</strong> updated successfully.</div>
+                </div>""".format(title)
+            )
+        else:
+            section = Section.objects.create(title=title, order=order, is_open=is_open)
+            return HttpResponse(
+                """<div class="alert alert-success border-0 rounded-0 d-flex align-items-center" role="alert">
+                    <i class="fa-light fa-check-circle text-success-emphasis me-2"></i>
+                    <div>Section <strong>{}</strong> created successfully.</div>
+                </div>""".format(title),
+                status=201
+            )
+    except Exception as e:
+        return HttpResponse(
+            """<div class="alert alert-danger border-0 rounded-0 d-flex align-items-center" role="alert">
+                <i class="fa-light fa-exclamation-circle text-danger-emphasis me-2"></i>
+                <div>Error: {}</div>
+            </div>""".format(str(e)),
+            status=500
+        )
 
 
 def create_lesson(request) -> HttpResponse:
-    if request.method == "POST":
-        # section_id = request.POST.get("section_id")
-        title = request.POST.get("title")
-        description = request.POST.get("description")
-        order = request.POST.get("order")
-        section = get_object_or_404(Section, pk=1)
-        lesson = Lesson.objects.create(
-             title=title, description=description, order=order
+    if request.method != "POST":
+        return HttpResponse(
+            """<div class="alert alert-danger border-0 rounded-0 d-flex align-items-center" role="alert">
+                <i class="fa-light fa-exclamation-circle text-danger-emphasis me-2"></i>
+                <div>Invalid request method.</div>
+            </div>""",
+            status=405
         )
-        return JsonResponse({"id": lesson.pk, "title": lesson.title})
-    return HttpResponse("Invalid request.", status=400)
+
+    title = request.POST.get("title")
+    if not title:
+        return HttpResponse(
+            """<div class="alert alert-danger border-0 rounded-0 d-flex align-items-center" role="alert">
+                <i class="fa-light fa-exclamation-circle text-danger-emphasis me-2"></i>
+                <div>Title is required.</div>
+            </div>""",
+            status=400
+        )
+
+    try:
+        lesson_id = request.POST.get("id")
+        description = request.POST.get("description", "")
+        order = request.POST.get("order", 0)
+        section_id = request.POST.get("section_id", 1)
+        section = get_object_or_404(Section, pk=section_id)
+
+        if lesson_id:
+            lesson = get_object_or_404(Lesson, id=lesson_id)
+            lesson.title = title
+            lesson.description = description
+            lesson.order = order
+            lesson.section = section
+            lesson.save()
+            return HttpResponse(
+                """<div class="alert alert-success border-0 rounded-0 d-flex align-items-center" role="alert">
+                    <i class="fa-light fa-check-circle text-success-emphasis me-2"></i>
+                    <div>Lesson <strong>{}</strong> updated successfully.</div>
+                </div>""".format(title)
+            )
+        else:
+            lesson = Lesson.objects.create(
+                title=title,
+                description=description,
+                order=order,
+            )
+            return HttpResponse(
+                """<div class="alert alert-success border-0 rounded-0 d-flex align-items-center" role="alert">
+                    <i class="fa-light fa-check-circle text-success-emphasis me-2"></i>
+                    <div>Lesson <strong>{}</strong> created successfully.</div>
+                </div>""".format(title),
+                status=201
+            )
+    except Exception as e:
+        return HttpResponse(
+            """<div class="alert alert-danger border-0 rounded-0 d-flex align-items-center" role="alert">
+                <i class="fa-light fa-exclamation-circle text-danger-emphasis me-2"></i>
+                <div>Error: {}</div>
+            </div>""".format(str(e)),
+            status=500
+        )
 
 
 def create_faq(request) -> HttpResponse:
-    if request.method == "POST":
-        question = request.POST.get("question")
-        answer = request.POST.get("answer")
-        faq = FAQ.objects.create(question=question, answer=answer)
-        return JsonResponse({"id": faq.pk, "question": faq.question})
-    return HttpResponse("Invalid request.", status=400)
+    if request.method != "POST":
+        return HttpResponse(
+            """<div class="alert alert-danger border-0 rounded-0 d-flex align-items-center" role="alert">
+                <i class="fa-light fa-exclamation-circle text-danger-emphasis me-2"></i>
+                <div>Invalid request method.</div>
+            </div>""",
+            status=405
+        )
+
+    question = request.POST.get("question")
+    if not question:
+        return HttpResponse(
+            """<div class="alert alert-danger border-0 rounded-0 d-flex align-items-center" role="alert">
+                <i class="fa-light fa-exclamation-circle text-danger-emphasis me-2"></i>
+                <div>Question is required.</div>
+            </div>""",
+            status=400
+        )
+
+    try:
+        faq_id = request.POST.get("id")
+        answer = request.POST.get("answer", "")
+
+        if faq_id:
+            faq = get_object_or_404(FAQ, id=faq_id)
+            faq.question = question
+            faq.answer = answer
+            faq.save()
+            return HttpResponse(
+                """<div class="alert alert-success border-0 rounded-0 d-flex align-items-center" role="alert">
+                    <i class="fa-light fa-check-circle text-success-emphasis me-2"></i>
+                    <div>FAQ <strong>{}</strong> updated successfully.</div>
+                </div>""".format(question)
+            )
+        else:
+            faq = FAQ.objects.create(question=question, answer=answer)
+            return HttpResponse(
+                """<div class="alert alert-success border-0 rounded-0 d-flex align-items-center" role="alert">
+                    <i class="fa-light fa-check-circle text-success-emphasis me-2"></i>
+                    <div>FAQ <strong>{}</strong> created successfully.</div>
+                </div>""".format(question),
+                status=201
+            )
+    except Exception as e:
+        return HttpResponse(
+            """<div class="alert alert-danger border-0 rounded-0 d-flex align-items-center" role="alert">
+                <i class="fa-light fa-exclamation-circle text-danger-emphasis me-2"></i>
+                <div>Error: {}</div>
+            </div>""".format(str(e)),
+            status=500
+        )
 
 def create_course_notes(request) -> HttpResponse:
     try:
