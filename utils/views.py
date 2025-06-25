@@ -145,6 +145,8 @@ def index(request):
                 }  
         except Profile.DoesNotExist:
             messages.error("Profile Cannot be Found!")
+    else:
+        return redirect('login')
     return render(request, 'index.html',context)
 
 def landing_page(request) -> HttpResponse:

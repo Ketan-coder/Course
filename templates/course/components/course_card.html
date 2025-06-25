@@ -17,6 +17,13 @@
 
       <div class="card-body d-flex flex-column">
         <!-- <h1 class="card-text mt-2 mx-auto text-success text-start"><b>{{ course.get_course_type_display }}</b></h1> -->
+        <div class="d-flex justify-content-start align-items-center">
+        {% for tag in course.tags.all %} 
+        <span class="badge bg-secondary m-1 selected-lesson" data-lesson-id="{{ tag.id }}">
+          {{ tag.name }}
+        </span>
+        {% endfor %}
+      </div>
         <h5 class="card-title mb-2">{{ course.title }}</h5>
         {% if course.course_type == 'free' %}
         <p class="card-text fs-5 d-flex align-items-center">
