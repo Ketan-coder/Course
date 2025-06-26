@@ -537,7 +537,6 @@ def create_lesson(request) -> HttpResponse:
             lesson.title = title
             lesson.description = description
             lesson.order = order
-            lesson.section = section
             lesson.save()
             return HttpResponse(
                 """<div class="alert alert-success border-0 rounded-0 d-flex align-items-center" role="alert">
