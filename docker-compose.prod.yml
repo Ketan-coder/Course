@@ -1,4 +1,4 @@
-version: '3'
+#version: '3'
 
 services:
   web:
@@ -42,12 +42,24 @@ services:
     container_name: nginx_server
     ports:
       - "80:80"
+      - "443:443"
     volumes:
       - static_volume:/app/staticfiles
       - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+      - ./certbot/www:/var/www/certbot
+      - ./certbot/conf:/etc/letsencrypt
     depends_on:
       - web
     restart: always
+
+  certbot:
+    image: certbot/certbot
+    volumes:
+      - ./certbot/www:/var/www/certbot
+      - ./certbot/conf:/etc/letsencrypt
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do sleep 12h & wait $${!}; certbot renew; done'"
+    depends_on:
+      - nginx
 
 volumes:
   sajan_giri_db:
