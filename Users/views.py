@@ -122,14 +122,18 @@ def updateUser(request):
             instructor.save()
 
         if project_settings.DEBUG is False:
-            send_email(
-                to_email=user.email,
-                subject="Profile Update Alert",
-                title="Profile Update Alert Notification",
-                body=f"Your profile with username '{user.username}' was updated on {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}. If this was not you, please log in to secure your account!.",
-                anchor_link="https://127.0.0.1:800/accounts/password-reset/",
-                anchor_text="Reset Password",
-            )
+            try:
+                send_email(
+                    to_email=user.email,
+                    subject="Profile Update Alert",
+                    title="Profile Update Alert Notification",
+                    body=f"Your profile with username '{user.username}' was updated on {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}. If this was not you, please log in to secure your account!.",
+                    anchor_link="https://127.0.0.1:800/accounts/password-reset/",
+                    anchor_text="Reset Password",
+                )
+            except Exception as error:
+                messages.error(request, f"Error sending email: {error}")
+                return redirect("update_user")
 
         messages.success(request, "Profile updated successfully")
         return redirect("home")
@@ -147,14 +151,18 @@ def login_form(request):
         if user is not None and user.is_active:
             login(request, user)
             if project_settings.DEBUG is False:
-                send_email(
-                    to_email=user.email,
-                    subject="Login Alert",
-                    title="Login Alert Notification",
-                    body=f"Your account with username '{user.username}' was accessed on {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}. If this was not you, please reset your password to secure your account!.",
-                    anchor_link="https://sajan.pythonanywhere.com/accounts/password-reset/",
-                    anchor_text="Reset Password",
-                )
+                try:
+                    send_email(
+                        to_email=user.email,
+                        subject="Login Alert",
+                        title="Login Alert Notification",
+                        body=f"Your account with username '{user.username}' was accessed on {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}. If this was not you, please reset your password to secure your account!.",
+                        anchor_link="https://sajan.pythonanywhere.com/accounts/password-reset/",
+                        anchor_text="Reset Password",
+                    )
+                except Exception as error:
+                    messages.error(request, f"Error sending email: {error}")
+                    return redirect("login")
             # subject, from_email, to = (
             #     "Login Alert",
             #     "sajan@gmail.com",
@@ -239,14 +247,18 @@ def register_view(request):
         #  Step 4: Send Confirmation Email
         confirmation_link = f"{settings.SITE_URL}/accounts/confirm-email/{profile.email_confirmation_token}/"
         if project_settings.DEBUG is False:
-            send_email(
-                to_email=user.email,
-                subject="Confirm Your sajan Account",
-                title="Complete Your Registration",
-                body="Thank you for registering! Please confirm your email by clicking the button below.",
-                anchor_link=confirmation_link,
-                anchor_text="Confirm Email",
-            )
+            try:
+                send_email(
+                    to_email=user.email,
+                    subject="Confirm Your sajan Account",
+                    title="Complete Your Registration",
+                    body="Thank you for registering! Please confirm your email by clicking the button below.",
+                    anchor_link=confirmation_link,
+                    anchor_text="Confirm Email",
+                )
+            except Exception as error:
+                messages.error(request, f"Error sending confirmation email: {error}")
+                return render(request, "user/register.html", {"title": "Register"})
         print(confirmation_link)
         # subject = "Confirm Your sajan Account"
         # from_email = "codingfoxblogs@gmail.com"
@@ -418,14 +430,18 @@ def update_email_request(request):
         # Send email verification link
         confirmation_link = f"{settings.SITE_URL}/confirm-new-email/{profile.email_confirmation_token}/{new_email}/"
         if project_settings.DEBUG is False:
-            send_email(
-                to_email=new_email,
-                subject="Confirm Your New Email",
-                title="Confirm Your New Email",
-                body="Please confirm your new email address.",
-                anchor_link=confirmation_link,
-                anchor_text="Confirm New Email",
-            )
+            try:
+                send_email(
+                    to_email=new_email,
+                    subject="Confirm Your New Email",
+                    title="Confirm Your New Email",
+                    body="Please confirm your new email address.",
+                    anchor_link=confirmation_link,
+                    anchor_text="Confirm New Email",
+                )
+            except Exception as error:
+                messages.error(request,f"Error sending confirmation email: {error}")
+                return redirect("update_user")
         # subject = "Confirm Your New Email"
         # from_email = "codingfoxblogs@gmail.com"
         # to = new_email
