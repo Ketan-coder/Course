@@ -213,6 +213,10 @@ def index(request):
                 }
             elif Instructor.objects.filter(profile=profile).exists():
                 course = Course.objects.filter(instructor__profile=profile)
+                course_count = 0
+                enrolled_students = 0
+                total_earnings = 0
+                total_bookmarked_by_students = 0
                 if course.exists():
                     course_count = course.count()
                     enrolled_students = sum(c.is_bought_by_users.count() for c in course)
