@@ -35,7 +35,7 @@
                     <h4 class="content-title font-size-16 text-muted">
                         <i class="ph ph-student text-primary mr-5"></i> Total Students
                     </h4>
-                    <div class="fs-1 font-weight-bold ms-1">1,250</div>
+                    <div class="fs-1 font-weight-bold ms-1">{{ enrolled_students }}</div>
                     <p class="text-muted mb-0 mt-1">+50 this month</p>
                 </div>
             </div>
@@ -45,7 +45,7 @@
                         <i class="ph ph-money text-success mr-5"></i> Total Revenue
                     </h4>
                     <div class="flex flex-row align-items-start">
-                      <small class="font-weight-bold mr-1">{{ instructor_currency }}</small> <span class="fs-1 font-weight-bold"> 8,450.00</span>
+                      <small class="font-weight-bold mr-1">{{ instructor_currency }}</small> <span class="fs-1 font-weight-bold"> {{ total_earnings }}</span>
                     </div>
                     <p class="text-muted mb-0 mt-1">+$720 this month</p>
                 </div>
@@ -55,7 +55,7 @@
                     <h4 class="content-title font-size-16 text-muted">
                         <i class="ph ph-heart text-danger mr-5"></i> Total Likes
                     </h4>
-                    <div class="fs-1 font-weight-bold ms-1">4,800</div>
+                    <div class="fs-1 font-weight-bold ms-1">{{ total_bookmarked_by_students }}</div>
                      <p class="text-muted mb-0 mt-1">+210 this month</p>
                 </div>
             </div>
@@ -64,7 +64,7 @@
                     <h4 class="content-title font-size-16 text-muted">
                         <i class="ph ph-book-open text-info mr-5"></i> Courses
                     </h4>
-                    <div class="fs-1 font-weight-bold ms-1">8</div>
+                    <div class="fs-1 font-weight-bold ms-1">{{ course_count }}</div>
                     <p class="text-muted mb-0 mt-1">+1 this month</p>
                 </div>
             </div>
@@ -86,30 +86,25 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr>
-                            <td class="align-middle">Investment Strategies for Beginners</td>
-                            <td class="align-middle">450</td>
-                            <td class="align-middle">1.2k</td>
-                            <td class="align-middle">300</td>
-                            <td class="align-middle"><span class="badge badge-success">Published</span></td>
+                        
+                        {% for course in courses %}
+                            <tr>
+                            <td class="align-middle">{{ course.title }}</td>
+                            <td class="align-middle">{{ course.students_count }}</td>
+                            <td class="align-middle">{{ course.bookmarked_count }}</td>
+                            <td class="align-middle">{{ course.earnings }}</td>
+                            <td class="align-middle"><span class="badge badge-success">
+                            {% if course.is_published %}
+                                Published
+                            {% else %}
+                                Draft
+                            {% endif %}
+                                </span></td>
                             <td class="text-right align-middle"><a href="#" class="btn btn-sm">Manage</a></td>
                         </tr>
-                        <tr>
-                            <td class="align-middle">Advanced Trading Techniques</td>
-                            <td class="align-middle">300</td>
-                            <td class="align-middle">980</td>
-                            <td class="align-middle">210</td>
-                            <td class="align-middle"><span class="badge badge-success">Published</span></td>
-                            <td class="text-right align-middle"><a href="#" class="btn btn-sm">Manage</a></td>
-                        </tr>
-                        <tr>
-                            <td class="align-middle">Options Trading Masterclass</td>
-                            <td class="align-middle">150</td>
-                            <td class="align-middle">650</td>
-                            <td class="align-middle">110</td>
-                            <td class="align-middle"><span class="badge badge-warning">Draft</span></td>
-                            <td class="text-right align-middle"><a href="#" class="btn btn-sm">Manage</a></td>
-                        </tr>
+                        {% endfor %}
+                            
+                        
                     </tbody>
                 </table>
             </div>
@@ -128,89 +123,132 @@
           <!-- Left Column: Enrolled Courses -->
           <div class="col-lg-8">
               <h2 class="content-title font-size-22 mb-3">Enrolled Courses</h2>
-              
+              {% for course in enrolled_courses %}
               <!-- Course Card 1 -->
               <div class="card shadow-sm mb-3 p-1">
                   <div class="row g-0">
                       <div class="col-md-4 p-3">
-                          <img src="https://placehold.co/400x300/d1e7dd/343a40?text=Course%20Image" class="img-fluid rounded-left rounded-1" alt="Course thumbnail" style="object-fit: cover; height: 100%;">
+                        
+                        {% if course.course.thumbnail %}
+                          <img src="{{ course.course.thumbnail.url }}" class="img-fluid rounded-left rounded-1" alt="Course thumbnail" style="object-fit: cover; height: 100%;">
+                        {% else %}
+                            <img src="https://placehold.co/300x200/fff4d6/343a40?text=No+Thumbnail" class="img-fluid rounded-left rounded-1" alt="No Thumbnail" style="object-fit: cover; height: 100%;">  
+                        {% endif %}
+                            
                       </div>
                       <div class="col-md-8 d-flex flex-column">
                           <div class="content p-4">
-                              <span class="badge badge-primary-light text-primary font-weight-bold mb-2">In Progress</span>
-                              <h4 class="mb-2 font-weight-bold">Investment Strategies for Beginners</h4>
-                              <p class="text-muted font-size-14 mb-3">Learn the fundamentals of investing, including asset allocation, risk management, and portfolio diversification.</p>
-                              <a href="#" class="btn btn-primary">Continue Learning <i class="ph ph-arrow-right ml-1"></i></a>
+                              <span class="badge badge-primary-light text-primary font-weight-bold mb-2">
+                              {% if course.progress == 100 %}
+                                  Completed   
+                                {% elif course.progress == 0 %}
+                                Not Started
+                                {% else %}
+                                In Progress
+                              {% endif %}
+                                 </span>
+                              <h4 class="mb-2 font-weight-bold">{{ course.course.title }}</h4>
+                              <p class="text-muted font-size-14 mb-3">{{ course.course.description|safe|truncatewords:20 }}</p>
+                              <a href="{% url 'course_detail' course.course.id %}" class="btn btn-primary">Continue Learning <i class="ph ph-arrow-right ml-1"></i></a> 
                           </div>
                           <div class="px-4 pb-3 mt-auto">
                               <div class="d-flex justify-content-between font-size-12 text-muted mb-1">
                                   <span>Progress</span>
-                                  <span>60%</span>
+                                  <span>{{ course.progress }}%</span>
                               </div>
                               <div class="progress" style="height: 0.5rem;">
-                                  <div class="progress-bar" role="progressbar" style="width: 60%;" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100"></div>
+                                  <div class="progress-bar" role="progressbar" style="width: {{ course.progress }}%;" aria-valuenow="{{ course.progress }}" aria-valuemin="0" aria-valuemax="100"></div>
                               </div>
                           </div>
                       </div>
                   </div>
               </div>
+                {% endfor %}
+            <!-- Tier Status -->
+            <h2 class="content-title font-size-22 mt-5 mb-3">Your Tier</h2>
+            <div class="card shadow-sm p-3">
+                <div class="d-flex align-items-center">
+                    {% if current_tier.icon %}
+                        <img src="{{ current_tier.icon.url }}" class="rounded-circle me-3" width="60" height="60" alt="Tier Icon">
+                    {% endif %}
+                    <div>
+                        <h5 class="mb-0">{{ current_tier.name }}</h5> 
+                        <small class="text-muted">Score: {{ user_score }}</small>
+                    </div>
+                </div>
+                <p class="mt-2">{{ current_tier.description }}</p>
 
-              <!-- Course Card 2 -->
-              <div class="card shadow-sm mb-3">
-                  <div class="row g-0">
-                      <div class="col-md-4 p-3">
-                          <img src="https://placehold.co/400x300/fff4d6/343a40?text=Course%20Image" class="img-fluid rounded-left rounded-1" alt="Course thumbnail" style="object-fit: cover; height: 100%;">
-                      </div>
-                      <div class="col-md-8 d-flex flex-column">
-                          <div class="content p-4">
-                              <span class="badge badge-primary-light text-primary font-weight-bold mb-2">In Progress</span>
-                              <h4 class="mb-2 font-weight-bold">Advanced Trading Techniques</h4>
-                              <p class="text-muted font-size-14 mb-3">Master advanced trading strategies, including technical analysis, algorithmic trading, and options trading.</p>
-                              <a href="#" class="btn btn-primary">Continue Learning <i class="ph ph-arrow-right ml-1"></i></a>
-                          </div>
-                           <div class="px-4 pb-3 mt-auto">
-                              <div class="d-flex justify-content-between font-size-12 text-muted mb-1">
-                                  <span>Progress</span>
-                                  <span>30%</span>
-                              </div>
-                              <div class="progress" style="height: 0.5rem;">
-                                  <div class="progress-bar" role="progressbar" style="width: 30%;" aria-valuenow="30" aria-valuemin="0" aria-valuemax="100"></div>
-                              </div>
-                          </div>
-                      </div>
-                  </div>
-              </div>
+                {% if next_tier %}
+                <div class="mt-3">
+                    <h6 class="mb-1">Next Tier: {{ next_tier.name }}</h6>
+                    <div class="progress mb-1" style="height: 0.75rem;">
+                        <div class="progress-bar bg-success" role="progressbar" style="width: {{ progress_percent }}%" aria-valuenow="{{ progress_percent }}" aria-valuemin="0" aria-valuemax="100">{{ progress_percent }}%</div>
+                    </div>
+                    <small class="text-muted">You need {{ score_needed }} more points to reach {{ next_tier.name }}.</small>
+                </div>
+                {% else %}
+                <p class="text-success mt-2">🎉 You’re at the highest tier!</p>
+                {% endif %}
+            </div>
+
           </div>
 
           <!-- Right Column: Tournaments & Leaderboard -->
-          <div class="col-lg-4">
-              <h2 class="content-title font-size-22 mb-3">Trading Tournaments</h2>
-              <div class="card shadow-sm mb-3 p-3">
-                  <h4 class="content-title font-size-16 mb-3"><i class="ph-fill ph-trophy mr-1"></i> Active Tournaments</h4>
-                  <div class="d-flex justify-content-between align-items-center mb-2">
-                      <span>Weekly Stock Challenge</span>
-                      <a href="#" class="font-weight-bold">Join Now</a>
-                  </div>
-                   <div class="d-flex justify-content-between align-items-center">
-                      <span>Monthly Portfolio Battle</span>
-                      <a href="#" class="font-weight-bold">Join Now</a>
-                  </div>
-              </div>
-              
-              <div class="card shadow-sm p-3">
-                  <h4 class="content-title font-size-16 mb-2"><i class="ph-fill ph-list-numbers mr-1"></i> Leaderboard</h4>
-                  <p class="font-size-14 text-muted mb-2">Your Rank: #12 <a href="#" class="ml-1 font-weight-bold">View Full Leaderboard</a></p>
-                  <ul class="list-group list-group-flush">
-                      <li class="list-group-item d-flex justify-content-between align-items-center">1. TraderPro123 <span class="text-success font-weight-bold">+15.2%</span></li>
-                      <li class="list-group-item d-flex justify-content-between align-items-center">2. StockMaster <span class="text-success font-weight-bold">+12.8%</span></li>
-                      <li class="list-group-item d-flex justify-content-between align-items-center">3. AlphaSeeker <span class="text-success font-weight-bold">+10.5%</span></li>
-                  </ul>
-              </div>
-          </div>
+          <!-- Right Column: Tournaments & Leaderboard -->
+            <div class="col-lg-4">
+                <h2 class="content-title font-size-22 mb-3">Trading Tournaments</h2>
+
+                <!-- Active Tournaments -->
+                <div class="card shadow-sm mb-3 p-3">
+                    <h4 class="content-title font-size-16 mb-3">
+                        <i class="ph-fill ph-trophy mr-1"></i> Active Tournaments
+                    </h4>
+
+                    {% if tournaments %}
+                        {% for t in tournaments %}
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span>{{ t.name }}</span>
+                            <a href="{% url 'tournament_detail' t.id %}" class="btn btn-sm btn-outline-primary">View</a>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted">No active tournaments available.</p>
+                    {% endif %}
+                </div>
+
+                <!-- Leaderboard -->
+                <div class="card shadow-sm p-3">
+                    <h4 class="content-title font-size-16 mb-2">
+                        <i class="ph-fill ph-list-numbers mr-1"></i> Leaderboard
+                    </h4>
+                    {% if current_tournament %}
+                    <p class="font-size-14 text-muted mb-2">
+                        Your Rank: #{{ user_rank|default:'--' }}
+                        <a href="{% url 'leaderboard' %}?tournament={{ current_tournament.id }}" class="ml-1 font-weight-bold">
+                            View Full Leaderboard
+                        </a>
+                    </p>
+                    {% endif %}
+
+                    {% if leaderboard %}
+                    <ul class="list-group list-group-flush">
+                        {% for entry in leaderboard %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            {{ forloop.counter }}. {{ entry.profile.user.username }}
+                            <span class="text-success font-weight-bold">{{ entry.score }}%</span>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    {% else %}
+                    <p class="text-muted">No leaderboard data available.</p>
+                    {% endif %}
+                </div>
+            </div>
+    
       </div>
 
       <!-- Rewards Status Section -->
-      <h2 class="content-title font-size-22 mt-5 mb-3">Rewards Status</h2>
+      {% comment %} <h2 class="content-title font-size-22 mt-5 mb-3">Rewards Status</h2>
       <div class="row row-eq-spacing mb-3">
           <div class="col-lg-3">
               <div class="card shadow-sm p-3 m-0">
@@ -238,7 +276,7 @@
                   </div>
               </div>
           </div>
-      </div>
+      </div> {% endcomment %}
   </div>
     {% endif %}
 </div>

@@ -4,6 +4,7 @@ import json
 from django.http import HttpResponse, HttpResponsePermanentRedirect, HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.db.models import Q
+from utils.models import Activity
 from Stock.models import Stock
 from .models import FAQ, Course, Language, Quiz, Section, Tag, Lesson, CourseNotes
 from Users.models import Instructor, Profile, Student
@@ -107,7 +108,11 @@ def course_create(request) -> HttpResponseRedirect | HttpResponsePermanentRedire
         )  # Assuming hidden inputs named 'selected_tags'
         course.tags.set(selected_tag_ids)
 
-        # ... Handle other ManyToMany fields similarly
+        Activity.objects.create(
+            user=request.user,
+            activity_type="Course Creation",
+            description=f"Created course: {title}",
+        )
 
         return redirect("course_list")
     else:
@@ -156,7 +161,11 @@ def course_update(request, pk) -> HttpResponseRedirect | HttpResponsePermanentRe
         selected_tag_ids = request.POST.getlist("selected_tags")
         course.tags.set(selected_tag_ids)
 
-        # ... Handle other ManyToMany fields similarly
+        Activity.objects.create(
+            user=request.user,
+            activity_type="Course Update",
+            description=f"Updated course: {course.title}",
+        )
 
         return redirect("course_list")
     else:
@@ -226,6 +235,12 @@ def create_quiz(request) -> HttpResponse:
 
         quiz.questions = questions
         quiz.save()
+
+        Activity.objects.create(
+            user=request.user,
+            activity_type="Quiz Creation",
+            description=f"Created quiz: {quiz.title} for course: {quiz.course.title if quiz.course else 'N/A'}",
+        )
         return redirect("course_list")
     return render(request, "course/quiz_form.html",locals())
 
@@ -273,8 +288,13 @@ def course_delete(request, pk) -> HttpResponseRedirect | HttpResponsePermanentRe
     course = get_object_or_404(Course, pk=pk)
     if (
         request.method == "POST"
-    ):  # Suggested code may be subject to a license. Learn more: ~LicenseLog:3694217246.
+    ): 
         course.delete()
+        Activity.objects.create(
+            user=request.user,
+            activity_type="Course Deletion",
+            description=f"Deleted course: {course.title}",
+        )
         return redirect("course_list")
     return render(request, "course/course_confirm_delete.html", {"course": course})
 
@@ -319,7 +339,6 @@ def bookmarked_courses(request) -> HttpResponseRedirect | HttpResponsePermanentR
     request.session["page"] = "course"
     profile = get_object_or_404(Profile, user=user)
     bookmarked_courses = Course.objects.filter(bookmarked_by_users=profile).all()
-    
     return render(request, "course/bookmarked_courses.html", {"bookmarked_courses": bookmarked_courses})
 
 def bookmark_course(request, course_id) -> HttpResponseRedirect | HttpResponsePermanentRedirect | HttpResponse | JsonResponse:
@@ -358,7 +377,11 @@ def bookmark_course(request, course_id) -> HttpResponseRedirect | HttpResponsePe
                 </button>
             </div>
         ''', reverse("bookmark_course", args=[course.pk]))
-
+    Activity.objects.create(
+        user=user,
+        activity_type="Course Update",
+        description=f"{'Bookmarked' if not is_bookmarked else 'Removed bookmark from'} course: {course.title}",
+    )
     return HttpResponse(html)
 
 def mark_lesson_complete(request, lesson_id, user_profile) -> HttpResponseRedirect | HttpResponsePermanentRedirect | HttpResponse:
@@ -384,6 +407,12 @@ def mark_lesson_complete(request, lesson_id, user_profile) -> HttpResponseRedire
     if next_lesson:
         lesson_id = next_lesson.id
         return JsonResponse({"next_lesson_id": lesson_id})
+    
+    Activity.objects.create(
+        user=user,
+        activity_type="Lesson Completion",
+        description=f"Completed lesson: {lesson.title}",
+    )
     
     return redirect("video_detail_page", lesson_id=lesson_id)
 
@@ -417,6 +446,12 @@ def create_tag(request) -> HttpResponse:
             tag = get_object_or_404(Tag, id=tag_id)
             tag.name = name
             tag.save()
+            
+            Activity.objects.create(
+                user=request.user,
+                activity_type="Course Update",
+                description=f"Created tag: {tag.name}",  
+            )
             return HttpResponse(
                 """<div class="alert alert-success border-0 rounded-0 d-flex align-items-center" role="alert">
                     <i class="fa-light fa-check-circle text-success-emphasis me-2"></i>
@@ -425,6 +460,12 @@ def create_tag(request) -> HttpResponse:
             )
         else:
             tag = Tag.objects.create(name=name)
+            
+            Activity.objects.create(
+                user=request.user,
+                activity_type="Course Update",
+                description=f"Created tag: {tag.name}",
+            )
             return HttpResponse(
                 """<div class="alert alert-success border-0 rounded-0 d-flex align-items-center" role="alert">
                     <i class="fa-light fa-check-circle text-success-emphasis me-2"></i>
@@ -657,6 +698,11 @@ def submit_quiz(request, quiz_id):
                 correct_answer = qdata.get("answer") if qdata.get("type") != 'DRAG_DROP' else qdata.get("correct_mapping")
                 if correct_answer and str(user_answer).strip().lower() == str(correct_answer).strip().lower():
                     quiz.completed_by_users.add(profile)
+                    Activity.objects.create(
+                        user=request.user,
+                        activity_type="Quiz Completion",
+                        description=f"Completed quiz: {quiz.title} with answer: {user_answer}",
+                    )
                     return JsonResponse({"status": "completed"})
 
             return JsonResponse({"status": "incorrect"}, status=200)

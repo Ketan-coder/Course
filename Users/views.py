@@ -19,7 +19,7 @@ from django.urls import reverse_lazy
 from django.views.generic import ListView
 # from Notes.models import Activity
 from utils.utils import send_email
-from utils.models import Currency
+from utils.models import Activity, Currency
 
 from Course import settings as project_settings
 from utils.media_handler import MediaHandler
@@ -134,6 +134,12 @@ def updateUser(request):
             except Exception as error:
                 messages.error(request, f"Error sending email: {error}")
                 return redirect("update_user")
+        
+        Activity.objects.create(
+            user=user,
+            activity_type="Profile Update",
+            description=f"Updated profile for {user.username}",
+        )
 
         messages.success(request, "Profile updated successfully")
         return redirect("home")
@@ -178,8 +184,18 @@ def login_form(request):
                 profile = Profile.objects.get(user=user)
                 if Instructor.objects.filter(profile=profile).exists():
                     messages.success(request, "Welcome Back Instructor!")
+                    Activity.objects.create(
+                        user=user,
+                        activity_type="Login",
+                        description=f"Logged in as Instructor: {user.username}",
+                    )
                 elif Student.objects.filter(profile=profile).exists():
                     messages.success(request, f"Welcome Back {user.first_name}! Start Learning by doing")
+                    Activity.objects.create(
+                        user=user,
+                        activity_type="Login",
+                        description=f"Logged in as Student: {user.username}",
+                    )
                 return redirect("home")
             except Profile.DoesNotExist:
                 messages.error(request, "Profile isn't created for this user.")
@@ -194,6 +210,7 @@ def login_form(request):
 
 def logout_form(request):
     context = {"title": "Logout"}
+    Activity.objects.create(user=request.user, activity_type="Logout", description=f"Logged out user: {request.user.username}")
     logout(request)
     return render(request, "user/logout.html", context)
 
@@ -283,6 +300,12 @@ def register_view(request):
         # msg = EmailMultiAlternatives(subject, text_content, from_email, [to])
         # msg.attach_alternative(html_content, "text/html")
         # msg.send()
+
+        Activity.objects.create(
+            user=user,
+            activity_type="Registration",
+            description=f"Registered user: {user.username}",
+        )
 
         messages.success(
             request,
@@ -390,6 +413,12 @@ def profile_setup_view(request):
             profile_data["image"] = profile_pic_path
 
         Profile.objects.update_or_create(user=user, defaults=profile_data)
+
+        Activity.objects.create(
+            user=user,
+            activity_type="Profile Setup",
+            description=f"Completed profile setup for {user.username}",
+        )
 
         messages.success(request, "Profile updated successfully.")
         return redirect("home")

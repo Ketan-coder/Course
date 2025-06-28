@@ -63,3 +63,52 @@ class FeedBack(models.Model):
 
     def __str__(self):
         return f"{self.name} - {self.email}"
+
+class Activity(models.Model):
+    ACTIVITY_TYPE_CHOICES = [
+        ('Login', 'Login'),
+        ('Logout', 'Logout'), 
+        ('Registration', 'Registration'),
+        ('Email Update', 'Email Update'),
+        ('Phone Update', 'Phone Update'),
+        ('Profile Setup', 'Profile Setup'),
+        ('Profile Update', 'Profile Update'),
+        ('Password Change', 'Password Change'),
+        ('Course Enroll', 'Course Enroll'),
+        ('Course Unenroll', 'Course Unenroll'),
+        ('Quiz Creation', 'Quiz Creation'),
+        ('Quiz Attempt', 'Quiz Attempt'),
+        ('Quiz Completion', 'Quiz Completion'),
+        ('Course Completion', 'Course Completion'),
+        ('Tier Change', 'Tier Change'),
+        ('Tournament Join', 'Tournament Join'),
+        ('Tournament Leave', 'Tournament Leave'),
+        ('Leaderboard Update', 'Leaderboard Update'),
+        ('Stock Purchase', 'Stock Purchase'),
+        ('Stock Sale', 'Stock Sale'),
+        ('Reward Redemption', 'Reward Redemption'),
+        ('Profile View', 'Profile View'),
+        ('Course Creation', 'Course Creation'),
+        ('Course Update', 'Course Update'),
+        ('Course Deletion', 'Course Deletion'),
+        ('Lesson Creation', 'Lesson Creation'),
+        ('Lesson Update', 'Lesson Update'),
+        ('Lesson Deletion', 'Lesson Deletion'),
+        ('Lesson Completion', 'Lesson Completion'),
+        ('Notification Sent', 'Notification Sent'),
+        ('Notification Read', 'Notification Read'),
+        ('Feedback Submitted', 'Feedback Submitted'),
+    ]
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='activities')
+    activity_type = models.CharField(max_length=50, choices=ACTIVITY_TYPE_CHOICES)
+    description = models.TextField(blank=True, null=True)
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    extra_fields = models.JSONField(blank=True, null=True, default=dict)
+
+    class Meta:
+        ordering = ['-timestamp']
+
+    def __str__(self):
+        return f"{self.user.username} - {self.activity_type} at {self.timestamp}"

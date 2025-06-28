@@ -30,7 +30,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ["*"]
 
@@ -224,7 +224,8 @@ TEMPLATES = [
 ]
 
 CSRF_TRUSTED_ORIGINS = [
-    # 'https://your-production-domain.com',
+    'https://calsie.com.au',
+    'https://www.calsie.com.au',
     'https://8000-firebase-coursegit-1747156684969.cluster-htdgsbmflbdmov5xrjithceibm.cloudworkstations.dev',
 ]
 

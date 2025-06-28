@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% block body %}
+<div class="container mt-5">
+    <h2 class="mb-4">🏆 Leaderboard</h2>
+
+    <form method="get" class="mb-3">
+        <label for="tournament">Select Tournament:</label>
+        <select name="tournament" onchange="this.form.submit()" class="form-select">
+            <option value="">All</option>
+            {% for t in tournaments %}
+                <option value="{{ t.id }}" {% if t == selected_tournament %}selected{% endif %}>{{ t.name }}</option>
+            {% endfor %}
+        </select>
+    </form>
+
+    <div class="card">
+        <div class="card-header"><strong>Top Performers{% if selected_tournament %} - {{ selected_tournament.name }}{% endif %}</strong></div>
+        <ul class="list-group list-group-flush">
+            {% for entry in entries %}
+                <li class="list-group-item d-flex justify-content-between">
+                    <span>#{{ forloop.counter }} {{ entry.profile.user.username }}</span>
+                    <span class="text-success font-weight-bold">{{ entry.score }}%</span>
+                </li>
+            {% empty %}
+                <li class="list-group-item text-center text-muted">No entries found.</li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+{% endblock %}
