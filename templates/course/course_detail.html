@@ -27,11 +27,18 @@
                     {% if course.instructor.profile.user.id == request.user.id %}
                         <a href="{% url 'course_update' pk=course.id %}" class="btn btn-primary btn-lg rounded-pill px-4 mt-3">Edit Course</a>
                     {% else %}
-                        {% if course.course_type == 'free' %}
-                            <a href="#" class="btn btn-info btn-lg rounded-pill px-4 mt-3">Enroll Now</a>
+                    <form method="post" action=".">
+                        {% csrf_token %}
+                        {% if logged_in_profile in course.is_bought_by_users.all or course.is_open_to_all and logged_in_profile in course.is_bought_by_users.all %}
+                            <button class="btn btn-info btn-lg rounded-pill px-4 mt-3" name="continue_now" value="1">Continue Course</button>
                         {% else %}
-                            <a href="#" class="btn btn-info btn-lg rounded-pill px-4 mt-3">Buy Now</a>
+                            {% if course.course_type == 'free' %}
+                                <button type="submit" name="enroll_now" value="1" class="btn btn-info btn-lg rounded-pill px-4 mt-3">Enroll Now</button>
+                            {% else %}
+                                <button type="submit" name="buy_now" value="1" class="btn btn-info btn-lg rounded-pill px-4 mt-3">Buy Now</button>
+                            {% endif %}
                         {% endif %}
+                    </form>    
                     {% endif %}
             </div>
         </div>

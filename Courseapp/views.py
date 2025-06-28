@@ -12,6 +12,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
 from django.utils.html import format_html
 from django.urls import reverse
+from django.contrib import messages
 
 def course_list(request) -> HttpResponse:
     courses: BaseManager[Course] = Course.objects.all()
@@ -114,6 +115,8 @@ def course_create(request) -> HttpResponseRedirect | HttpResponsePermanentRedire
             description=f"Created course: {title}",
         )
 
+        messages.success(request, "Course created successfully.")
+
         return redirect("course_list")
     else:
         # You'll need to pass necessary data for dropdowns (languages, instructors)
@@ -166,6 +169,8 @@ def course_update(request, pk) -> HttpResponseRedirect | HttpResponsePermanentRe
             activity_type="Course Update",
             description=f"Updated course: {course.title}",
         )
+
+        messages.success(request, "Course updated successfully.")
 
         return redirect("course_list")
     else:
@@ -241,6 +246,7 @@ def create_quiz(request) -> HttpResponse:
             activity_type="Quiz Creation",
             description=f"Created quiz: {quiz.title} for course: {quiz.course.title if quiz.course else 'N/A'}",
         )
+        messages.success(request, "Quiz created successfully.")
         return redirect("course_list")
     return render(request, "course/quiz_form.html",locals())
 
@@ -295,6 +301,7 @@ def course_delete(request, pk) -> HttpResponseRedirect | HttpResponsePermanentRe
             activity_type="Course Deletion",
             description=f"Deleted course: {course.title}",
         )
+        messages.success(request, "Course deleted successfully.")
         return redirect("course_list")
     return render(request, "course/course_confirm_delete.html", {"course": course})
 
@@ -306,7 +313,33 @@ def course_detail(request, pk) -> HttpResponseRedirect | HttpResponsePermanentRe
         return redirect("login")
     request.session["page"] = "course"
     logged_in_profile = Profile.objects.get(user=user)
-    return render(request, "course/course_detail.html", {"course": course})
+    if request.method == 'POST':
+        if 'enroll_now' in request.POST or 'buy_now' in request.POST:
+            # Enroll the user in the course
+            student_profile = Student.objects.filter(profile=logged_in_profile).first()
+            if student_profile:
+                course.is_bought_by_users.add(logged_in_profile)
+                Activity.objects.create(
+                    user=user,
+                    activity_type="Course Enroll",
+                    description=f"Enrolled in course: {course.title}",
+                )
+                messages.success(request, f"You have successfully enrolled in {course.title}.")
+                return redirect("course_detail", pk=pk)
+            else:
+                return render(request, "course/course_detail.html", {"course": course, "error": "You must have a student profile to enroll."})
+        elif 'continue_now' in request.POST:
+            # Redirect to the first lesson of the course
+            first_section = course.sections.filter(lesson__isnull=False).exclude(lesson__completed_by_users=logged_in_profile).first()
+            if first_section:
+                first_lesson = first_section.lesson.first()
+                if first_lesson:
+                    return redirect("video_detail_page", lesson_id=first_lesson.id)
+                else:
+                    messages.error(request, "No lessons available in this course.")
+                    return redirect("course_detail", pk=pk)
+            return redirect("course_detail", pk=pk)
+    return render(request, "course/course_detail.html", {"course": course, "logged_in_profile": logged_in_profile})
 
 
 def video_detail_page(request,lesson_id) -> HttpResponseRedirect | HttpResponsePermanentRedirect | HttpResponse:

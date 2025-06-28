@@ -47,4 +47,5 @@ urlpatterns = [
         CustomPasswordResetCompleteView.as_view(),
         name="password_reset_complete",
     ),
+    path("profile/", views.profile, name="profile"),
 ]

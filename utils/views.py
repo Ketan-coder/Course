@@ -132,6 +132,10 @@ def quiz_helper(request) -> HttpResponse:
 
 def index(request):
     request.session["page"] = "home"
+    # Check if user is authenticated
+    if not request.user.is_authenticated:
+        # If not authenticated, redirect to the login page
+        return redirect('login')
     
     current_user = request.user
     if current_user.is_authenticated:

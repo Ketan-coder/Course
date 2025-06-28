@@ -343,7 +343,7 @@ def email_confirmation_view(request, token):
     messages.success(request, "Email confirmed! Complete your profile.")
     return redirect("profile_setup")
 
-
+@login_required
 def profile_setup_view(request):
     if not request.user.is_authenticated:
         return redirect("login")
@@ -440,6 +440,12 @@ def check_username(request):
         )
 
     return HttpResponse('<span style="color: green;"> Username is available</span>')
+
+# profile view
+@login_required
+def profile(request):
+    profile = request.user.profile
+    return render(request, "user/profile.html", {"profile": profile})
 
 
 @login_required
