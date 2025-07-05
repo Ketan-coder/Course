@@ -98,6 +98,7 @@ class Activity(models.Model):
         ('Notification Sent', 'Notification Sent'),
         ('Notification Read', 'Notification Read'),
         ('Feedback Submitted', 'Feedback Submitted'),
+        ('Bouns Points Earned','Bouns Points Earned'),
     ]
 
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='activities')

@@ -126,6 +126,7 @@ class Lesson(models.Model):
     bookmarked_by_users = models.ManyToManyField('Users.Profile', related_name='bookmarked_lessons', blank=True)
     content = models.TextField(blank=True, null=True)
     order = models.PositiveIntegerField(default=0)
+    required_score = models.PositiveIntegerField(default=0)
     extra_fields = models.JSONField(blank=True, null=True, default=dict)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -161,6 +162,7 @@ class Quiz(models.Model):
     completed_by_users = models.ManyToManyField('Users.Profile', related_name='completed_quizzes', blank=True)
     max_score = models.DecimalField(max_digits=5, decimal_places=2, default=Decimal('0.0'))
     passing_score = models.DecimalField(max_digits=5, decimal_places=2, default=Decimal('0.0'))
+    required_score = models.PositiveIntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     extra_fields = models.JSONField(blank=True, null=True, default=dict)
@@ -347,6 +349,7 @@ class PaymentHistory(models.Model):
 class CourseCertificate(models.Model):
     user = models.ForeignKey('Users.Profile', on_delete=models.CASCADE, related_name='course_certificates')
     course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='certificates')
+    required_score = models.PositiveIntegerField(default=0)
     certificate_code = models.CharField(max_length=100, unique=True)
     issued_at = models.DateTimeField(auto_now_add=True)
     extra_fields = models.JSONField(blank=True, null=True, default=dict)

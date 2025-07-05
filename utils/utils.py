@@ -5,13 +5,14 @@ from django.http import HttpResponse
 from django.template.loader import get_template
 from django.core.mail import EmailMultiAlternatives
 from django.conf import settings
+from .decorators import *
 
 # xhtml2pdf is a PDF generator using HTML and CSS
 # It supports HTML 5 and CSS 2.1 (and some of CSS 3)
 # It is completely written in pure Python so it is platform independent
 from xhtml2pdf import pisa  
 
-
+@check_load_time
 def render_to_pdf(template_src, context_dict={}):
     template = get_template(template_src)
     html = template.render(context_dict)
@@ -24,6 +25,8 @@ def render_to_pdf(template_src, context_dict={}):
         return HttpResponse(result.getvalue(), content_type='application/pdf')
     return None
 
+
+@check_load_time
 def send_email(to_email, subject, title, body, anchor_link=None, anchor_text="Click Here"):
     """
     Sends a customizable email with an optional anchor link.
