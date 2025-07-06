@@ -224,13 +224,14 @@ def index(request):
                 if course.exists():
                     course_count = course.count()
                     enrolled_students = sum(c.is_bought_by_users.count() for c in course)
-                    total_earnings = sum(c.is_bought_by_users.aggregate(total=Sum('price'))['total'] for c in course if c.is_bought_by_users.exists() and (not c.is_open_to_all or c.course_type == 'paid'))
+                    total_earnings = 0
+                    # total_earnings = sum(c.is_bought_by_users.aggregate(total=Sum('price'))['total'] for c in course if c.is_bought_by_users.exists() and (not c.is_open_to_all or c.course_type == 'paid'))
                     total_bookmarked_by_students = sum(c.bookmarked_by_users.count() for c in course)
 
                     for c in course:
                         c.students_count = c.is_bought_by_users.count()
                         c.bookmarked_count = c.bookmarked_by_users.count()
-                        c.earnings = c.is_bought_by_users.aggregate(total=Sum('price'))['total'] if c.is_bought_by_users.exists() and (not c.is_open_to_all or c.course_type == 'paid') else 0 # Sum of all purchases
+                        # c.earnings = c.is_bought_by_users.aggregate(total=Sum('price'))['total'] if c.is_bought_by_users.exists() and (not c.is_open_to_all or c.course_type == 'paid') else 0 # Sum of all purchases
                 context = {
                     'user_role': 'instructor',
                     'course_count': course_count or 0,
