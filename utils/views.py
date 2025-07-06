@@ -226,17 +226,17 @@ def index(request):
                     enrolled_students = sum(c.is_bought_by_users.count() for c in course)
                     total_earnings = 0
                     if course.filter(is_open_to_all=False, course_type='paid').exists():
-                        users_who_bought_courses = course.filter(is_open_to_all=False, course_type='paid').count()
+                        users_who_bought_courses = course.filter(is_open_to_all=False, course_type='paid')
                         if users_who_bought_courses.exists():
                             for c in course:
-                                total_earnings += users_who_bought_courses * c.price
+                                total_earnings += users_who_bought_courses.count() * c.price
                     total_bookmarked_by_students = sum(c.bookmarked_by_users.count() for c in course)
 
                     for c in course:
                         c.students_count = c.is_bought_by_users.count()
                         c.bookmarked_count = c.bookmarked_by_users.count()
-                        users_who_bought_courses = c.is_bought_by_users.all().count()
-                        c.earnings = users_who_bought_courses * c.price if users_who_bought_courses else 0
+                        users_who_bought_courses = c.is_bought_by_users.all()
+                        c.earnings = (users_who_bought_courses.count() if users_who_bought_courses else 0) * c.price if users_who_bought_courses else 0
 
                 context = {
                     'user_role': 'instructor',
