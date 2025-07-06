@@ -46,14 +46,14 @@
         <a href="#" class="text-decoration-none d-block">
             <div class="instructor-card card shadow-lg rounded overflow-hidden mx-4 my-3"
                  style="max-width: 300px">
-                <img src="{{ course.instructor.profile.image.url }}"
+                <img src="{{ course.qr_code.url }}"
                      class="card-img object-fit-cover"
-                     style="height: 25em"
+                     style="height: 20em"
                      alt="{{ instructor.name }}">
-                <div class="card-img-overlay d-flex flex-column justify-content-end bg-dark bg-opacity-50 text-white">
+                <!-- <div class="card-img-overlay d-flex flex-column justify-content-end bg-dark bg-opacity-50 text-white">
                     <h5 class="card-title text-center mb-0 fw-bold">{{ course.instructor.profile.user.username }}</h5>
                     <p class="card-text text-center small">{{ course.instructor.profile.bio|safe|truncatewords:12 }}</p>
-                </div>
+                </div> -->
             </div>
         </a>
         <!-- Tabs Navigation -->
@@ -125,6 +125,14 @@
                                      data-bs-parent="#courseAccordion">
                                     <div class="accordion-body ps-4">
                                         <p class="mb-3">{{ chapter.description|default:"No description available." }}</p>
+                                        {% if chapter.article %}
+                                            <div class="mb-3">
+                                                <strong>Article:</strong>
+                                                <a href="{% url 'article_detail' article_id=chapter.article.id %}" class="text-decoration-none">
+                                                    {{ chapter.article.title|default:"No article available." }}
+                                                </a>
+                                            </div>
+                                        {% endif %}
                                         {% for lesson in chapter.lesson.all %}
                                             <div class="d-flex align-items-center p-2 mb-2 bg-body-tertiary rounded">
                                                 <div class="lesson-number fw-bold text-primary me-3">{{ forloop.counter }}.</div>
@@ -365,7 +373,7 @@
     /* Replaces position-absolute to work across devices */
     .instructor-card {
     position: absolute;
-    bottom: 1rem;
+    bottom: 5rem;
     right: 1rem;
     }
 

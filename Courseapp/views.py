@@ -6,7 +6,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.db.models import Q
 from utils.models import Activity
 from Stock.models import Stock
-from .models import FAQ, Course, Language, Quiz, Section, Tag, Lesson, CourseNotes
+from .models import FAQ, Course, Language, Quiz, Section, Tag, Lesson, CourseNotes, Article
 from Users.models import Instructor, Profile, Student
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
@@ -14,6 +14,7 @@ from django.utils.html import format_html
 from django.urls import reverse
 from django.contrib import messages
 from .utils import * 
+from django.contrib.auth.models import User
 
 def course_list(request) -> HttpResponse:
     courses: BaseManager[Course] = Course.objects.all()
@@ -67,6 +68,7 @@ def course_create(request) -> HttpResponseRedirect | HttpResponsePermanentRedire
     instructors = Instructor.objects.all()
     request.session["page"] = "course"
     if request.method == "POST":
+        print(request.POST)
         # Manually get data from request.POST for each field
         title = request.POST.get("title")
         description = request.POST.get("description")
@@ -110,6 +112,18 @@ def course_create(request) -> HttpResponseRedirect | HttpResponsePermanentRedire
         )  # Assuming hidden inputs named 'selected_tags'
         course.tags.set(selected_tag_ids)
 
+        # handle faq selection
+        selected_faq_ids = request.POST.getlist("selected_faqs")
+        if selected_faq_ids:
+            faqs = FAQ.objects.filter(id__in=selected_faq_ids)
+            course.faqs.set(faqs)
+
+        # Handle sections selection
+        selected_section_ids = request.POST.getlist("selected_sections")
+        if selected_section_ids:
+            sections = Section.objects.filter(id__in=selected_section_ids)
+            course.sections.set(sections)
+
         Activity.objects.create(
             user=request.user,
             activity_type="Course Creation",
@@ -137,6 +151,7 @@ def course_update(request, pk) -> HttpResponseRedirect | HttpResponsePermanentRe
     lessons = Lesson.objects.all() 
     request.session["page"] = "course"
     if request.method == "POST":
+        print(request.POST)
         # Manually get data from request.POST for each field
         course.title = request.POST.get("title")
         course.description = request.POST.get("description")
@@ -164,6 +179,18 @@ def course_update(request, pk) -> HttpResponseRedirect | HttpResponsePermanentRe
         # Handle ManyToMany fields (example for tags)
         selected_tag_ids = request.POST.getlist("selected_tags")
         course.tags.set(selected_tag_ids)
+
+        # handle faq selection
+        selected_faq_ids = request.POST.getlist("selected_faqs")
+        if selected_faq_ids:
+            faqs = FAQ.objects.filter(id__in=selected_faq_ids)
+            course.faqs.set(faqs)
+
+        # Handle sections selection
+        selected_section_ids = request.POST.getlist("selected_sections")
+        if selected_section_ids:
+            sections = Section.objects.filter(id__in=selected_section_ids)
+            course.sections.set(sections)
 
         Activity.objects.create(
             user=request.user,
@@ -288,6 +315,15 @@ def search_faqs(request) -> JsonResponse:
         return JsonResponse(list(faqs), safe=False)
     return JsonResponse([], safe=False)
 
+def search_article(request) -> JsonResponse:
+    search_term = request.GET.get("q")
+    if search_term:
+        articles= Article.objects.filter(title__icontains=search_term).values(
+            "id", "title"
+        )
+        return JsonResponse(list(articles), safe=False)
+    return JsonResponse([], safe=False)
+
 
 @user_passes_test(lambda u: Instructor.objects.filter(profile=u.profile).exists())
 def course_delete(request, pk) -> HttpResponseRedirect | HttpResponsePermanentRedirect | HttpResponse:
@@ -314,6 +350,13 @@ def course_detail(request, pk) -> HttpResponseRedirect | HttpResponsePermanentRe
         return redirect("login")
     request.session["page"] = "course"
     logged_in_profile = Profile.objects.get(user=user)
+    ref = request.GET.get('ref', 'outside')
+
+    if ref != 'outside':
+        referrer = User.objects.filter(username=ref).first()
+        # Optional: log this or show it
+    else:
+        referrer = None
     if request.method == 'POST':
         if 'enroll_now' in request.POST or 'buy_now' in request.POST:
             # Enroll the user in the course
@@ -340,7 +383,7 @@ def course_detail(request, pk) -> HttpResponseRedirect | HttpResponsePermanentRe
                     messages.error(request, "No lessons available in this course.")
                     return redirect("course_detail", pk=pk)
             return redirect("course_detail", pk=pk)
-    return render(request, "course/course_detail.html", {"course": course, "logged_in_profile": logged_in_profile})
+    return render(request, "course/course_detail.html", locals())
 
 
 def video_detail_page(request,lesson_id) -> HttpResponseRedirect | HttpResponsePermanentRedirect | HttpResponse:
@@ -355,7 +398,7 @@ def video_detail_page(request,lesson_id) -> HttpResponseRedirect | HttpResponseP
     
     # Points Check
     required_score = lesson.required_score
-    if required_score > 0:
+    if required_score > 0 and student_profile:
         user_score = student_profile.score if student_profile else 0
         if user_score < required_score:
             messages.error(request,format_html("You need <strong class='text-primary'>{} points</strong> to view this video. Keep learning and earning points!", required_score))
@@ -562,15 +605,25 @@ def create_section(request) -> HttpResponse:
         )
 
     try:
+        print("Request POST ==>" + str(request.POST))
         section_id = request.POST.get("id")
         order = request.POST.get("order", 0)
         is_open = request.POST.get("is_open", False) == "on"
+        article = request.POST.get("article", "")
+        selected_lessons = request.POST.getlist("selected_lesson")
+        if selected_lessons:
+            selected_lessons = Lesson.objects.filter(id__in=selected_lessons)
+
+        if article:
+            article = Article.objects.filter(id=article).first()
 
         if section_id:
             section = get_object_or_404(Section, id=section_id)
             section.title = title
             section.order = order
             section.is_open = is_open
+            section.article = article
+            section.lesson.set(selected_lessons)  # Update lessons
             section.save()
             return HttpResponse(
                 """<div class="alert alert-success border-0 rounded-0 d-flex align-items-center" role="alert">
@@ -621,14 +674,18 @@ def create_lesson(request) -> HttpResponse:
         lesson_id = request.POST.get("id")
         description = request.POST.get("description", "")
         order = request.POST.get("order", 0)
-        section_id = request.POST.get("section_id", 1)
-        section = get_object_or_404(Section, pk=section_id)
+        required_score = request.POST.get("required-score", 0)
+        # section_id = request.POST.get("section_id", 1)
+        # section = get_object_or_404(Section, pk=section_id)
 
         if lesson_id:
             lesson = get_object_or_404(Lesson, id=lesson_id)
             lesson.title = title
-            lesson.description = description
+            lesson.content = description
+            if "video" in request.FILES:
+                lesson.video = request.FILES["video"]
             lesson.order = order
+            lesson.required_score = required_score
             lesson.save()
             return HttpResponse(
                 """<div class="alert alert-success border-0 rounded-0 d-flex align-items-center" role="alert">
@@ -639,9 +696,13 @@ def create_lesson(request) -> HttpResponse:
         else:
             lesson = Lesson.objects.create(
                 title=title,
-                description=description,
+                content=description,
                 order=order,
+                required_score=required_score,
             )
+            if "video" in request.FILES:
+                lesson.video = request.FILES["video"]
+                lesson.save()
             return HttpResponse(
                 """<div class="alert alert-success border-0 rounded-0 d-flex align-items-center" role="alert">
                     <i class="fa-light fa-check-circle text-success-emphasis me-2"></i>
@@ -810,3 +871,57 @@ def edit_tag(request, tag_id):
 
     # Return updated tag UI or just a success message
     return render(request, "components/updated_tag_list.html", {"tags": Tag.objects.all()})
+
+
+def create_or_edit_article(request):
+    request.session["page"] = "course"
+    if not request.user.is_authenticated:
+        return redirect("login")
+    
+    user = request.user
+    instructor = Instructor.objects.filter(profile__user=user).first() or None
+    if not instructor:
+        return HttpResponse("You must be an instructor to create or edit articles.", status=403)
+    
+    if request.method == "POST":
+        title = request.POST.get("title")
+        content = request.POST.get("content")
+        article_id = request.POST.get("article_id", None)
+        if not title or not content:
+            return HttpResponse("Title and content are required.", status=400)
+
+        if article_id:
+            article = get_object_or_404(Article, id=article_id)
+            article.title = title
+            article.content = content
+            article.author = instructor
+            article.save()
+        else:
+            article = Article.objects.create(title=title, content=content, author=instructor)
+
+        return redirect("course_list")
+
+    else:
+        if request.method == "GET":
+            article_id = request.GET.get("article_id", None)
+            if article_id:
+                article = get_object_or_404(Article, id=article_id)
+                # If article_id is provided, fetch the article for editing
+                if not article:
+                    return HttpResponse("Article not found.", status=404)
+            else:
+                article = None
+        return render(request, "course/article_form.html", {"article": article})
+    
+def article_detail(request, article_id):
+    request.session["page"] = "course"
+    article = get_object_or_404(Article, id=article_id)
+    if not request.user.is_authenticated:
+        return redirect("login")
+    
+    user = request.user
+    student = Student.objects.filter(profile__user=user).first() or None
+    # if not student:
+    #     return HttpResponse("You must be an instructor to view articles.", status=403)
+
+    return render(request, "course/article_detail.html", locals())

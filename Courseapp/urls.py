@@ -17,8 +17,10 @@ urlpatterns: list[URLPattern] = [
     path('courses/search_sections/', login_required(views.search_sections), name='search_sections'),
     path('courses/search_lesson/', login_required(views.search_lessons), name='search_lessons'),
     path('courses/search_faqs/', login_required(views.search_faqs), name='search_faqs'),
+    path('courses/search_articles/', login_required(views.search_article), name='search_articles'),
 
     path("detail/<int:lesson_id>/", login_required(views.video_detail_page), name="video_detail_page"),
+    path("article/<int:article_id>/", login_required(views.article_detail), name="article_detail"),
 
     # urls.py
     path("lesson/<int:lesson_id>/<int:user_profile>/complete/", login_required(views.mark_lesson_complete), name="mark_lesson_complete"),
@@ -28,6 +30,7 @@ urlpatterns: list[URLPattern] = [
     path("create_lesson/", login_required(views.create_lesson), name="create_lesson"),
     path("create_faq/", login_required(views.create_faq), name="create_faq"),
     path("create_course_notes/", login_required(views.create_course_notes), name="create_course_notes"),
+    path("create_article/", login_required(views.create_or_edit_article), name="create_article"),
 
     path("tags/edit/<int:tag_id>/", views.edit_tag, name="edit_tag"),
 

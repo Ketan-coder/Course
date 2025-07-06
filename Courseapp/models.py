@@ -5,7 +5,6 @@ from requests import Response
 from utils.media_handler import MediaHandler
 from decimal import Decimal
 
-
 def validate_discount(value) -> None:
     if value < 0:
         raise ValidationError("Discount price must be non-negative.")
@@ -51,6 +50,7 @@ class Course(models.Model):
     bookmarked_by_users = models.ManyToManyField('Users.Profile', related_name='bookmarked_courses', blank=True)
     completed_by_users = models.ManyToManyField('Users.Profile', related_name='completed_courses', blank=True)
     reviews = models.ManyToManyField('CourseReview', related_name='courses', blank=True)
+    qr_code = models.ImageField(upload_to='qr_codes/', blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     extra_fields = models.JSONField(blank=True, null=True, default=dict)
@@ -60,6 +60,26 @@ class Course(models.Model):
 
     def __str__(self):
         return self.title
+    
+    def generate_qr(self, ref="outside", auto_save=False):
+        import qrcode
+        from io import BytesIO
+        from django.core.files.base import ContentFile
+        from django.conf import settings
+
+        # if settings.DEBUG:
+        #     url = f"http://127.0.0.1/courses/{self.pk}/?ref={ref}"
+        # else:
+        url = f"https://calsie.com.au/courses/{self.pk}/?ref={ref}"
+        qr = qrcode.make(url)
+        buffer = BytesIO()
+        qr.save(buffer, format="PNG")
+        filename = f"{self.title[:10]}-qr.png"
+        self.qr_code.save(filename, ContentFile(buffer.getvalue()), save=False)
+
+        if auto_save:
+            super(Course, self).save(update_fields=['qr_code'])
+
 
     def save(self, *args, **kwargs):
         self.extra_fields['last_updated'] = str(self.updated_at)
@@ -80,14 +100,13 @@ class Course(models.Model):
 
         # Removed MediaHandler import and usage to fix circular import issue
         # from utils.media_handler import MediaHandler
-        if self.thumbnail:
-            resized_path: str | None = MediaHandler.resize_image(self.thumbnail, size=(150, 150))
+        if self.thumbnail and '_resized' not in self.thumbnail.name:
+            resized_path = MediaHandler.resize_image(self.thumbnail, size=(150, 150))
             if resized_path:
-                # You might want to save this resized path to another field
-                # or just use it for processing.
                 self.thumbnail = resized_path
-            else:
-                pass
+
+        if not self.qr_code:
+            self.generate_qr(auto_save=False)
         super().save(*args, **kwargs)
 
     def delete(self, *args, **kwargs):
@@ -95,9 +114,9 @@ class Course(models.Model):
         # Removed MediaHandler import and usage to fix circular import issue
         # from utils.media_handler import MediaHandler
         # if self.thumbnail:
-            # MediaHandler.delete_media_file(self.thumbnail.name)
+        #     MediaHandler.delete_media_file(self.thumbnail.name)
         # if self.video:
-            # MediaHandler.delete_media_file(self.video.name)
+        #     MediaHandler.delete_media_file(self.video.name)
         super().delete(*args, **kwargs)
 
 
@@ -105,6 +124,7 @@ class Section(models.Model):
     title = models.CharField(max_length=200)
     order = models.PositiveIntegerField(default=0)
     is_open = models.BooleanField(default=True)
+    article = models.ForeignKey('Article', on_delete=models.SET_NULL, related_name='sections', blank=True, null=True)
     lesson = models.ManyToManyField('Lesson', related_name='sections', blank=True)
     extra_fields = models.JSONField(blank=True, null=True, default=dict)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -379,3 +399,17 @@ class CourseNotes(models.Model):
 
     def __str__(self) -> str:
         return f"{self.user.profile.user.first_name} left a note on {self.course.title} - {self.section.title} - {self.note_text[:20]}"
+    
+class Article(models.Model):
+    title = models.CharField(max_length=200)
+    content = models.TextField()
+    author = models.ForeignKey('Users.Instructor', on_delete=models.CASCADE, related_name='articles')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    extra_fields = models.JSONField(blank=True, null=True, default=dict)
+
+    class Meta:
+        ordering: list[str] = ['-created_at']
+
+    def __str__(self) -> str:
+        return self.title

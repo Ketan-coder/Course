@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+
+{% block body %}
+    <div class="article-detail container p-4">
+        <h1>{{ article.title }}</h1>
+        <p><em>By {{ article.author.profile.user.username }} on {{ article.created_at }}</em></p>
+        <div class="article-body">
+            {{ article.content|safe }}
+        </div>
+    </div>
+{% endblock %}

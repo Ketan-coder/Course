@@ -2,7 +2,7 @@ from typing import Literal
 from django.contrib import admin
 
 from .models import Language, Course, Section, Lesson, Quiz, QuizSubmission, Tag
-from .models import CourseComment, CourseSubComment, CourseReview, CourseCertificate, FAQ
+from .models import CourseComment, CourseSubComment, CourseReview, CourseCertificate, FAQ, Article
 
 # Register your models here.
 
@@ -51,6 +51,7 @@ class CourseAdmin(admin.ModelAdmin):
                     "instructor",
                     "price",
                     "discount_price",
+                    "qr_code",
                 )
             },
         ),
@@ -262,3 +263,19 @@ class FAQAdmin(admin.ModelAdmin):
     #     }),
     # )
     # )
+
+@admin.register(Article)
+class CourseArticleAdmin(admin.ModelAdmin):
+    list_display = ("title", "author", "created_at")
+    search_fields = ("title", "content", "author__username")
+    list_filter = ("created_at",)
+    ordering = ("-created_at",)
+    date_hierarchy = "created_at"
+    fieldsets = (
+        (None, {
+            'fields': ('title', 'content', 'author')
+        }),
+        ('Extra Fields', {
+            'fields': ('extra_fields',)
+        }),
+    )

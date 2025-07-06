@@ -134,7 +134,7 @@
                                                     
                                                 </div>
                                                 <div class="progress mt-2 progress-bar-height" role="progressbar" aria-label="Basic example" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
-                                                    <div class="progress-bar {% if logged_in_profile in l.completed_by_users.all %}bg-primary{% else %}bg-secondary{% endif %}" role="progressbar" style="width: {% if logged_in_profile in l.completed_by_users.all %}100{% else %}0{% endif %}%"
+                                                    <div class="progress-bar {% if logged_in_profile in l.completed_by_users.all %}bg-info{% else %}bg-secondary{% endif %}" role="progressbar" style="width: {% if logged_in_profile in l.completed_by_users.all %}100{% else %}0{% endif %}%"
 ></div> 
                                                 </div>
                                             </a>
@@ -303,6 +303,7 @@
         {% endif %}
     {% endfor %}
   {% endfor %}
+  {% if lesson.video %}
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     const videoEl = document.getElementById('lesson-video');
@@ -313,7 +314,6 @@ document.addEventListener('DOMContentLoaded', function () {
     videoEl.load();
 });
 </script>
-{% if lesson.video %}
 <script>
     document.addEventListener('DOMContentLoaded', () => {
         const video = document.getElementById('lesson-video');
@@ -338,7 +338,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     .then(data => {
                         console.log("Lesson marked complete:", data);
                         if (data.next_lesson_id) {
-                            window.location.href = `http://127.0.0.1:8000/course/detail/${data.next_lesson_id}/`;
+                            window.location.href = `${window.location.origin}/course/detail/${data.next_lesson_id}/`;
                         }
                     })
                     .catch(err => console.error("Error marking complete:", err));
