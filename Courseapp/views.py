@@ -410,7 +410,7 @@ def bookmark_course(request, course_id) -> HttpResponseRedirect | HttpResponsePe
         ''', reverse("bookmark_course", args=[course.pk]))
     else:
         course.bookmarked_by_users.add(profile)
-        actual_added_points = update_score(profile, 15)
+        actual_added_points = update_score(request,profile, 15)
         # Return HTML for "Remove" button
         html = format_html('''
             <div id="save-button">
@@ -446,10 +446,10 @@ def mark_lesson_complete(request, lesson_id, user_profile) -> HttpResponseRedire
         lesson.completed_by_users.add(profile)
 
     # Handle Student Streak Logic
-    update_streak(profile)
+    update_streak(request,profile)
 
     # Handle Student Score Logic
-    update_score(profile)
+    update_score(request,profile)
 
     # rediect the user to the next video or lesson
     section = get_object_or_404(Section, lesson__id=lesson_id)
@@ -749,8 +749,8 @@ def submit_quiz(request, quiz_id):
                 correct_answer = qdata.get("answer") if qdata.get("type") != 'DRAG_DROP' else qdata.get("correct_mapping")
                 if correct_answer and str(user_answer).strip().lower() == str(correct_answer).strip().lower():
                     quiz.completed_by_users.add(profile)
-                    update_score(profile, 10)
-                    update_streak(profile)
+                    update_score(request,profile, 10)
+                    update_streak(request,profile)
                     Activity.objects.create(
                         user=request.user,
                         activity_type="Quiz Completion",

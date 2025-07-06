@@ -35,3 +35,7 @@ WebsiteTester.py
 
 media/
 .idx/
+
+# Ignore database files
+*.sqlite3
+*.db

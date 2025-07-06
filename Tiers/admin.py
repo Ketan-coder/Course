@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Tier, TierRank, Tournament, LeaderboardEntry
+from .models import *
 # Register your models here.
 
 admin.site.register(Tier)

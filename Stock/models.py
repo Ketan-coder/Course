@@ -56,7 +56,7 @@ class Stock(models.Model):
 
 
 class StockEvents(models.Model):
-    stock = models.ForeignKey(Stock, on_delete=models.CASCADE, related_name='events')
+    stock = models.ForeignKey(Stock, on_delete=models.CASCADE, related_name='events', null=True, blank=True)
     event_type = models.CharField(max_length=50)  # e.g., 'Earnings', 'Dividend', etc.
     event_date = models.DateField()
     description = models.TextField(blank=True, null=True)
@@ -71,7 +71,7 @@ class StockEvents(models.Model):
     
 
 class StockPriceHistory(models.Model):
-    stock = models.ForeignKey(Stock, on_delete=models.CASCADE, related_name='price_history')
+    stock = models.ForeignKey(Stock, on_delete=models.CASCADE, related_name='price_history', null=True, blank=True)
     datetime = models.DateTimeField()  # Use DateTimeField if storing hourly/minute data
     open_price = models.DecimalField(max_digits=12, decimal_places=2)
     close_price = models.DecimalField(max_digits=12, decimal_places=2)
@@ -95,7 +95,7 @@ class StockPriceHistory(models.Model):
 
 
 class Wallet(models.Model):
-    user = models.OneToOneField("Users.Profile", on_delete=models.CASCADE, related_name='wallet')
+    user = models.OneToOneField("Users.Profile", on_delete=models.CASCADE, related_name='wallet', null=True, blank=True)
     balance = models.DecimalField(max_digits=15, decimal_places=2, default=0.00)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -105,7 +105,7 @@ class Wallet(models.Model):
         return f"{self.user.username}'s Wallet"
 
 class StockPortfolio(models.Model):
-    user = models.ForeignKey("Users.Profile", on_delete=models.CASCADE, related_name='stock_portfolio')
+    user = models.ForeignKey("Users.Profile", on_delete=models.CASCADE, related_name='stock_portfolio', null=True, blank=True)
     total_holdings = models.DecimalField(max_digits=15, decimal_places=2, default=0.00)
     total_value = models.DecimalField(max_digits=15, decimal_places=2, default=0.00)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -117,8 +117,8 @@ class StockPortfolio(models.Model):
         return f"{self.user.username}'s Stock Portfolio"
 
 class StockHolding(models.Model):
-    portfolio = models.ForeignKey(StockPortfolio, on_delete=models.CASCADE, related_name='holdings')
-    stock = models.ForeignKey(Stock, on_delete=models.CASCADE, related_name='holdings')
+    portfolio = models.ForeignKey(StockPortfolio, on_delete=models.CASCADE, related_name='holdings', null=True, blank=True)
+    stock = models.ForeignKey(Stock, on_delete=models.CASCADE, related_name='holdings', null=True, blank=True)
     quantity = models.PositiveIntegerField()
     average_price = models.DecimalField(max_digits=12, decimal_places=2)
     purchase_date = models.DateField()

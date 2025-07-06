@@ -242,6 +242,8 @@ CHANNEL_LAYERS = {
 # Media files settings
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+DATA_UPLOAD_MAX_MEMORY_SIZE = 21474836480  # 20 GB
+FILE_UPLOAD_MAX_MEMORY_SIZE = 21474836480  # 20 GB
 
 # Email settings
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'

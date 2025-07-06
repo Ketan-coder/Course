@@ -3,9 +3,11 @@ from django.utils import timezone
 from Users.models import Student
 from django.db import transaction
 from Tiers.models import LeaderboardEntry
+from django.contrib import messages
+from utils.models import Activity
 
 @transaction.atomic
-def update_streak(profile):
+def update_streak(request,profile):
     """
     Update the user's streak count when they complete a lesson.
     Resets the streak if it's their first lesson of the day,
@@ -29,7 +31,7 @@ def update_streak(profile):
             student_profile.streak_last_updated_date = timezone.now()
             student_profile.save()
             Activity.objects.create(
-                user=request.user,
+                user=profile.user,
                 activity_type="Streak",
                 description=f"Streak is incremented to {student_profile.streak}",
             )
@@ -60,11 +62,9 @@ def update_streak(profile):
     except Student.DoesNotExist:
         messages.error(request, "Instructor Doesn't have streaks")
 
-from django.db import transaction
-from django.utils import timezone
 
 @transaction.atomic
-def update_score(profile, increment_score_by=10):
+def update_score(request,profile, increment_score_by=10):
     """
     Updates the user's score and potentially awards bonus points for streaks.
     Atomic transaction ensures data consistency.
@@ -85,7 +85,7 @@ def update_score(profile, increment_score_by=10):
             # student_profile.bonus_points_earned += bonus
 
             Activity.objects.create(
-                user=request.user,
+                user=profile.user,
                 activity_type="Bouns Points Earned",
                 description=f"Bouns Points Earned: {bonus} - Final Score is: {student_profile.score}",
             )

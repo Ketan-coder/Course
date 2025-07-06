@@ -23,7 +23,7 @@
             <div class="position-absolute top-50 start-0 translate-middle-y text-white p-5 z-1"
                  style="max-width: 600px">
                 <h1 class="display-1 fw-bold">{{ course.title|default:"Stock Market Basics" }}</h1>
-                <p class="lead">{{ course.description|default:"A simple and fun way to learn finance." }}</p>
+                <p class="lead">{{ course.description|safe|default:"A simple and fun way to learn finance." }}</p>
                     {% if course.instructor.profile.user.id == request.user.id %}
                         <a href="{% url 'course_update' pk=course.id %}" class="btn btn-primary btn-lg rounded-pill px-4 mt-3">Edit Course</a>
                     {% else %}
@@ -52,7 +52,7 @@
                      alt="{{ instructor.name }}">
                 <div class="card-img-overlay d-flex flex-column justify-content-end bg-dark bg-opacity-50 text-white">
                     <h5 class="card-title text-center mb-0 fw-bold">{{ course.instructor.profile.user.username }}</h5>
-                    <p class="card-text text-center small">{{ course.instructor.profile.bio|truncatewords:12 }}</p>
+                    <p class="card-text text-center small">{{ course.instructor.profile.bio|safe|truncatewords:12 }}</p>
                 </div>
             </div>
         </a>
@@ -100,7 +100,7 @@
                 <div class="tab-pane fade show active" id="description" role="tabpanel">
                     <div class="card card-body mb-4">
                         <h3 class="fw-bold">Course Description</h3>
-                        <p>{{ course.description|linebreaksbr }}</p>
+                        <p>{{ course.description|safe|linebreaksbr }}</p>
                     </div>
                 </div>
                 <!-- Syllabus Tab -->
@@ -219,7 +219,7 @@
                                              class="accordion-collapse collapse {% if forloop.first %}show{% endif %}"
                                              aria-labelledby="faq-heading-{{ forloop.counter }}"
                                              data-bs-parent="#faqAccordion">
-                                            <div class="accordion-body">{{ faq.answer|linebreaksbr }}</div>
+                                            <div class="accordion-body">{{ faq.answer|safe|linebreaksbr }}</div>
                                         </div>
                                     </div>
                                 {% endfor %}
