@@ -100,8 +100,38 @@
                                 Draft
                             {% endif %}
                                 </span></td>
-                            <td class="text-right align-middle"><a href="#" class="btn btn-sm">Manage</a></td>
+                            <td class="text-right align-middle" style="white-space: nowrap; width: 2em;">
+                                {% comment %} Edit course button {% endcomment %}
+                                <button type="button" class="btn btn-primary btn-sm" {% if course.is_published %} {% else %} disabled {% endif %} data-bs-toggle="modal" data-bs-target="#courseQRModal{{ course.id }}">
+                                    View QR Code
+                                </button>
+                                {% comment %} Copy course url button {% endcomment %}
+                                <button type="button" class="btn btn-secondary btn-sm" onclick="copyCourseUrl('{{ course.id }}')">
+                                    Copy Course URL
+                                </button>
+                                <a href="{% url 'course_detail' course.id %}" class="btn btn-info btn-sm">
+                                    View Course
+                                </a>
+                            </td>
                         </tr>
+                        <!-- Vertically centered modal -->
+                    <div class="modal fade" id="courseQRModal{{ course.id }}" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">{{ course.title }}</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body p-3">
+                                    <div class="text-center">
+                                        <img src="{{ course.qr_code.url }}" alt="QR Code for {{ course.title }}" class="img-fluid" style="max-width: 100%; height: auto;">
+                                    </div>
+                                    <p class="text-muted mt-3">Scan this QR code to access the course directly.</p>
+                                    <p class="text-muted">You can also share this QR code with your students.</p>
+                            </div>
+                        </div>
+                    </div>
+
                         {% endfor %}
                             
                         
@@ -281,3 +311,15 @@
     {% endif %}
 </div>
 {% endblock body %}
+{% block script %}
+    <script>
+        function copyCourseUrl(courseId) {
+            const courseUrl = window.location.origin + "{% url 'course_detail' 0 %}".replace('0', courseId);
+            navigator.clipboard.writeText(courseUrl).then(() => {
+                alert('Course URL copied to clipboard!');
+            }).catch(err => {
+                console.error('Failed to copy: ', err);
+            });
+        }
+    </script>
+{% endblock script %}

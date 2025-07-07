@@ -55,6 +55,7 @@ class Instructor(models.Model):
     profile = models.OneToOneField(Profile, on_delete=models.CASCADE)
     associated_courses = models.ManyToManyField(Course, related_name='instructors', blank=True)
     experience = models.PositiveIntegerField(default=0)
+    is_classroom_instructor = models.BooleanField(default=False)
     rating = models.DecimalField(max_digits=3, decimal_places=2, default=0.00)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

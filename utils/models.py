@@ -90,6 +90,7 @@ class Activity(models.Model):
         ('Profile View', 'Profile View'),
         ('Course Creation', 'Course Creation'),
         ('Course Update', 'Course Update'),
+        ('Course Referral', 'Course Referral'),
         ('Course Deletion', 'Course Deletion'),
         ('Lesson Creation', 'Lesson Creation'),
         ('Lesson Update', 'Lesson Update'),

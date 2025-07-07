@@ -51,6 +51,7 @@ class Course(models.Model):
     completed_by_users = models.ManyToManyField('Users.Profile', related_name='completed_courses', blank=True)
     reviews = models.ManyToManyField('CourseReview', related_name='courses', blank=True)
     qr_code = models.ImageField(upload_to='qr_codes/', blank=True, null=True)
+    referred_by = models.ManyToManyField('Users.Profile', related_name='referred_courses', blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     extra_fields = models.JSONField(blank=True, null=True, default=dict)
@@ -67,10 +68,14 @@ class Course(models.Model):
         from django.core.files.base import ContentFile
         from django.conf import settings
 
+        if self.instructor:
+            ref = self.instructor.profile.user.username
+
         # if settings.DEBUG:
         #     url = f"http://127.0.0.1/courses/{self.pk}/?ref={ref}"
         # else:
-        url = f"https://calsie.com.au/courses/{self.pk}/?ref={ref}"
+        # https://calsie.com.au/course/course/1/?ref=sajan_giri
+        url = f"https://calsie.com.au/course/course/{self.pk}/?ref={ref}"
         qr = qrcode.make(url)
         buffer = BytesIO()
         qr.save(buffer, format="PNG")
@@ -140,6 +145,8 @@ class Lesson(models.Model):
     # section = models.ForeignKey(Section, on_delete=models.CASCADE, related_name='lessons')
     title = models.CharField(max_length=200)
     video = models.FileField(upload_to='lesson_videos', blank=True, null=True)
+    video_url = models.URLField(blank=True, null=True)
+    thumbnail = models.ImageField(upload_to='lesson_thumbnails', blank=True, null=True)
     description = models.TextField(blank=True, null=True)
     is_open = models.BooleanField(default=True)
     completed_by_users = models.ManyToManyField('Users.Profile', related_name='completed_lessons', blank=True)

@@ -1,7 +1,16 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load video_tags %}
 
 {% block title %}{{ lesson.title }} - Course Video Detail{% endblock title %}
+
+{% block head %}
+    <!-- Plyr CSS -->
+<link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css" />
+
+<!-- Plyr JS -->
+<script src="https://cdn.plyr.io/3.7.8/plyr.polyfilled.js"></script>
+{% endblock head %}
 
 {% block body %}
 <div class="container-fluid py-20">
@@ -10,23 +19,33 @@
         <div class="col-12 col-lg-8">
             <div class="content-wrapper">
                 <!-- Custom HTML5 Video Player -->
-                <div class="card shadow-sm mb-20">
-                    <div class="ratio ratio-16x9">
-                        {% if lesson.video %}
-                        <video id="lesson-video" class="w-100 h-100" controls controlsList="nodownload" preload="metadata" poster="{% static 'images/video-poster.jpg' %}">
-                            {% comment %} <source src="{{ lesson.video.url }}" type="video/mp4"> {% endcomment %}
-                            Your browser does not support the video tag.
+                <div class="card shadow-sm mb-4">
+                    <div class="ratio ratio-9x16">
+                        {% if lesson.video_url %}
+                        <div class="plyr__video-embed" id="youtube-player">
+                            <iframe
+                            src="https://www.youtube.com/embed/{{ lesson.video_url|youtube_id }}?origin={{ request.get_host }}&amp;playsinline=1"
+                            allowfullscreen
+                            allow="autoplay"
+                            ></iframe>
+                        </div>
+                        {% elif lesson.video %}
+                        <video id="lesson-video" controls controlsList="nodownload" poster="{% static 'images/video-poster.jpg' %}" class="w-100 h-100">
+                            <source src="{{ lesson.video.url }}" type="video/mp4">
                         </video>
                         {% else %}
-                        <div class="alert alert-warning">
+                        <div class="alert alert-warning text-center p-5">
                             No video available for this lesson.
                         </div>
                         {% endif %}
                     </div>
-                </div>
+                    </div>
+
+
+
 
                 <!-- Title and Actions -->
-                <div class="m-2 mb-4">
+                <div class="m-2 mb-4 mt-5">
                 <div class="d-flex flex-column flex-md-row justify-content-md-between align-items-md-center m-20">
                     <h1 class="content-title fw-bold m-10 mb-md-0">{{ lesson.title }}</h1>
                     <div class="d-flex gap-2">
@@ -127,6 +146,14 @@
                                 <div class="list-group">
                                     {% for i in course.sections.all %}
                                             <h5 class="mb-2">{{ i.title }}</h5>
+                                            {% if i.article %}
+                                                <div class="mb-3">
+                                                    <strong>Article:</strong>
+                                                    <a href="{% url 'article_detail' article_id=i.article.id %}" class="text-decoration-none">
+                                                        {{ i.article.title|default:"No article available." }}
+                                                    </a>
+                                                </div>
+                                            {% endif %}
                                         {% for l in i.lesson.all %}
                                             <a href="{% url 'video_detail_page' l.id %}" class="ps-lg-3 list-group-item list-group-item-action {% if l.id == lesson.id %}active{% endif %}">
                                                 <div class="d-flex justify-content-between">
@@ -304,7 +331,7 @@
     {% endfor %}
   {% endfor %}
   {% if lesson.video %}
-<script>
+{% comment %} <script>
 document.addEventListener('DOMContentLoaded', function () {
     const videoEl = document.getElementById('lesson-video');
     const source = document.createElement('source');
@@ -346,7 +373,68 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         }
     });
+</script> {% endcomment %}
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        let player;
+        const isYouTube = "{{ lesson.video_url|default:'' }}" !== "";
+        const lessonId = "{{ lesson.id }}";
+        const userProfile = "{{ logged_in_profile.id }}";
+        const csrfToken = "{{ csrf_token }}";
+        let isMarkedComplete = {{ is_completed|yesno:"true,false" }};
+
+        if (isYouTube) {
+            // YouTube Player
+            player = new Plyr('#plyr-youtube-player', {
+                youtube: {
+                    rel: 0,
+                    showinfo: 0
+                }
+            });
+
+            player.on('timeupdate', () => {
+                const percent = (player.currentTime / player.duration) * 100;
+                if (percent >= 85 && !isMarkedComplete) {
+                    isMarkedComplete = true;
+                    markLessonComplete(lessonId, userProfile, csrfToken);
+                }
+            });
+
+        } else {
+            // HTML5 video
+            const video = document.getElementById('lesson-video');
+            player = new Plyr(video);
+
+            player.on('timeupdate', () => {
+                const percent = (player.currentTime / player.duration) * 100;
+                if (percent >= 85 && !isMarkedComplete) {
+                    isMarkedComplete = true;
+                    markLessonComplete(lessonId, userProfile, csrfToken);
+                }
+            });
+        }
+
+        function markLessonComplete(lessonId, userId, csrf) {
+            fetch("{% url 'mark_lesson_complete' lesson_id=lesson.id user_profile=logged_in_profile.id %}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrf
+                },
+                body: JSON.stringify({ lesson: lessonId, user_profile: userId })
+            })
+            .then(res => res.json())
+            .then(data => {
+                console.log('Marked Complete:', data);
+                if (data.next_lesson_id) {
+                    window.location.href = `/course/detail/${data.next_lesson_id}/`;
+                }
+            })
+            .catch(err => console.error("Error:", err));
+        }
+    });
 </script>
+
 {% endif %}
 <script>
     document.addEventListener("DOMContentLoaded", function () {

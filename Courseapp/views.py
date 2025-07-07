@@ -37,7 +37,7 @@ def course_list(request) -> HttpResponse:
             courses = Course.objects.all()
         else:
             courses = courses.filter(course_type=filter_by_type)
-    return render(request, "course/course_list.html", {"courses": courses})
+    return render(request, "course/course_list.html", locals())
 
 
 # @user_passes_test(lambda u: Instructor.objects.filter(profile=u.profile).exists())
@@ -344,7 +344,9 @@ def course_delete(request, pk) -> HttpResponseRedirect | HttpResponsePermanentRe
 
 
 def course_detail(request, pk) -> HttpResponseRedirect | HttpResponsePermanentRedirect | HttpResponse:
-    course = get_object_or_404(Course, pk=pk)
+    course = Course.objects.filter(pk=pk).first()
+    if not course:
+        return render(request, "course/course_not_found.html")
     user = request.user
     if not user.is_authenticated:
         return redirect("login")
@@ -354,7 +356,29 @@ def course_detail(request, pk) -> HttpResponseRedirect | HttpResponsePermanentRe
 
     if ref != 'outside':
         referrer = User.objects.filter(username=ref).first()
-        # Optional: log this or show it
+        if referrer:
+            # Add the course to the referrer's referred courses
+            referrer_profile = Profile.objects.get(user=referrer)
+            course.referred_by.add(referrer_profile)
+            # Log the referral activity
+            Activity.objects.create(
+                user=user,
+                activity_type="Course Referral",
+                description=f"Referred by {referrer.username} for course: {course.title}",
+            )
+            if referrer_profile:
+                # Update the referrer profile with bonus points
+                bonus_points = 35
+                student_profile = Student.objects.filter(profile=referrer_profile).first()
+                if student_profile:
+                    student_profile.score += bonus_points
+                    student_profile.save()
+                    # Log the bonus points activity
+                    Activity.objects.create(
+                        user=referrer,
+                        activity_type="Bouns Points Earned",
+                        description=f"Earned {bonus_points} bonus points for referring {course.title}",
+                    )
     else:
         referrer = None
     if request.method == 'POST':
@@ -610,6 +634,7 @@ def create_section(request) -> HttpResponse:
         order = request.POST.get("order", 0)
         is_open = request.POST.get("is_open", False) == "on"
         article = request.POST.get("article", "")
+
         selected_lessons = request.POST.getlist("selected_lesson")
         if selected_lessons:
             selected_lessons = Lesson.objects.filter(id__in=selected_lessons)
@@ -675,6 +700,7 @@ def create_lesson(request) -> HttpResponse:
         description = request.POST.get("description", "")
         order = request.POST.get("order", 0)
         required_score = request.POST.get("required-score", 0)
+        video_url = request.POST.get("video-url", "")
         # section_id = request.POST.get("section_id", 1)
         # section = get_object_or_404(Section, pk=section_id)
 
@@ -682,8 +708,12 @@ def create_lesson(request) -> HttpResponse:
             lesson = get_object_or_404(Lesson, id=lesson_id)
             lesson.title = title
             lesson.content = description
+            if "thumbnail" in request.FILES:
+                lesson.thumbnail = request.FILES["thumbnail"]
             if "video" in request.FILES:
                 lesson.video = request.FILES["video"]
+            else:
+                lesson.video_url = video_url
             lesson.order = order
             lesson.required_score = required_score
             lesson.save()
@@ -700,9 +730,13 @@ def create_lesson(request) -> HttpResponse:
                 order=order,
                 required_score=required_score,
             )
+            if "thumbnail" in request.FILES:
+                lesson.thumbnail = request.FILES["thumbnail"]
             if "video" in request.FILES:
                 lesson.video = request.FILES["video"]
-                lesson.save()
+            else:
+                lesson.video_url = video_url
+            lesson.save()
             return HttpResponse(
                 """<div class="alert alert-success border-0 rounded-0 d-flex align-items-center" role="alert">
                     <i class="fa-light fa-check-circle text-success-emphasis me-2"></i>
