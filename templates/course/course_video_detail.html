@@ -22,13 +22,8 @@
                 <div class="card shadow-sm mb-4">
                     <div class="ratio ratio-9x16">
                         {% if lesson.video_url %}
-                        <div class="plyr__video-embed" id="youtube-player">
-                            <iframe
-                            src="https://www.youtube.com/embed/{{ lesson.video_url|youtube_id }}?origin={{ request.get_host }}&amp;playsinline=1"
-                            allowfullscreen
-                            allow="autoplay"
-                            ></iframe>
-                        </div>
+                        <iframe width="560" height="315" src="https://youtu.be/LOgU8hgmM2I?si=sT_UVRebjydETKGa" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+
                         {% elif lesson.video %}
                         <video id="lesson-video" controls controlsList="nodownload" poster="{% static 'images/video-poster.jpg' %}" class="w-100 h-100">
                             <source src="{{ lesson.video.url }}" type="video/mp4">
@@ -40,8 +35,6 @@
                         {% endif %}
                     </div>
                     </div>
-
-
 
 
                 <!-- Title and Actions -->
@@ -376,63 +369,60 @@ document.addEventListener('DOMContentLoaded', function () {
 </script> {% endcomment %}
 <script>
     document.addEventListener('DOMContentLoaded', () => {
-        let player;
-        const isYouTube = "{{ lesson.video_url|default:'' }}" !== "";
-        const lessonId = "{{ lesson.id }}";
-        const userProfile = "{{ logged_in_profile.id }}";
-        const csrfToken = "{{ csrf_token }}";
-        let isMarkedComplete = {{ is_completed|yesno:"true,false" }};
+    let player;
+    const isYouTube = "{{ lesson.video_url|default:'' }}" !== "";
+    const lessonId = "{{ lesson.id }}";
+    const userProfile = "{{ logged_in_profile.id }}";
+    const csrfToken = "{{ csrf_token }}";
+    let isMarkedComplete = {{ is_completed|yesno:"true,false" }};
 
-        if (isYouTube) {
-            // YouTube Player
-            player = new Plyr('#plyr-youtube-player', {
-                youtube: {
-                    rel: 0,
-                    showinfo: 0
-                }
-            });
+    if (isYouTube) {
+        player = new Plyr('#youtube-player', {
+            youtube: {
+                rel: 0,
+                showinfo: 0
+            }
+        });
 
-            player.on('timeupdate', () => {
-                const percent = (player.currentTime / player.duration) * 100;
-                if (percent >= 85 && !isMarkedComplete) {
-                    isMarkedComplete = true;
-                    markLessonComplete(lessonId, userProfile, csrfToken);
-                }
-            });
+        player.on('timeupdate', () => {
+            const percent = (player.currentTime / player.duration) * 100;
+            if (percent >= 85 && !isMarkedComplete) {
+                isMarkedComplete = true;
+                markLessonComplete(lessonId, userProfile, csrfToken);
+            }
+        });
+    } else {
+        const video = document.getElementById('lesson-video');
+        player = new Plyr(video);
 
-        } else {
-            // HTML5 video
-            const video = document.getElementById('lesson-video');
-            player = new Plyr(video);
+        player.on('timeupdate', () => {
+            const percent = (player.currentTime / player.duration) * 100;
+            if (percent >= 85 && !isMarkedComplete) {
+                isMarkedComplete = true;
+                markLessonComplete(lessonId, userProfile, csrfToken);
+            }
+        });
+    }
 
-            player.on('timeupdate', () => {
-                const percent = (player.currentTime / player.duration) * 100;
-                if (percent >= 85 && !isMarkedComplete) {
-                    isMarkedComplete = true;
-                    markLessonComplete(lessonId, userProfile, csrfToken);
-                }
-            });
-        }
+    function markLessonComplete(lessonId, userId, csrf) {
+        fetch("{% url 'mark_lesson_complete' lesson_id=lesson.id user_profile=logged_in_profile.id %}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrf
+            },
+            body: JSON.stringify({ lesson: lessonId, user_profile: userId })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.next_lesson_id) {
+                window.location.href = `/course/detail/${data.next_lesson_id}/`;
+            }
+        })
+        .catch(err => console.error("Error:", err));
+    }
+});
 
-        function markLessonComplete(lessonId, userId, csrf) {
-            fetch("{% url 'mark_lesson_complete' lesson_id=lesson.id user_profile=logged_in_profile.id %}", {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': csrf
-                },
-                body: JSON.stringify({ lesson: lessonId, user_profile: userId })
-            })
-            .then(res => res.json())
-            .then(data => {
-                console.log('Marked Complete:', data);
-                if (data.next_lesson_id) {
-                    window.location.href = `/course/detail/${data.next_lesson_id}/`;
-                }
-            })
-            .catch(err => console.error("Error:", err));
-        }
-    });
 </script>
 
 {% endif %}

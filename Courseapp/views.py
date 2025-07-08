@@ -354,7 +354,7 @@ def course_detail(request, pk) -> HttpResponseRedirect | HttpResponsePermanentRe
     logged_in_profile = Profile.objects.get(user=user)
     ref = request.GET.get('ref', 'outside')
 
-    if ref != 'outside':
+    if ref != 'outside' and ref != None and ref != '':
         referrer = User.objects.filter(username=ref).first()
         if referrer:
             # Add the course to the referrer's referred courses
@@ -417,7 +417,7 @@ def video_detail_page(request,lesson_id) -> HttpResponseRedirect | HttpResponseP
     request.session["page"] = "course"
     logged_in_profile = Profile.objects.get(user=user)
     student_profile = Student.objects.filter(profile=logged_in_profile).first() or None
-    leaderboard_entry_profile = LeaderboardEntry.objects.filter(profile=logged_in_profile).first() or None
+    # leaderboard_entry_profile = LeaderboardEntry.objects.filter(profile=logged_in_profile).first() or None
     lesson = get_object_or_404(Lesson, pk=lesson_id)
     
     # Points Check
@@ -426,7 +426,7 @@ def video_detail_page(request,lesson_id) -> HttpResponseRedirect | HttpResponseP
         user_score = student_profile.score if student_profile else 0
         if user_score < required_score:
             messages.error(request,format_html("You need <strong class='text-primary'>{} points</strong> to view this video. Keep learning and earning points!", required_score))
-            return('course_list')
+            return redirect('course_list')
 
     course = get_object_or_404(Course, sections__lesson__id=lesson_id)
     to_search_sections = course.sections.all().values_list('id', flat=True)

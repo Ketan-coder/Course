@@ -43,7 +43,7 @@ class StudentAdmin(admin.ModelAdmin):
     date_hierarchy = 'created_at'
     fieldsets = (
         (None, {
-            'fields': ('profile', 'tier', 'rank')
+            'fields': ('profile', 'tier', 'rank','score', 'daily_score')
         }),
         ('Extra Fields', {
             'fields': ('extra_fields',)
