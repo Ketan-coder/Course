@@ -7,7 +7,7 @@
       <!-- Modal Header -->
       <div class="modal-header">
         <h5 class="modal-title" id="modalLabel-mcq-{{ quiz_data.id }}">
-          {{ quiz_data.question|default:"Multiple Choice Question" }}
+          Multiple Choice Question
         </h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
@@ -42,9 +42,9 @@
 <script>
 document.addEventListener('DOMContentLoaded', function () {
   const quizId = "{{ quiz_data.id|escapejs }}";
-  const correctAnswer = "{{ quiz_data.correct_answer|escapejs }}";
-  const correctFeedback = "{{ quiz_data.correct_feedback|default:'Correct!'|escapejs }}";
-  const incorrectFeedback = "{{ quiz_data.incorrect_feedback|default:'Incorrect. Try again.'|escapejs }}";
+  const correctAnswerMCQ = "{{ quiz_data.answer|escapejs }}";
+  const correctFeedback = "Correct! Well done.";
+  const incorrectFeedback = "Incorrect. Try again.";
 
   const form = document.getElementById(`form-mcq-${quizId}`);
   const submitBtn = document.getElementById(`submit-mcq-${quizId}`);
@@ -76,7 +76,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     const value = selected.value.trim().toLowerCase();
-    const correct = correctAnswer.trim().toLowerCase();
+    const correct = correctAnswerMCQ.trim().toLowerCase();
 
     if (value === correct) {
       feedback.textContent = correctFeedback;
@@ -86,7 +86,7 @@ document.addEventListener('DOMContentLoaded', function () {
       submitBtn.textContent = "Correct!";
       submitBtn.disabled = true;
       form.querySelectorAll('input').forEach(r => r.disabled = true);
-      // ✅ Send to backend to mark as completed
+      //  Send to backend to mark as completed
       fetch(`/course/quiz/submit/${quizId}/`, {
         method: 'POST',
         headers: {
@@ -99,7 +99,7 @@ document.addEventListener('DOMContentLoaded', function () {
           console.warn("Failed to mark quiz as complete.");
         }
       }).catch(console.error);
-      submitBtn.dispatchEvent(new CustomEvent('correctAnswer', { bubbles: true }));
+      submitBtn.dispatchEvent(new CustomEvent('correctAnswerMCQ', { bubbles: true }));
     } else {
       feedback.textContent = incorrectFeedback;
       feedback.classList.add('text-danger');

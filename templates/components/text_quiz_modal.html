@@ -69,7 +69,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const submitButtonText = document.getElementById(`submit-text-quiz-${quizIdText}`);
     const feedbackElementText = document.getElementById(`feedback-text-quiz-${quizIdText}`);
 
-    const correctAnswerText = "{{ quiz_data.correct_answer|escapejs }}"; // The correct answer
+    const correctAnswerText = "{{ quiz_data.answer|escapejs }}"; // The correct answer
     const correctFeedbackText = "{{ quiz_data.correct_feedback|default:'Correct! Well done.'|escapejs }}";
     const incorrectFeedbackText = "{{ quiz_data.incorrect_feedback|default:'Not quite right. Try again!'|escapejs }}";
 

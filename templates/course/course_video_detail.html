@@ -1,6 +1,5 @@
 {% extends 'base.html' %}
 {% load static %}
-{% load video_tags %}
 
 {% block title %}{{ lesson.title }} - Course Video Detail{% endblock title %}
 
@@ -20,21 +19,27 @@
             <div class="content-wrapper">
                 <!-- Custom HTML5 Video Player -->
                 <div class="card shadow-sm mb-4">
-                    <div class="ratio ratio-9x16">
-                        {% if lesson.video_url %}
-                        <iframe width="560" height="315" src="https://youtu.be/LOgU8hgmM2I?si=sT_UVRebjydETKGa" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
-
-                        {% elif lesson.video %}
-                        <video id="lesson-video" controls controlsList="nodownload" poster="{% static 'images/video-poster.jpg' %}" class="w-100 h-100">
-                            <source src="{{ lesson.video.url }}" type="video/mp4">
+                    
+                        {% if lesson.video %}
+                        {% comment %} <div class="ratio ratio-16x9">
+                        <video id="lesson-video" controls controlsList="nodownload" class="w-100 h-100">]
                         </video>
+                        </div> {% endcomment %}
+
+                        <div class="plyr__video-wrapper">
+                            <video id="lesson-video" class="plyr w-100" controls playsinline data-plyr-config='{ "controls": ["play", "progress", "current-time", "mute", "volume", "fullscreen", "settings"] }' poster="{% static 'images/video-poster.jpg' %}" controlsList="nodownload">
+                            </video>
+                        </div>
+
+                        {% elif lesson.video_url %}
+                        <div id="youtube-player-container" class="ratio ratio-16x9"></div>
                         {% else %}
                         <div class="alert alert-warning text-center p-5">
                             No video available for this lesson.
                         </div>
                         {% endif %}
-                    </div>
-                    </div>
+                    
+                </div>
 
 
                 <!-- Title and Actions -->
@@ -177,9 +182,9 @@
                                                                     </button>
                                                                 </span>
                                                             {% else %}
-                                                                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modal-mcq-{{ questions.id }}" >
-                                                                    Open MCQ Quiz
-                                                                </button>
+                                                            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modal-mcq-{{ questions.id }}" >
+                                                                Open MCQ Quiz
+                                                            </button>
                                                             {% endif %}
                                                             {% comment %} {% include "components/modal_mcq.html" with quiz_data=questions %} {% endcomment %}
 
@@ -323,13 +328,17 @@
         {% endif %}
     {% endfor %}
   {% endfor %}
-  {% if lesson.video %}
+{% if lesson.video %}
 {% comment %} <script>
 document.addEventListener('DOMContentLoaded', function () {
     const videoEl = document.getElementById('lesson-video');
     const source = document.createElement('source');
     source.src = "{{ lesson.video.url }}";
     source.type = "video/mp4";
+    if (!videoEl) {
+        console.error("Video element not found.");
+        return;
+    }
     videoEl.appendChild(source);
     videoEl.load();
 });
@@ -337,6 +346,7 @@ document.addEventListener('DOMContentLoaded', function () {
 <script>
     document.addEventListener('DOMContentLoaded', () => {
         const video = document.getElementById('lesson-video');
+        if (!video) return;
         let isMarkedComplete = {{ is_completed|yesno:"true,false" }};
 
         if (video) {
@@ -367,65 +377,85 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 </script> {% endcomment %}
-<script>
-    document.addEventListener('DOMContentLoaded', () => {
-    let player;
-    const isYouTube = "{{ lesson.video_url|default:'' }}" !== "";
-    const lessonId = "{{ lesson.id }}";
-    const userProfile = "{{ logged_in_profile.id }}";
-    const csrfToken = "{{ csrf_token }}";
-    let isMarkedComplete = {{ is_completed|yesno:"true,false" }};
-
-    if (isYouTube) {
-        player = new Plyr('#youtube-player', {
-            youtube: {
-                rel: 0,
-                showinfo: 0
-            }
-        });
-
-        player.on('timeupdate', () => {
-            const percent = (player.currentTime / player.duration) * 100;
-            if (percent >= 85 && !isMarkedComplete) {
-                isMarkedComplete = true;
-                markLessonComplete(lessonId, userProfile, csrfToken);
-            }
-        });
-    } else {
-        const video = document.getElementById('lesson-video');
-        player = new Plyr(video);
-
-        player.on('timeupdate', () => {
-            const percent = (player.currentTime / player.duration) * 100;
-            if (percent >= 85 && !isMarkedComplete) {
-                isMarkedComplete = true;
-                markLessonComplete(lessonId, userProfile, csrfToken);
-            }
-        });
-    }
-
-    function markLessonComplete(lessonId, userId, csrf) {
-        fetch("{% url 'mark_lesson_complete' lesson_id=lesson.id user_profile=logged_in_profile.id %}", {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': csrf
-            },
-            body: JSON.stringify({ lesson: lessonId, user_profile: userId })
-        })
-        .then(res => res.json())
-        .then(data => {
-            if (data.next_lesson_id) {
-                window.location.href = `/course/detail/${data.next_lesson_id}/`;
-            }
-        })
-        .catch(err => console.error("Error:", err));
-    }
-});
-
-</script>
 
 {% endif %}
+{% if lesson.video %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const videoEl = document.getElementById('lesson-video');
+        const player = new Plyr(videoEl, {
+            autoplay: false,
+            tooltips: { controls: true },
+            settings: ['quality', 'speed', 'loop'],
+        });
+
+        // Append source dynamically
+        if (videoEl && !videoEl.querySelector('source')) {
+            const source = document.createElement('source');
+            source.src = "{{ lesson.video.url }}";
+            source.type = "video/mp4";
+            videoEl.appendChild(source);
+            videoEl.load();
+        }
+
+        // Mark video complete after 85% watch
+        let isMarkedComplete = {{ is_completed|yesno:"true,false" }};
+        player.on('timeupdate', () => {
+            const percent = (player.currentTime / player.duration) * 100;
+            if (percent >= 85 && !isMarkedComplete) {
+                isMarkedComplete = true;
+                const lesson = "{{ lesson.id }}";
+                const user_profile = "{{ logged_in_profile.id }}";
+
+                fetch("{% url 'mark_lesson_complete' lesson_id=lesson.id user_profile=logged_in_profile.id %}", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    body: JSON.stringify({ lesson: lesson, user_profile: user_profile })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    console.log("Lesson marked complete:", data);
+                    if (data.next_lesson_id) {
+                        window.location.href = `${window.location.origin}/course/detail/${data.next_lesson_id}/`;
+                    }
+                })
+                .catch(err => console.error("Error marking complete:", err));
+            }
+        });
+    });
+</script>
+{% endif %}
+
+{% if lesson.video_url %}
+<script>
+    function getYoutubeID(url) {
+        const regExp = /(?:v=|\/)([0-9A-Za-z_-]{11}).*/;
+        const match = url.match(regExp);
+        return (match && match[1].length == 11) ? match[1] : null;
+    }
+
+    const ytID = getYoutubeID("{{ lesson.video_url }}");
+
+    const playerContainer = document.getElementById('youtube-player-container');
+    if (ytID && playerContainer) {
+        const iframe = document.createElement('iframe');
+        iframe.setAttribute('src', `https://www.youtube-nocookie.com/embed/${ytID}?rel=0&modestbranding=1&playsinline=1`);
+        iframe.setAttribute('width', '100%');
+        iframe.setAttribute('height', '100%');
+        iframe.setAttribute('frameborder', '0');
+        iframe.setAttribute('allowfullscreen', '');
+        iframe.setAttribute('allow', 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share');
+
+        playerContainer.appendChild(iframe);
+    } else {
+        console.error("Invalid YouTube URL or container not found.");
+    }
+</script>
+{% endif %}
+
 <script>
     document.addEventListener("DOMContentLoaded", function () {
         const token = document.querySelector('meta[name="csrf-token"]').content;
@@ -445,5 +475,11 @@ document.addEventListener('DOMContentLoaded', function () {
     .modal {
         z-index: 1055 !important; /* Bootstrap modal z-index */
       }      
+      .plyr__video-wrapper video {
+        border-radius: 10px;
+        max-height: 70vh;
+        background: black;
+    }
+
 </style>
 {% endblock body %}

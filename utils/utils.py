@@ -11,6 +11,16 @@ from .decorators import *
 # It supports HTML 5 and CSS 2.1 (and some of CSS 3)
 # It is completely written in pure Python so it is platform independent
 from xhtml2pdf import pisa  
+from .decorators import check_load_time
+import google.generativeai as genai
+import os
+import json
+import re
+
+# Configure API Key
+genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+
+model = genai.GenerativeModel("models/gemini-1.5-flash-latest")
 
 @check_load_time
 def render_to_pdf(template_src, context_dict={}):
@@ -70,3 +80,76 @@ def send_email(to_email, subject, title, body, anchor_link=None, anchor_text="Cl
     msg = EmailMultiAlternatives(subject, text_content, settings.DEFAULT_FROM_EMAIL, to_email)
     msg.attach_alternative(html_content, "text/html")
     msg.send()
+
+
+@check_load_time
+def generate_quiz_from_content(section_title :str, lesson_content:str) -> dict:
+    # models = genai.list_models()
+
+    # for m in models:
+    #     print(m.name, m.supported_generation_methods)
+    prompt = f'''
+You are an expert quiz creator.
+
+Generate 5 quiz questions from the lesson below. Vary the question types among these:
+- SINGLE_SELECT (one correct option)
+- MULTIPLE_SELECT (one correct option but marked as that type)
+- TEXT (user types answer)
+- IMAGE_MC (multiple choice with an image)
+- DRAG_DROP (sentence with blanks and draggable options)
+
+Each question should include:
+- id (string)
+- question (text)
+- type
+- options (if applicable)
+- correct answer
+- for IMAGE_MC include an "image" field
+- for DRAG_DROP include sentence_parts, draggable_options, and correct_mapping
+
+Return JSON in this format:
+{{
+  "1": {{
+    "id": "1",
+    "question": "...",
+    "options": [...],
+    "type": "SINGLE_SELECT",
+    "answer": "..."
+  }},
+  "2": {{ ... }},
+  ...
+}}
+
+Here is an example of a question:
+{{"1": {{"id": "1", "question": "What is the capital of France?", "options": [{{"id": "Paris", "text": "Paris"}}, {{"id": "London", "text": "London"}}], "type": "MULTIPLE_SELECT", "answer": "Paris"}}, "2": {{"id": "2", "question": "What is 2 + 2?", "options": [{{"id": "1", "text": "1"}}, {{"id": "2", "text": "2"}}, {{"id": "3", "text": "3"}}, {{"id": "4", "text": "4"}}], "type": "SINGLE_SELECT", "answer": "4"}}, "3": {{"id": "3", "question": "Capital of Nepal?", "options": [], "type": "TEXT", "answer": "Kathmandu"}}, "4": {{"id": "4", "question": "Which monument is shown?", "type": "IMAGE_MC", "image": "media/monuments/eiffel.jpg", "options": [{{"id": "Taj Mahal", "text": "Taj Mahal"}}, {{"id": "Colosseum", "text": "Colosseum"}}, {{"id": "Eiffel Tower", "text": "Eiffel Tower"}}], "answer": "Eiffel Tower"}}, "5": {{"id": "5", "question": "Complete the sentence", "type": "DRAG_DROP", "sentence_parts": ["The quick brown ", null, " jumps over the ", null, " dog."], "draggable_options": [{{"id": "fox", "text": "fox"}}, {{"id": "lazy", "text": "lazy"}}, {{"id": "quick", "text": "quick"}}], "correct_mapping": {{"0": "fox", "1": "lazy"}}}}}}
+
+Output **only valid JSON**, with no comments or markdown.
+
+Section Title: {section_title}
+
+Lesson Content:
+{lesson_content}
+'''
+
+    # response = model.generate_content(prompt)
+    # print("Gemini Response:", response)
+    try:
+        response = model.generate_content(prompt)
+        print("Gemini Response:", response)
+
+        # Get the raw text from first candidate part
+        raw_text = response.candidates[0].content.parts[0].text
+
+        # Extract JSON from code block using regex
+        match = re.search(r"```json\s*(\{.*?\})\s*```", raw_text, re.DOTALL)
+        if not match:
+            raise ValueError("Could not find JSON block in the response.")
+
+        quiz_json = match.group(1)
+        parsed_data = json.loads(quiz_json)
+        print("Quiz Data given from AI ==>", parsed_data)
+        return parsed_data
+
+    except Exception as e:
+        print("Error parsing Gemini response:", e)
+        return {}

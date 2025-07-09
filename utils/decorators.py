@@ -3,17 +3,17 @@ from django.http import HttpResponseForbidden
 from functools import wraps
 from django.core.cache import cache
 from django.shortcuts import redirect
-from Users.models import Instructor, Student, Profile
+# from Users.models import Instructor, Student, Profile
 
 # Timer Decorator
 def check_load_time(func):
     @wraps(func)
-    def wrapper():
+    def wrapper(*args, **kwargs):
         start_time = time.time()
-        func()
+        result = func(*args, **kwargs)
         end_time = time.time()
-        load_time = end_time - start_time
-        return load_time
+        print(f"Function {func.__name__} took {end_time - start_time:.2f} seconds.")
+        return result
     return wrapper
 
 # Require Super user Decorator
@@ -82,28 +82,28 @@ def retry_on_failure(retries=3, delay=2):
     return decorator
 
 
-def only_instructor(request):
-    @wraps(func)
-    def wrapper(request, *args, **kwargs):
-        if request.user.is_authenticated:
-            profile = Profile.objects.filter(user=request.user)
-            if profile:
-                if Instructor.objects.filter(profile=profile).exists():
-                    return func(request, *args, **kwargs)
-                elif request.user.is_authenticated:
-                    return redirect('home') # Assuming 'home' is the URL name for your home page
-                else:
-                    return redirect('login') # Assuming 'login' is the URL name for your login page
-        return wrapper
+# def only_instructor(request):
+#     @wraps(func)
+#     def wrapper(request, *args, **kwargs):
+#         if request.user.is_authenticated:
+#             profile = Profile.objects.filter(user=request.user)
+#             if profile:
+#                 if Instructor.objects.filter(profile=profile).exists():
+#                     return func(request, *args, **kwargs)
+#                 elif request.user.is_authenticated:
+#                     return redirect('home') # Assuming 'home' is the URL name for your home page
+#                 else:
+#                     return redirect('login') # Assuming 'login' is the URL name for your login page
+#         return wrapper
 
-def only_student(request):
-    @wraps(func)
-    def wrapper(request, *args, **kwargs):
-        if request.user.is_authenticated:
-            if Student.objects.filter(user=request.user).exists():
-                return func(request, *args, **kwargs)
-            elif request.user.is_authenticated:
-                return redirect('home') # Assuming 'home' is the URL name for your home page
-            else:
-                return redirect('login') # Assuming 'login' is the URL name for your login page
-        return wrapper
+# def only_student(request):
+#     @wraps(func)
+#     def wrapper(request, *args, **kwargs):
+#         if request.user.is_authenticated:
+#             if Student.objects.filter(user=request.user).exists():
+#                 return func(request, *args, **kwargs)
+#             elif request.user.is_authenticated:
+#                 return redirect('home') # Assuming 'home' is the URL name for your home page
+#             else:
+#                 return redirect('login') # Assuming 'login' is the URL name for your login page
+#         return wrapper

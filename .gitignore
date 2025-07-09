@@ -39,3 +39,9 @@ media/
 # Ignore database files
 *.sqlite3
 *.db
+
+# Ignore log files
+*.log
+
+# Ignore internal files
+internal_readme.md

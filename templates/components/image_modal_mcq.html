@@ -25,7 +25,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="modalLabel-imcq-{{ quiz_data.id }}">
-                    {{ quiz_data.title|default:"Image-based Multiple Choice Question" }}
+                    Image-based Multiple Choice Question
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
@@ -90,7 +90,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const formIMCQ = document.getElementById(`form-imcq-${quizIdIMCQ}`);
     const submitButtonIMCQ = document.getElementById(`submit-imcq-${quizIdIMCQ}`);
     const feedbackElementIMCQ = document.getElementById(`feedback-imcq-${quizIdIMCQ}`);
-    const correctOptionIdIMCQ = "{{ quiz_data.correct_option_id|escapejs }}";
+    const correctOptionIdIMCQ = "{{ quiz_data.answer|escapejs }}";
     const correctFeedbackIMCQ = "{{ quiz_data.correct_feedback|default:'Correct!'|escapejs }}";
     const incorrectFeedbackIMCQ = "{{ quiz_data.incorrect_feedback|default:'Incorrect. Try again.'|escapejs }}";
 

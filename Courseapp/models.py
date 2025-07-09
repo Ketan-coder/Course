@@ -4,6 +4,7 @@ from django.core.exceptions import ValidationError
 from requests import Response
 from utils.media_handler import MediaHandler
 from decimal import Decimal
+from utils.utils import generate_quiz_from_content
 
 def validate_discount(value) -> None:
     if value < 0:
@@ -51,7 +52,7 @@ class Course(models.Model):
     completed_by_users = models.ManyToManyField('Users.Profile', related_name='completed_courses', blank=True)
     reviews = models.ManyToManyField('CourseReview', related_name='courses', blank=True)
     qr_code = models.ImageField(upload_to='qr_codes/', blank=True, null=True)
-    referred_by = models.ManyToManyField('Users.Profile', related_name='referred_courses', blank=True, null=True)
+    referred_by = models.ManyToManyField('Users.Profile', related_name='referred_courses', blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     extra_fields = models.JSONField(blank=True, null=True, default=dict)
@@ -138,6 +139,32 @@ class Section(models.Model):
     def __str__(self):
         
         return self.title
+    
+    def save(self, *args, **kwargs):
+        self.extra_fields['last_updated'] = str(self.updated_at)
+        print(f"Saving section: {self.title} with lessons: {[lesson.title for lesson in self.lesson.all()]}")
+
+        # Generate quiz from the first lesson's content if it exists
+        quiz_data = generate_quiz_from_content(self.title, self.lesson.first().content if self.lesson.exists() else '')
+        if quiz_data:
+            related_quizes = Quiz.objects.filter(section=self)
+            if not related_quizes.exists():
+                quiz = Quiz.objects.create(
+                    section=self,
+                    title=f"{self.title} Quiz",
+                    questions=quiz_data,
+                    is_inside_video=False,
+                    max_score=Decimal('100.0'),
+                    passing_score=Decimal('50.0'),
+                    required_score=5
+                )
+                print(f"Quiz created for section {self.title}: {quiz.title}")
+            else:
+                print(f"Quiz already exists for section {self.title}. No new quiz created.")
+        else:
+            print(f"No quiz data generated for section {self.title}. Please check the lesson content.")
+        print(f"Quiz Data given from AI ==> {quiz_data}")
+        super().save(*args, **kwargs)
 
 
 class Lesson(models.Model):

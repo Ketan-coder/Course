@@ -25,9 +25,12 @@
 {% comment %} {% with "correct-mapping-data-"|add:quiz_data.id as json_id %}
     {{ correct_mapping|json_script:json_id }}
 {% endwith %} {% endcomment %}
-<script type="application/json" id="correct-mapping-data-{{ quiz_data.id }}">
+{% comment %} <script type="application/json" id="correct-mapping-data-{{ quiz_data.id }}">
     {{ correct_mapping|safe }}
-</script>
+</script> {% endcomment %}
+{% with "correct-mapping-data-"|add:quiz_data.id as json_id %}
+    {{ correct_mapping|json_script:json_id }}
+{% endwith %}
 
 <div class="modal fade" id="modal-drag-drop-{{ quiz_data.id }}" tabindex="-1" aria-labelledby="modalLabel-drag-drop-{{ quiz_data.id }}" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
@@ -43,7 +46,7 @@
                 </svg>
                 {% endif %}
                 <h5 class="modal-title" id="modalLabel-drag-drop-{{ quiz_data.id }}">
-                    {{ quiz_data.question|default:"Drag-and-Drop Challenge" }}
+                    Drag-and-Drop Challenge
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
