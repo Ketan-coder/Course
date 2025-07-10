@@ -149,15 +149,15 @@
 
     <nav class="navbar navbar-expand-lg">
       <div class="container-fluid">
-          <a class="navbar-brand" href="#">Calsie</a>
+          <a class="navbar-brand" href="{% url 'landing_page' %}">Calsie</a>
           <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
               <span class="navbar-toggler-icon"></span>
           </button>
           <div class="collapse navbar-collapse" id="navbarNav">
               <ul class="navbar-nav">
-                  <li class="nav-item">
+                  {% comment %} <li class="nav-item">
                     <a class="nav-link" href="{% url 'landing_page' %}">Landing Page</a>
-                </li>  
+                </li>   {% endcomment %}
                 <li class="nav-item">
                       <a class="nav-link {% if request.session.page == 'home' %}active{% endif %}" href="{% url 'home' %}">Home</a>
                   </li>
@@ -167,12 +167,18 @@
                   {% comment %} <li class="nav-item">
                     <a class="nav-link" href="{% url 'stock_list' %}">Stocks</a>
                 </li> {% endcomment %}
-                  {% comment %} <li class="nav-item">
-                      <a class="nav-link" href="#">Instructors</a>
-                  </li> {% endcomment %}
+                <li class="nav-item">
+                    <a class="nav-link {% if request.session.page == 'partners' %}active{% endif %}" href="#">Partners</a>
+                </li>
+                {% if request.session.current_user_type == 'student' %}
                   <li class="nav-item">
-                      <a class="nav-link {% if request.session.page == 'partners' %}active{% endif %}" href="#">Partners</a>
+                      <a class="nav-link" href="#"><p><i class="ph ph-fire"></i> Streak: <b>{{ request.session.streak }}</b></p></a>
                   </li>
+                  <li class="nav-item">
+                      <a class="nav-link" href="#"><p><i class="ph ph-trophy"></i> Score: <b>{{ request.session.score }}</b></p>
+</a>
+                  </li>
+                {% endif %}
               </ul>
               <form class="d-flex ms-auto align-items-center" role="search">
                   <div class="input-group">

@@ -20,6 +20,16 @@ def course_list(request) -> HttpResponse:
     courses: BaseManager[Course] = Course.objects.all()
     request.session["page"] = "course"
 
+    profile = Profile.objects.filter(user=request.user).first()
+    student_profile = Student.objects.filter(profile=profile).first() or None
+    instructor_profile = Instructor.objects.filter(profile=profile).first() or None
+    if student_profile:
+        request.session['streak'] = student_profile.streak
+        request.session['score'] = student_profile.score
+        request.session['current_user_type'] = 'student'
+    elif instructor_profile:
+        request.session['current_user_type'] = 'instructor'
+
     if request.method == "POST" and "search_term" in request.POST:
         search_term = request.POST["search_term"]
         courses = courses.filter(
@@ -151,6 +161,8 @@ def course_create(request) -> HttpResponseRedirect | HttpResponsePermanentRedire
 def course_update(request, pk) -> HttpResponseRedirect | HttpResponsePermanentRedirect | HttpResponse:
     course: Course = get_object_or_404(Course, pk=pk)
     instructors: BaseManager[Instructor] = Instructor.objects.all()
+    logined_profile = Profile.objects.get(user=request.user)
+    logined_instructor = Instructor.objects.filter(profile=logined_profile).first()
     lessons = Lesson.objects.all() 
     request.session["page"] = "course"
     if request.method == "POST":
@@ -161,7 +173,7 @@ def course_update(request, pk) -> HttpResponseRedirect | HttpResponsePermanentRe
         course.course_type = request.POST.get("course_type")
         course.course_level = request.POST.get("course_level")
         course.language_id = request.POST.get("language")
-        course.instructor_id = request.POST.get("instructor")
+        # course.instructor_id = request.POST.get("instructor")
         course.price = request.POST.get("price")
         course.discount_price = request.POST.get("discount_price")
         course.is_published = request.POST.get("is_published", False) == "on"

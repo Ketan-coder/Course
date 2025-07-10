@@ -144,6 +144,11 @@ def index(request):
             profile = Profile.objects.get(user=current_user)
             if Student.objects.filter(profile=profile).exists():
                 enrolled_courses = Course.objects.filter(is_bought_by_users=profile)
+                
+                student_profile = Student.objects.get(profile=profile)
+                request.session['streak'] = student_profile.streak
+                request.session['score'] = student_profile.score
+                request.session['current_user_type'] = 'student'
             
                 course_progress = []
                 for course in enrolled_courses:
@@ -217,6 +222,7 @@ def index(request):
                 }
             elif Instructor.objects.filter(profile=profile).exists():
                 course = Course.objects.filter(instructor__profile=profile)
+                request.session['current_user_type'] = 'instructor'
                 course_count = 0
                 enrolled_students = 0
                 total_earnings = 0
