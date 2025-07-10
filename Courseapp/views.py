@@ -63,9 +63,12 @@ def course_list(request) -> HttpResponse:
 #         form = CourseForm(instance=course)
 #     return render(request, 'course/course_form.html', {'form': form})
 
+@login_required
 @user_passes_test(lambda u: Instructor.objects.filter(profile=u.profile).exists())
 def course_create(request) -> HttpResponseRedirect | HttpResponsePermanentRedirect | HttpResponse:
     instructors = Instructor.objects.all()
+    logined_profile = Profile.objects.get(user=request.user)
+    logined_instructor = Instructor.objects.filter(profile=logined_profile).first()
     request.session["page"] = "course"
     if request.method == "POST":
         print(request.POST)
@@ -75,7 +78,7 @@ def course_create(request) -> HttpResponseRedirect | HttpResponsePermanentRedire
         course_type = request.POST.get("course_type")
         course_level = request.POST.get("course_level")
         language_id = request.POST.get("language")
-        instructor_id = request.POST.get("instructor")
+        # instructor_id = request.POST.get("instructor")
         price = request.POST.get("price")
         discount_price = request.POST.get("discount_price")
         is_published = request.POST.get("is_published", False) == "on"
@@ -94,7 +97,7 @@ def course_create(request) -> HttpResponseRedirect | HttpResponsePermanentRedire
             course_type=course_type,
             course_level=course_level,
             language_id=language_id,
-            instructor_id=instructor_id,
+            instructor_id=logined_instructor.id,
             price=price,
             discount_price=discount_price,
             is_published=is_published,
@@ -140,7 +143,7 @@ def course_create(request) -> HttpResponseRedirect | HttpResponsePermanentRedire
         return render(
             request,
             "course/course_form.html",
-            {"languages": languages, "instructors": instructors},
+            {"languages": languages, "instructors": instructors,'logined_profile': logined_profile },
         )
 
 

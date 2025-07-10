@@ -5,11 +5,20 @@
     <h2 class="mb-4">{% if course %}Edit Course{% else %}Create Course{% endif %}</h2>
 
     <div class="d-flex gap-2 mb-3">
+        <p class="text-muted">Start with these befor adding Course: </p>
         <button type="button" class="btn btn-outline-primary" data-bs-toggle="offcanvas" data-bs-target="#offcanvas-add-tag">Add Tag</button>
         <button type="button" class="btn btn-outline-success" data-bs-toggle="offcanvas" data-bs-target="#offcanvas-add-faq">Add FAQ</button>
         <button type="button" class="btn btn-outline-warning" data-bs-toggle="offcanvas" data-bs-target="#offcanvas-add-section">Add Section</button>
         <a href="{% url 'create_quiz' %}" class="btn btn-outline-info">Create Quiz</a>
         <a href="{% url 'create_article' %}" class="btn btn-outline-info">Create Article</a>
+    </div>
+
+    <div>
+        <p class="text-muted">You can add Tags, FAQs, Sections, Articles and Lessons to your course using the buttons above.</p>
+        <p class="text-muted">Make sure to save your course after adding these elements.</p>
+        <blockquote class="blockquote">
+            <p class="mb-0">Note: Quiz and Lessons are not editable for now!</p>
+        </blockquote>
     </div>
 
     <!-- Offcanvas: Add Tag -->
@@ -278,7 +287,7 @@
             {% endif %}
         </div>
 
-        <div class="form-group">
+        {% comment %} <div class="form-group">
             <label for="id_instructor" class="form-label">Instructor:</label>
             <select name="instructor" id="id_instructor" class="form-control">
                 {% for inst in instructors %}
@@ -287,17 +296,6 @@
             </select>
             {% if form.instructor.errors %}
             <div class="invalid-feedback d-block">{{ form.instructor.errors }}</div>
-            {% endif %}
-        </div>
-
-        {% comment %} <div class="form-group">
-            <label for="id_thumbnail" class="form-label">Thumbnail:</label>
-            <input type="file" name="thumbnail" id="id_thumbnail" class="form-control">
-            {% if course.thumbnail %}
-            <p class="mt-2">Current: <a href="{{ course.thumbnail.url }}" target="_blank">{{ course.thumbnail.name }}</a></p>
-            {% endif %}
-            {% if form.thumbnail.errors %}
-            <div class="invalid-feedback d-block">{{ form.thumbnail.errors }}</div>
             {% endif %}
         </div> {% endcomment %}
 
@@ -377,7 +375,13 @@
             <!-- <input type="number" name="price" id="id_price" value="{{ course.price|default:'0.0' }}" step="0.01"
                 class="form-control"> -->
             <div class="input-group mb-3">
-              <span class="input-group-text" id="add-on-1">{{course.instructor.profile.currency}}</span>
+              <span class="input-group-text" id="add-on-1">
+                {% if course %} 
+                    {{course.instructor.profile.currency.symbol}}
+                {% else %}
+                    {{logined_profile.currency.symbol}}</span>
+                {% endif %}
+            </span>
               <input type="number" name="price" id="id_price" value="{{ course.price|default:'0.0' }}" step="0.01"
                 class="form-control">
             </div>
@@ -391,7 +395,12 @@
             <!-- <input type="number" name="discount_price" id="id_discount_price"
                 value="{{ course.discount_price|default:'0.0' }}" step="0.01" class="form-control"> -->
               <div class="input-group mb-3">
-                <span class="input-group-text" id="add-on-1">{{course.instructor.profile.currency}}</span>
+                <span class="input-group-text" id="add-on-1">
+                    {% if course %}
+                        {{course.instructor.profile.currency.symbol}}
+                    {% else %}
+                        {{logined_profile.currency.symbol}}</span>
+                    {% endif %}
                 <input type="number" name="discount_price" id="id_discount_price"
                 value="{{ course.discount_price|default:'0.0' }}" step="0.01" class="form-control">
               </div>
