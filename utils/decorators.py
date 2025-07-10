@@ -1,5 +1,5 @@
 import time
-from django.http import HttpResponseForbidden
+from django.http import HttpResponseForbidden, JsonResponse
 from functools import wraps
 from django.core.cache import cache
 from django.shortcuts import redirect

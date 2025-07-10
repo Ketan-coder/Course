@@ -37,6 +37,7 @@ def render_to_pdf(template_src, context_dict={}):
 
 
 @check_load_time
+@retry_on_failure
 def send_email(to_email, subject, title, body, anchor_link=None, anchor_text="Click Here"):
     """
     Sends a customizable email with an optional anchor link.
@@ -83,12 +84,13 @@ def send_email(to_email, subject, title, body, anchor_link=None, anchor_text="Cl
 
 
 @check_load_time
-def generate_quiz_from_content(section_title :str, lesson_content:str) -> dict:
+def generate_quiz_from_content(section_title :str, lesson_content:str, prompt: str = '') -> dict:
     # models = genai.list_models()
 
     # for m in models:
     #     print(m.name, m.supported_generation_methods)
-    prompt = f'''
+    if prompt is None or prompt.strip() == "":
+        prompt = f'''
 You are an expert quiz creator.
 
 Generate 5 quiz questions from the lesson below. Vary the question types among these:
@@ -121,6 +123,21 @@ Return JSON in this format:
 }}
 
 Here is an example of a question:
+{{"1": {{"id": "1", "question": "What is the capital of France?", "options": [{{"id": "Paris", "text": "Paris"}}, {{"id": "London", "text": "London"}}], "type": "MULTIPLE_SELECT", "answer": "Paris"}}, "2": {{"id": "2", "question": "What is 2 + 2?", "options": [{{"id": "1", "text": "1"}}, {{"id": "2", "text": "2"}}, {{"id": "3", "text": "3"}}, {{"id": "4", "text": "4"}}], "type": "SINGLE_SELECT", "answer": "4"}}, "3": {{"id": "3", "question": "Capital of Nepal?", "options": [], "type": "TEXT", "answer": "Kathmandu"}}, "4": {{"id": "4", "question": "Which monument is shown?", "type": "IMAGE_MC", "image": "media/monuments/eiffel.jpg", "options": [{{"id": "Taj Mahal", "text": "Taj Mahal"}}, {{"id": "Colosseum", "text": "Colosseum"}}, {{"id": "Eiffel Tower", "text": "Eiffel Tower"}}], "answer": "Eiffel Tower"}}, "5": {{"id": "5", "question": "Complete the sentence", "type": "DRAG_DROP", "sentence_parts": ["The quick brown ", null, " jumps over the ", null, " dog."], "draggable_options": [{{"id": "fox", "text": "fox"}}, {{"id": "lazy", "text": "lazy"}}, {{"id": "quick", "text": "quick"}}], "correct_mapping": {{"0": "fox", "1": "lazy"}}}}}}
+
+Output **only valid JSON**, with no comments or markdown.
+
+Section Title: {section_title}
+
+Lesson Content:
+{lesson_content}
+'''
+    else:
+        prompt = f'''
+You are an expert quiz creator.
+{prompt}
+
+Here is an example of a question you have to generate:
 {{"1": {{"id": "1", "question": "What is the capital of France?", "options": [{{"id": "Paris", "text": "Paris"}}, {{"id": "London", "text": "London"}}], "type": "MULTIPLE_SELECT", "answer": "Paris"}}, "2": {{"id": "2", "question": "What is 2 + 2?", "options": [{{"id": "1", "text": "1"}}, {{"id": "2", "text": "2"}}, {{"id": "3", "text": "3"}}, {{"id": "4", "text": "4"}}], "type": "SINGLE_SELECT", "answer": "4"}}, "3": {{"id": "3", "question": "Capital of Nepal?", "options": [], "type": "TEXT", "answer": "Kathmandu"}}, "4": {{"id": "4", "question": "Which monument is shown?", "type": "IMAGE_MC", "image": "media/monuments/eiffel.jpg", "options": [{{"id": "Taj Mahal", "text": "Taj Mahal"}}, {{"id": "Colosseum", "text": "Colosseum"}}, {{"id": "Eiffel Tower", "text": "Eiffel Tower"}}], "answer": "Eiffel Tower"}}, "5": {{"id": "5", "question": "Complete the sentence", "type": "DRAG_DROP", "sentence_parts": ["The quick brown ", null, " jumps over the ", null, " dog."], "draggable_options": [{{"id": "fox", "text": "fox"}}, {{"id": "lazy", "text": "lazy"}}, {{"id": "quick", "text": "quick"}}], "correct_mapping": {{"0": "fox", "1": "lazy"}}}}}}
 
 Output **only valid JSON**, with no comments or markdown.

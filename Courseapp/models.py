@@ -140,12 +140,12 @@ class Section(models.Model):
         
         return self.title
     
-    def save(self, *args, **kwargs):
+    def save(self, prompt='',*args, **kwargs):
         self.extra_fields['last_updated'] = str(self.updated_at)
         print(f"Saving section: {self.title} with lessons: {[lesson.title for lesson in self.lesson.all()]}")
 
         # Generate quiz from the first lesson's content if it exists
-        quiz_data = generate_quiz_from_content(self.title, self.lesson.first().content if self.lesson.exists() else '')
+        quiz_data = generate_quiz_from_content(self.title, self.lesson.first().content if self.lesson.exists() else '', prompt=prompt)
         if quiz_data:
             related_quizes = Quiz.objects.filter(section=self)
             if not related_quizes.exists():

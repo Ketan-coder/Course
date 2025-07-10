@@ -118,6 +118,11 @@
                 <div class="invalid-feedback d-block">{{ form.article.errors }}</div>
                 {% endif %}
             </div>
+
+            <div class="form-group mt-2 mb-3">
+                <label for="id_prompt" class="form-label">Prompt for Generating Quiz:</label>
+                <textarea name="prompt" id="id_prompt" class="form-control"></textarea>
+            </div>
             <script>
             document.getElementById('id_article_search').addEventListener('input', function () {
                 const searchTerm = this.value;

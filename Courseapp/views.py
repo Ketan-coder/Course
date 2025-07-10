@@ -634,6 +634,7 @@ def create_section(request) -> HttpResponse:
         order = request.POST.get("order", 0)
         is_open = request.POST.get("is_open", False) == "on"
         article = request.POST.get("article", "")
+        prompt = request.POST.get("prompt", "")
 
         selected_lessons = request.POST.getlist("selected_lesson")
         if selected_lessons:
@@ -649,7 +650,7 @@ def create_section(request) -> HttpResponse:
             section.is_open = is_open
             section.article = article
             section.lesson.set(selected_lessons)  # Update lessons
-            section.save()
+            section.save(prompt=prompt)  # Save prompt if needed
             return HttpResponse(
                 """<div class="alert alert-success border-0 rounded-0 d-flex align-items-center" role="alert">
                     <i class="fa-light fa-check-circle text-success-emphasis me-2"></i>
@@ -658,6 +659,9 @@ def create_section(request) -> HttpResponse:
             )
         else:
             section = Section.objects.create(title=title, order=order, is_open=is_open)
+            section.article = article
+            section.lesson.set(selected_lessons)  # Update lessons
+            section.save(prompt=prompt)
             return HttpResponse(
                 """<div class="alert alert-success border-0 rounded-0 d-flex align-items-center" role="alert">
                     <i class="fa-light fa-check-circle text-success-emphasis me-2"></i>
