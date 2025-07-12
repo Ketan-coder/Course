@@ -471,7 +471,8 @@ def video_detail_page(request,lesson_id) -> HttpResponseRedirect | HttpResponseP
             messages.error(request,format_html("You need <strong class='text-primary'>{} points</strong> to view this video. Keep learning and earning points!", required_score))
             return redirect('course_list')
 
-    course = get_object_or_404(Course, sections__lesson__id=lesson_id)
+    # course = get_object_or_404(Course, sections__lesson__id=lesson_id)
+    course = Course.objects.filter(sections__lesson__id=lesson_id).first()
     to_search_sections = course.sections.all().values_list('id', flat=True)
     section = get_object_or_404(Section, id__in=to_search_sections)
     is_completed = lesson.completed_by_users.filter(pk=logged_in_profile.pk).exists()
@@ -539,43 +540,51 @@ def bookmark_course(request, course_id) -> HttpResponseRedirect | HttpResponsePe
     )
     return HttpResponse(html)
 
+@csrf_exempt
 def mark_lesson_complete(request, lesson_id, user_profile) -> HttpResponseRedirect | HttpResponsePermanentRedirect | HttpResponse:
     user = request.user
-    if not user.is_authenticated:
-        return redirect("login")
+    if not request.user.is_authenticated:
+        return JsonResponse({'error': 'Unauthorized'}, status=403)
+    try:
+        lesson = get_object_or_404(Lesson, pk=lesson_id)
+        profile = get_object_or_404(Profile, pk=user_profile)
+
+        # Check if the lesson is already completed by the user
+        if lesson.completed_by_users.filter(pk=profile.pk).exists():
+            # If already completed, remove the user from completed users
+            return JsonResponse({"message": "Lesson already completed."}, status=400)
+        else:
+            # If not completed, add the user to completed users
+            lesson.completed_by_users.add(profile)
     
-    lesson = get_object_or_404(Lesson, pk=lesson_id)
-    profile = get_object_or_404(Profile, pk=user_profile)
+        
 
-    # Check if the lesson is already completed by the user
-    if lesson.completed_by_users.filter(pk=profile.pk).exists():
-        # If already completed, remove the user from completed users
-        return JsonResponse({"message": "Lesson already completed."}, status=400)
-    else:
-        # If not completed, add the user to completed users
-        lesson.completed_by_users.add(profile)
+        # Handle Student Streak Logic
+        if Student.objects.filter(profile=profile).exists():
+            update_streak(request,profile)
 
-    # Handle Student Streak Logic
-    update_streak(request,profile)
+        # Handle Student Score Logic
+        if Student.objects.filter(profile=profile).exists():
+            update_score(request,profile)
 
-    # Handle Student Score Logic
-    update_score(request,profile)
+        # rediect the user to the next video or lesson
+        section = get_object_or_404(Section, lesson__id=lesson_id)
 
-    # rediect the user to the next video or lesson
-    section = get_object_or_404(Section, lesson__id=lesson_id)
-
-    next_lesson = section.lesson.filter(id__gt=lesson_id).exclude(completed_by_users=profile,id=lesson_id).first()
-    if next_lesson:
-        lesson_id = next_lesson.id
-        return JsonResponse({"next_lesson_id": lesson_id})
-    
-    Activity.objects.create(
-        user=user,
-        activity_type="Lesson Completion",
-        description=f"Completed lesson: {lesson.title}",
-    )
-    
-    return redirect("video_detail_page", lesson_id=lesson_id)
+        next_lesson = section.lesson.filter(id__gt=lesson_id).exclude(completed_by_users=profile,id=lesson_id).first()
+        if next_lesson:
+            lesson_id = next_lesson.id
+            return JsonResponse({"next_lesson_id": lesson_id})
+        
+        Activity.objects.create(
+            user=user,
+            activity_type="Lesson Completion",
+            description=f"Completed lesson: {lesson.title}",
+        )
+        
+        url = reverse("video_detail_page", kwargs={"lesson_id": lesson_id})
+        return JsonResponse({"next_lesson_url": url})
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
 
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
