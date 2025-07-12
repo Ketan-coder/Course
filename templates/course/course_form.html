@@ -162,7 +162,8 @@
                 }
             });
             </script>
-            <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#modal-add-lesson">Add Lesson</button>
+            {% comment %} <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#modal-add-lesson">Add Lesson</button> {% endcomment %}
+            <a type="button" class="btn btn-outline-info" href="{% url "lesson_form" %}">Add Lesson</a>
             <button type="submit" class="btn btn-warning" id="section-submit-btn">Save Section</button>
         </form>
         <div id="section-select"></div> 
@@ -205,7 +206,7 @@
                         </div>
                         <div class="mb-3">
                             <label for="lesson-video-url" class="form-label">Video Url</label>
-                            <input type="text" class="form-control" name="video-url" id="lesson-video-url" required>
+                            <input type="text" class="form-control" name="video-url" id="lesson-video-url">
                         </div>
                         <div class="mb-3">
                             <label for="lesson-order" class="form-label">Order</label>

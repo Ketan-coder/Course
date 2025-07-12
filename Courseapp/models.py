@@ -328,7 +328,7 @@ class CourseReview(models.Model):
         ordering: list[str] = ['-created_at']
 
     def __str__(self) -> str:
-        return f"{self.user.username} - {self.course.title} - {self.rating}"
+        return f"{self.user.user.username} - {self.rating}"
 
 class CourseComment(models.Model):
     user = models.ForeignKey('Users.Profile', on_delete=models.CASCADE, related_name='course_comments')

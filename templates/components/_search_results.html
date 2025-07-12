@@ -1,0 +1,7 @@
+{% for course in courses %}
+  <a href="{% url 'course_detail' course.id %}" class="list-group-item list-group-item-action">
+    {{ course.title }}
+  </a>
+{% empty %}
+  <div class="text-muted small">No courses found.</div>
+{% endfor %}

@@ -15,27 +15,27 @@ from django.urls import reverse
 from django.contrib import messages
 from .utils import * 
 from django.contrib.auth.models import User
+from django.template.loader import render_to_string
 
 def course_list(request) -> HttpResponse:
     courses: BaseManager[Course] = Course.objects.all()
     request.session["page"] = "course"
-
-    profile = Profile.objects.filter(user=request.user).first()
-    student_profile = Student.objects.filter(profile=profile).first() or None
-    instructor_profile = Instructor.objects.filter(profile=profile).first() or None
-    if student_profile:
-        request.session['streak'] = student_profile.streak
-        request.session['score'] = student_profile.score
-        request.session['current_user_type'] = 'student'
-    elif instructor_profile:
-        request.session['current_user_type'] = 'instructor'
+    if request.user.is_authenticated:
+        profile = Profile.objects.filter(user=request.user).first()
+        student_profile = Student.objects.filter(profile=profile).first() or None
+        instructor_profile = Instructor.objects.filter(profile=profile).first() or None
+        if student_profile:
+            request.session['streak'] = student_profile.streak
+            request.session['score'] = student_profile.score
+            request.session['current_user_type'] = 'student'
+        elif instructor_profile:
+            request.session['current_user_type'] = 'instructor'
 
     if request.method == "POST" and "search_term" in request.POST:
         search_term = request.POST["search_term"]
         courses = courses.filter(
             title__icontains=search_term, language__name__icontains=search_term
         ) # Suggested code may be subject to a license. Learn more: ~LicenseLog:1606362085.
-    print(request.GET)
     if "course_level" in request.GET:
         filter_by_level = request.GET["course_level"]
         if filter_by_level != "any":
@@ -81,7 +81,6 @@ def course_create(request) -> HttpResponseRedirect | HttpResponsePermanentRedire
     logined_instructor = Instructor.objects.filter(profile=logined_profile).first()
     request.session["page"] = "course"
     if request.method == "POST":
-        print(request.POST)
         # Manually get data from request.POST for each field
         title = request.POST.get("title")
         description = request.POST.get("description")
@@ -166,7 +165,6 @@ def course_update(request, pk) -> HttpResponseRedirect | HttpResponsePermanentRe
     lessons = Lesson.objects.all() 
     request.session["page"] = "course"
     if request.method == "POST":
-        print(request.POST)
         # Manually get data from request.POST for each field
         course.title = request.POST.get("title")
         course.description = request.POST.get("description")
@@ -231,7 +229,6 @@ def course_update(request, pk) -> HttpResponseRedirect | HttpResponsePermanentRe
 def create_quiz(request) -> HttpResponse:
     request.session["page"] = "course"
     if request.method == "POST":
-        print(request.POST)
         # Either update or create new quiz
         quiz_id = request.POST.get("quiz_id")
         course_id = request.POST.get("course_id")
@@ -339,6 +336,14 @@ def search_article(request) -> JsonResponse:
         return JsonResponse(list(articles), safe=False)
     return JsonResponse([], safe=False)
 
+def search_courses_htmx(request):
+    try:
+        query = request.GET.get("q", "")
+        courses = Course.objects.filter(title__icontains=query)[:10]
+        html = render_to_string("components/_search_results.html", {"courses": courses})
+        return HttpResponse(html)
+    except Exception as e:
+        return HttpResponse(f"Error: {str(e)}", status=500)
 
 @user_passes_test(lambda u: Instructor.objects.filter(profile=u.profile).exists())
 def course_delete(request, pk) -> HttpResponseRedirect | HttpResponsePermanentRedirect | HttpResponse:
@@ -367,6 +372,7 @@ def course_detail(request, pk) -> HttpResponseRedirect | HttpResponsePermanentRe
         return redirect("login")
     request.session["page"] = "course"
     logged_in_profile = Profile.objects.get(user=user)
+    user_review = course.reviews.filter(user=logged_in_profile).first()
     ref = request.GET.get('ref', 'outside')
 
     if ref != 'outside' and ref != None and ref != '':
@@ -397,7 +403,29 @@ def course_detail(request, pk) -> HttpResponseRedirect | HttpResponsePermanentRe
     else:
         referrer = None
     if request.method == 'POST':
-        if 'enroll_now' in request.POST or 'buy_now' in request.POST:
+        if 'submit_review' in request.POST:
+            # Handle course review submission
+            review_text = request.POST.get('review_text', '').strip()
+            rating = request.POST.get('rating', 0)
+            if review_text:
+                existing_review = course.reviews.filter(user=logged_in_profile).first()
+                if existing_review:
+                    existing_review.review_text = review_text
+                    existing_review.rating = rating
+                    existing_review.save()
+                    messages.success(request, "Your review has been updated successfully.")
+                else:
+                    course.reviews.create(
+                        user=logged_in_profile,
+                        review_text=review_text,
+                        rating=rating
+                    )
+                    messages.success(request, "Your review has been submitted successfully.")
+            else:
+                messages.error(request, "Review text cannot be empty.")
+            return redirect("course_detail", pk=pk)
+
+        elif 'enroll_now' in request.POST or 'buy_now' in request.POST:
             # Enroll the user in the course
             student_profile = Student.objects.filter(profile=logged_in_profile).first()
             if student_profile:
@@ -978,3 +1006,80 @@ def article_detail(request, article_id):
     #     return HttpResponse("You must be an instructor to view articles.", status=403)
 
     return render(request, "course/article_detail.html", locals())
+
+def lesson_form(request, lesson_id=None) -> HttpResponseRedirect | HttpResponsePermanentRedirect | HttpResponse:
+    request.session["page"] = "course"
+    if not request.user.is_authenticated:
+        return redirect("login")
+
+    user = request.user
+    instructor = Instructor.objects.filter(profile__user=user).first()
+    if not instructor:
+        return HttpResponse("You must be an instructor to create lessons.", status=403)
+    
+    lesson = None
+
+    if lesson_id:
+        lesson = get_object_or_404(Lesson, id=lesson_id)
+        # Fetch existing lesson data for editing
+        if not lesson:
+            messages.error(request, "Lesson not found.")
+            return redirect("course_list")
+
+    if request.method == "POST":
+
+        # Form Fields
+        title = request.POST.get("title", "").strip()
+        description = request.POST.get("description", "").strip()
+        order = request.POST.get("order") or 0
+        required_score = request.POST.get("required_score") or 0
+        video_url = request.POST.get("video_url", "").strip()
+        video_path = request.POST.get("video_path", "")
+        # section_id = request.POST.get("section_id")
+
+        if not title:
+            return JsonResponse({"error": "Title is required"}, status=400)
+
+        # section = get_object_or_404(Section, pk=section_id) if section_id else None
+        # lesson_id = request.POST.get("lesson_id")
+
+        # Create or update
+        if lesson_id:
+            lesson = get_object_or_404(Lesson, id=lesson_id)
+            message = "updated"
+        else:
+            lesson = Lesson(title=title)
+            message = "created"
+
+        # Assign all fields
+        lesson.title = title
+        lesson.description = description
+        lesson.order = order
+        lesson.required_score = required_score
+
+        if video_path:
+            lesson.video = video_path
+            lesson.video_url = ""  # Clear URL if uploading file
+        elif video_url:
+            lesson.video_url = video_url
+
+        if "thumbnail" in request.FILES:
+            lesson.thumbnail = request.FILES["thumbnail"]
+
+        lesson.save()
+
+        # Log activity
+        Activity.objects.create(
+            user=user,
+            activity_type="Lesson Creation",
+            description=f"{message.capitalize()} lesson: {lesson.title}"
+        )
+
+        # Return for Uppy (XHRUpload expects status 200)
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse({"success": True, "redirect": "/courses/"})
+
+        messages.success(request, f"Lesson '{lesson.title}' {message} successfully.")
+        return redirect("course_list")
+
+    return render(request, "course/lesson_form.html", locals())

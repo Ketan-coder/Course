@@ -1,224 +1,110 @@
 {% load static %}
 <!DOCTYPE html>
-<html lang="en" data-bs-theme="dark" data-bs-core="modern">
-  <head>
-    <title>
-      {% block title %} {% endblock title %}
-    </title>
-    <!-- Required meta tags -->
-    <meta charset="utf-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="title" content="Sajan" />
-    <meta
-      name="description"
-      content=""
-    />
-    <meta name="csrf-token" content="{{ csrf_token }}" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Roboto:wght@100;300;400;700;900&display=swap"
-      rel="stylesheet"
-    />
-    <link
-      rel="stylesheet"
-      href="https://fonts.googleapis.com/icon?family=Material+Icons"
-    />
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"
-    />
-    <link href="{% static 'vendors/css/halfmoon.css' %}" rel="stylesheet" />
-    <link href="{% static 'vendors/css/halfmoon.modern.css' %}" rel="stylesheet" />
-    <link href="{% static 'vendors/css/halfmoon.cores.css' %}" rel="stylesheet" />
-    <link href="{% static 'vendors/css/halfmoon.elegant.css' %}" rel="stylesheet" />
-    <script src="{% static 'vendors/js/htmx.min.js' %}" ></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha256-CDOy6cOibCWEdsRiZuaHf8dSGGJRYuBGC+mjoJimHGw=" crossorigin="anonymous"></script>
-    <link href="https://cdn.jsdelivr.net/npm/halfmoon@2.0.2/css/halfmoon.min.css" rel="stylesheet" integrity="sha256-RjeFzczeuZHCyS+Gvz+kleETzBF/o84ZRHukze/yv6o=" crossorigin="anonymous">
-    <link href="https://cdn.jsdelivr.net/npm/halfmoon@2.0.2/css/cores/halfmoon.modern.css" rel="stylesheet" integrity="sha256-DD6elX+jPmbFYPsGvzodUv2+9FHkxHlVtQi0/RJVULs=" crossorigin="anonymous">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
-    {% comment %}
-    <link
-      href="https://fonts.googleapis.com/css?family=Roboto|Lora|Poppins"
-      rel="stylesheet"
-    />
-    {% endcomment %}
-    <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
-    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
-    <link
-      href="https://fonts.googleapis.com/css2?family=Roboto:wght@100;300;400;700;900&display=swap"
-      rel="stylesheet"
-    />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Lora:wght@100;300;400;700;900&display=swap"
-      rel="stylesheet"
-    />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Poppins:wght@100;300;400;700;900&display=swap"
-      rel="stylesheet"
-    />
-    <!-- Phosphor Icons -->
-    <script src="https://unpkg.com/phosphor-icons"></script>
-    <style>
-      .card-link-wrapper {
-        text-decoration: none; /* Remove underline from the anchor tag */
-        color: inherit; /* Inherit text color */
-      }
-    
-      .card-link-wrapper .card {
-        transition: transform 0.3s ease-in-out; /* Add a smooth transition for the transform property */
-      }
-    
-      .card-link-wrapper:hover .card {
-        transform: scale(1.02); /* Slightly increase the scale of the card on hover */
-      }
+<html lang="en"
+      {% if request.user.is_authenticated and request.user.profile.isDarkTheme %}data-bs-theme="dark" {% elif not request.user.is_authenticated %} data-bs-theme="dark" {% endif %}
+      data-bs-core="{{ request.user.profile.theme|default:'default' }}">
+<head>
+  <title>{% block title %}{% endblock title %}</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="csrf-token" content="{{ csrf_token }}">
+  
+  <!-- Fonts & Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,700|Lora|Poppins&display=swap">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
+  <script src="https://unpkg.com/phosphor-icons"></script>
 
-      .ql-toolbar.ql-snow .quill-editor .ql-container .ql-snow !important {
-        border: none;
-      }
-    </style>
-    {% block head %} {% endblock head %}
-  </head>
-  <body>
-    <!-- Navbar nav scrolling -->
-    <!-- <nav
-      class="navbar navbar-expand-md"
-      style="
-        background-color: var(--bs-content-bg);
-        border-bottom: var(--bs-border-width) solid
-          var(--bs-content-border-color);"
-    >
-      <div class="container-fluid">
-        <a class="navbar-brand" href="#">
-          Sajan Giri
-        </a>
-        <button
-          class="navbar-toggler"
-          type="button"
-          data-bs-toggle="collapse"
-          data-bs-target="#navbar-collapse-2"
-          aria-controls="navbar-collapse-2"
-          aria-expanded="false"
-          aria-label="Toggle navigation"
-        >
-          <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbar-collapse-2">
-          <ul class="navbar-nav ms-auto">
-            <li class="nav-item">
-              <a class="nav-link active" aria-current="page" href="{% url 'home' %}">Home</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="{% url 'course_list' %}">Course</a>
-            </li>
-            
-            <li class="nav-item" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="Completed 20% of Course to Open Trade">
-              <a class="nav-link disabled">Trade</a>
-            </li>
-			
-			{% if user.is_authenticated %}
-			<li class="nav-item dropdown">
-              <a
-                class="nav-link dropdown-toggle"
-                href="#"
-                role="button"
-                data-bs-toggle="dropdown"
-                aria-expanded="false"
-              >
-                {{ user.username }}
-              </a>
-              <ul class="dropdown-menu dropdown-menu-end mt-md-2 rounded-top-0">
-                <li><a class="dropdown-item" href="#">Liked Courses</a></li>
-                <li><a class="dropdown-item" href="{% url 'update_user' %}">Update Profile</a></li>
-                <li><hr class="dropdown-divider" /></li>
-                <li><a class="dropdown-item" href="{% url 'logout' %}">Log out</a></li>
-              </ul>
-            </li>
-			{% else %}
-			<li class="nav-item">
-				<a class="nav-link" href="{% url 'login' %}">Login/Register</a>
-			</li>	
-			{% endif %}
-				
-			
-          </ul>
-        </div>
-      </div>
-    </nav> -->
+  <!-- Styles -->
+  <link href="{% static 'vendors/css/halfmoon.css' %}" rel="stylesheet" />
+  <link href="{% static 'vendors/css/halfmoon.modern.css' %}" rel="stylesheet" />
+  <link href="{% static 'vendors/css/halfmoon.elegant.css' %}" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/halfmoon@2.0.2/css/halfmoon.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/halfmoon@2.0.2/css/cores/halfmoon.modern.css" rel="stylesheet">
+
+  <!-- Scripts -->
+  <script src="{% static 'vendors/js/htmx.min.js' %}"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+  <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
+
+  <style>
+    .card-link-wrapper:hover .card {
+      transform: scale(1.02);
+      transition: transform 0.3s ease;
+    }
+  </style>
+
+  {% block head %}{% endblock head %}
+    </head>
+
+    <body>
 
     <nav class="navbar navbar-expand-lg">
       <div class="container-fluid">
-          <a class="navbar-brand" href="{% url 'landing_page' %}">Calsie</a>
-          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-              <span class="navbar-toggler-icon"></span>
-          </button>
-          <div class="collapse navbar-collapse" id="navbarNav">
-              <ul class="navbar-nav">
-                  {% comment %} <li class="nav-item">
-                    <a class="nav-link" href="{% url 'landing_page' %}">Landing Page</a>
-                </li>   {% endcomment %}
-                <li class="nav-item">
-                      <a class="nav-link {% if request.session.page == 'home' %}active{% endif %}" href="{% url 'home' %}">Home</a>
-                  </li>
-                  <li class="nav-item">
-                      <a class="nav-link {% if request.session.page == 'course' %}active{% endif %}" aria-current="page" href="{% url 'course_list' %}">Courses</a>
-                  </li>
-                  {% comment %} <li class="nav-item">
-                    <a class="nav-link" href="{% url 'stock_list' %}">Stocks</a>
-                </li> {% endcomment %}
-                <li class="nav-item">
-                    <a class="nav-link {% if request.session.page == 'partners' %}active{% endif %}" href="#">Partners</a>
-                </li>
-                {% if request.session.current_user_type == 'student' %}
-                  <li class="nav-item">
-                      <a class="nav-link" href="#"><p><i class="ph ph-fire"></i> Streak: <b>{{ request.session.streak }}</b></p></a>
-                  </li>
-                  <li class="nav-item">
-                      <a class="nav-link" href="#"><p><i class="ph ph-trophy"></i> Score: <b>{{ request.session.score }}</b></p>
-</a>
-                  </li>
-                {% endif %}
+        <a class="navbar-brand" href="{% url 'landing_page' %}">Calsie</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <ul class="navbar-nav me-auto">
+            <li class="nav-item"><a class="nav-link {% if request.session.page == 'home' %}active{% endif %}" href="{% url 'home' %}">
+              <i class="ph ph-house"></i>
+              Home</a></li>
+            <li class="nav-item"><a class="nav-link {% if request.session.page == 'course' %}active{% endif %}" href="{% url 'course_list' %}">
+              <i class="ph-fill ph-slideshow"></i>
+              Courses</a></li>
+            <li class="nav-item"><a class="nav-link {% if request.session.page == 'partners' %}active{% endif %}" href="#">
+              <i class="ph ph-users"></i>
+              Partners</a></li>
+
+            {% if request.session.current_user_type == 'student' %}
+            <li class="nav-item"><a class="nav-link"><i class="ph ph-fire"></i> Streak: <b>{{ request.session.streak }}</b></a></li>
+            <li class="nav-item"><a class="nav-link"><i class="ph ph-trophy"></i> Score: <b>{{ request.session.score }}</b></a></li>
+            {% endif %}
+          </ul>
+
+          <!-- Dark Mode / Theme Toggles -->
+          <div class="d-flex gap-2 align-items-center">
+            <button type='submit' class="btn btn-outline-dark btn-sm text-primary"
+            onclick="confirmAndToggle('{% url 'toggle_dark_mode' %}', 'Do you want to toggle dark/light mode?')">
+              {% if request.user.profile.isDarkTheme %} Light Theme {% else %} Dark Mode {% endif %} 
+            </button>
+
+            <button type='submit' class="btn btn-outline-secondary btn-sm"
+                    onclick="confirmAndToggle('{% url 'toggle_theme' %}', 'Do you want to change the theme?')">
+              {{ request.user.profile.theme.capitalize|default:"Default" }} Theme
+            </button>
+
+            <button type="button" class="btn btn-outline-primary ms-2" data-bs-toggle="modal" data-bs-target="#searchModal">
+              <i class="ph-duotone ph-magnifying-glass"></i> Search
+            </button>
+
+
+
+            {% if user.is_authenticated %}
+            <div class="dropdown ms-3">
+              <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+                <img src="https://placehold.co/40x40/666/fff?text=U" class="rounded-circle" width="30" height="30" />
+              </a>
+              <ul class="dropdown-menu dropdown-menu-end">
+                <li><a class="dropdown-item">{{ user.first_name }}</a></li>
+                <li><a class="dropdown-item" href="{% url 'bookmarked_courses' %}">Liked Courses</a></li>
+                <li><a class="dropdown-item" href="{% url 'update_user' %}">Update Profile</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item" href="{% url 'logout' %}">Log out</a></li>
               </ul>
-              <form class="d-flex ms-auto align-items-center" role="search">
-                  <div class="input-group">
-                      <span class="input-group-text">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-search" viewBox="0 0 16 16">
-                              <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1 1 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0"/>
-                          </svg>
-                      </span>
-                      <input class="form-control" type="search" placeholder="Search courses" aria-label="Search">
-                  </div>
-                  {% if user.is_authenticated %}
-                  <!-- <img src="https://placehold.co/40x40/666/fff?text=U" alt="User" class="rounded-circle ms-2" style="width: 40px; height: 40px;"> -->
-                   <li class="nav-item dropdown">
-                      <a
-                        class="nav-link dropdown-toggle"
-                        href="#"
-                        role="button"
-                        data-bs-toggle="dropdown"
-                        aria-expanded="false"
-                      >
-                        <!-- {{ user.username }} -->
-                        <img src="https://placehold.co/40x40/666/fff?text=U" alt="User" class="rounded-circle ms-2" style="width: 20px; height: 20px;">
-                      </a style="z-index: 1050;">
-                      <ul class="dropdown-menu dropdown-menu-end mt-md-2 rounded-top-0">
-                        <li><a class="dropdown-item" href="">{{ user.first_name }}</a></li>
-                        <li><a class="dropdown-item" href="{% url 'bookmarked_courses' %}">Liked Courses</a></li>
-                        <li><a class="dropdown-item" href="{% url 'update_user' %}">Update Profile</a></li>
-                        <li><hr class="dropdown-divider" /></li>
-                        <li><a class="dropdown-item" href="{% url 'logout' %}">Log out</a></li>
-                      </ul>
-                    </li>
-                  {% else %}
-                <li class="nav-item">
-                  <a class="nav-link" href="{% url 'login' %}">Login/Register</a>
-                </li>	
-                {% endif %}
-              </form>
+            </div>
+            {% else %}
+            <a class="btn btn-primary btn-sm ms-3" href="{% url 'login' %}">Login</a>
+            {% endif %}
           </div>
+        </div>
       </div>
-  </nav>
+    </nav>
     <!-- Navbar end -->
     <!-- Flash messages -->
     {% if messages %}
@@ -274,7 +160,37 @@
         });
       });
     </script>
+
     {% endif %}
+    <!-- Search Modal -->
+    <div class="modal fade" id="searchModal" tabindex="-1" aria-labelledby="searchModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="searchModalLabel">Search Courses</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+
+            <input type="text"
+                  class="form-control"
+                  placeholder="Type to search..."
+                  hx-get="{% url 'search_courses_htmx' %}"
+                  hx-trigger="keyup changed delay:150ms"
+                  hx-target="#searchResults"
+                  hx-swap="innerHTML"
+                  autofocus />
+
+            <div id="searchResults" class="list-group mt-3">
+              <!-- Search results go here -->
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Main content -->
+    
     {% block body %}
     
      {% endblock %}
@@ -282,5 +198,23 @@
      {% block script %}
 
      {% endblock %}
+     <script>
+      function confirmAndToggle(url, message) {
+        if (confirm(message)) {
+          fetch(url, {
+            method: 'POST',
+            headers: {
+              'X-CSRFToken': '{{ csrf_token }}'
+            }
+          })
+          .then(response => response.json())
+          .then(data => {
+            if (data.reload) {
+              location.reload();
+            }
+          });
+        }
+      }
+    </script>
   </body>
 </html>

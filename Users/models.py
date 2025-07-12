@@ -9,6 +9,15 @@ from Tiers.models import Tier, TierRank
 
 # Create your models here.
 class Profile(models.Model):
+    """User Profile model to store additional user information.
+    This model extends the User model to include fields like phone number, address, bio, etc."""
+
+    THEMES = (
+        ('modern', 'Modern'),
+        ('elegant', 'Elegant'),
+        ('default', 'Default'),
+    )
+
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     # phone_no_prefix = models.CharField(max_length=5, blank=True, null=True)
     phone_no_prefix = models.OneToOneField(PhoneNoPrefix, on_delete=models.SET_NULL, null=True, blank=True)
@@ -22,6 +31,8 @@ class Profile(models.Model):
     is_profile_complete = models.BooleanField(default=False)
     currency = models.OneToOneField(Currency, on_delete=models.SET_NULL, null=True, blank=True)
     email_confirmation_token = models.UUIDField(unique=True, blank=True, null=True)
+    isDarkTheme = models.BooleanField(default=True)  # True for dark mode, False for light mode
+    theme = models.CharField(max_length=20, choices=THEMES, default='default')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     

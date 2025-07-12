@@ -77,6 +77,14 @@
                             type="button"
                             role="tab">Syllabus</button>
                 </li>
+                {% comment %} <li class="nav-item" role="presentation">
+                    <button class="nav-link"
+                            id="comment-tab"
+                            data-bs-toggle="tab"
+                            data-bs-target="#comment"
+                            type="button"
+                            role="tab">Comment</button>
+                </li> {% endcomment %}
                 <li class="nav-item" role="presentation">
                     <button class="nav-link"
                             id="reviews-tab"
@@ -124,7 +132,7 @@
                                      aria-labelledby="heading-{{ forloop.counter }}"
                                      data-bs-parent="#courseAccordion">
                                     <div class="accordion-body ps-4">
-                                        <p class="mb-3">{{ chapter.description|default:"No description available." }}</p>
+                                        <p class="mb-3">{{ chapter.description|safe|default:"No description available." }}</p>
                                         {% if chapter.article %}
                                             <div class="mb-3">
                                                 <strong>Article:</strong>
@@ -139,9 +147,17 @@
                                                 <div class="lesson-details flex-grow-1">
                                                     <strong class="fw-semibold">{{ lesson.title|default:"Lesson Sub-Topic" }}</strong>
                                                     <br>
-                                                    <small>{{ lesson.description|default:"No lesson description." }}</small>
+                                                    <small>{{ lesson.description|truncatechars:20|safe|default:"No lesson description." }}</small>
                                                 </div>
-                                                    <a href="{% url 'video_detail_page' lesson_id=lesson.id %}" class="btn btn-primary btn-sm rounded-pill">Watch Video</a>
+                                                {% if course.instructor.profile.id == logged_in_profile.id %}
+                                                <a href="{% url 'lesson_form' lesson_id=lesson.id %}" class="btn btn-info-outline btn-sm rounded-pill m-2">Edit Lesson</a>
+                                                <span class="text-muted small ne-2">|</span>
+                                                {% if lesson.video_url %}
+                                                    <a href="{{ lesson.video_url }}" class="btn btn-info btn-sm rounded-pill m-2">Video Link</a> 
+                                                    <span class="text-muted small me-2">|</span>
+                                                {% endif %}   
+                                                {% endif %}
+                                                <a href="{% url 'video_detail_page' lesson_id=lesson.id %}" class="btn btn-primary btn-sm rounded-pill m-2 ms-2">Watch Video</a>
                                             </div>
                                         {% endfor %}
                                     </div>
@@ -157,6 +173,13 @@
                         {% endfor %}
                     </div>
                 </div>
+                <!-- Comments Tab -->
+                {% comment %} <div class="tab-pane fade show" id="comment" role="tabpanel">
+                    <div class="card card-body mb-4">
+                        <h3 class="fw-bold">Course Comment</h3>
+                        <p>{{ course.description|safe|linebreaksbr }}</p>
+                    </div>
+                </div> {% endcomment %}
                 <!-- Reviews Tab -->
                 <div class="tab-pane fade" id="reviews" role="tabpanel">
                     <h2 class="text-center mb-4 fw-bold">What people are saying!</h2>
@@ -174,7 +197,25 @@
                                     <div class="col-md-4 {% if not forloop.first and not forloop.counter0|divisibleby:3 %}d-none d-md-block{% endif %}">
                                         <div class="card h-100 shadow-sm">
                                             <div class="card-body">
-                                                <p class="card-text">"{{ review.review_text|default:"No review text provided." }}"</p>
+                                                <!-- Star Rating -->
+                                                <div class="mb-2">
+                                                    {% for i in "12345" %}
+                                                        {% if forloop.counter <= review.rating %}
+                                                            <i class="ph ph-star-fill text-warning" style="font-size: 1.2rem;"></i>
+                                                        {% else %}
+                                                            <i class="ph ph-star text-warning" style="font-size: 1.2rem;"></i>
+                                                        {% endif %}
+                                                    {% endfor %}
+                                                </div>
+                                                {% if review.review_text %}
+                                                <div class="card-text">
+                                                    {{ review.review_text|safe }}
+                                                </div>
+                                                {% else %}
+                                                <div class="text-muted fst-italic">No review provided.</div>
+                                                {% endif %}
+
+
                                                 <footer class="blockquote-footer mt-2">
                                                     {{ review.user.user.username }}
                                                 </footer>
@@ -202,6 +243,133 @@
                     {% endwith %}
                     {% else %}
                         {% include "course/components/static_testimonials.html" %}
+                    {% endif %}
+                    <!-- Review Form -->
+                     {% if logged_in_profile in course.reviews.all and request.session.current_user_type == 'student' %}
+                    <div class="card card-body mt-5 mb-3">
+                        <h4 class="fw-bold mb-3"> {% if user_review %} Update the review {% else %} Leave a Review {% endif %} </h4>
+                        {% if user.is_authenticated %}
+                                {% if user_review %}
+                                    <p class="text-muted">You’ve already reviewed this course. You can edit your review below.</p>
+                                {% endif %}
+                                {% if user_review %}
+                                    <button class="btn btn-outline-primary mb-3" type="button" data-bs-toggle="collapse" data-bs-target="#reviewFormCollapse" aria-expanded="false" aria-controls="reviewFormCollapse">
+                                        {% if user_review %}Edit Your Review{% else %}Leave a Review{% endif %}
+                                    </button>
+                                    <div class="collapse" id="reviewFormCollapse">
+                                {% endif %}
+                                    <form method="POST" action="{% url 'course_detail' pk=course.id %}#reviews" id="review-form" class="needs-validation" novalidate>
+                                        {% csrf_token %}
+                                        <!-- Star Rating -->
+                                        <div class="mb-3">
+                                            <label class="form-label">Your Rating</label>
+                                            <div id="star-rating" class="mb-2">
+                                                {% for i in "12345" %}
+                                                    <i class="ph {% if user_review and user_review.rating|default:0 >= forloop.counter %}ph-star-fill{% else %}ph-star{% endif %} text-warning fs-3 star"
+                                                    data-value="{{ forloop.counter }}"
+                                                    style="cursor:pointer;"></i>
+                                                {% endfor %}
+                                            </div>
+                                            <input type="hidden" name="rating" id="review_rating" value="{{ user_review.rating|default:0 }}">
+                                        </div>
+
+                                        <!-- Review Text -->
+                                        <div class="mb-3">
+                                            <label class="form-label">Your Review</label>
+                                            <div id="quill-editor" style="height: 150px;"></div>
+                                            <textarea class="form-control d-none" id="review_text" name="review_text" rows="3" maxlength="500" required>{{ user_review.review_text|safe }}</textarea>
+                                        </div>
+
+                                        <button type="submit" name="submit_review" value="1" class="btn btn-primary rounded-pill px-4">
+                                            {% if user_review %}Update Review{% else %}Submit Review{% endif %}
+                                        </button>
+                                    </form>
+                                {% if user_review %}
+                                    </div>
+                                {% endif %}
+                            <!-- Include JS as before -->
+
+                            <script>
+                                // Star rating selection logic
+                                document.addEventListener("DOMContentLoaded", function () {
+                                    const stars = document.querySelectorAll('#star-rating .star');
+                                    const ratingInput = document.getElementById('review_rating');
+                                    let currentRating = parseInt(ratingInput.value) || 0;
+
+                                    function setStars(rating) {
+                                        stars.forEach((star, idx) => {
+                                            if (idx < rating) {
+                                                star.classList.remove('ph-star');
+                                                star.classList.add('ph-star-fill');
+                                            } else {
+                                                star.classList.remove('ph-star-fill');
+                                                star.classList.add('ph-star');
+                                            }
+                                        });
+                                    }
+
+                                    setStars(currentRating);
+
+                                    stars.forEach((star, idx) => {
+                                        star.addEventListener('mouseenter', function () {
+                                            setStars(idx + 1);
+                                        });
+                                        star.addEventListener('mouseleave', function () {
+                                            setStars(currentRating);
+                                        });
+                                        star.addEventListener('click', function () {
+                                            currentRating = idx + 1;
+                                            ratingInput.value = currentRating;
+                                            setStars(currentRating);
+                                        });
+                                    });
+                                });
+                            </script>
+                            <!-- Quill JS and CSS -->
+                            <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+                            <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
+                            <script>
+                        document.addEventListener("DOMContentLoaded", function () {
+                            var quill = new Quill('#quill-editor', {
+                                theme: 'snow',
+                                placeholder: 'Write your review...',
+                                modules: {
+                                    toolbar: [
+                                        ['bold', 'italic', 'underline'],
+                                        [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+                                        ['link'],
+                                        ['clean']
+                                    ]
+                                }
+                            });
+                             // Get the existing review text from server and load it into Quill
+                            const initialReviewText = `{{ user_review.review_text|safe|default:""|escapejs }}`;
+                            quill.root.innerHTML = initialReviewText;
+
+                            var form = document.getElementById('review-form');
+                            form.addEventListener('submit', function (e) {
+                                // Get the value from Quill editor
+                                var reviewText = document.getElementById('review_text');
+                                reviewText.value = quill.root.innerHTML.trim();
+
+                                // Check for empty content
+                                var plain = quill.getText().trim();
+                                if (plain.length === 0) {
+                                    alert("Review cannot be empty!");
+                                    e.preventDefault(); // Prevent form submission
+                                    return false;
+                                }
+
+                                // Now allow form to submit
+                            });
+                        });
+                    </script>
+                        {% else %}
+                            <p class="text-muted">You must <a href="{% url 'login' %}?next={{ request.path }}#reviews">log in</a> to leave a review.</p>
+                        {% endif %}
+                    </div>
+                    {% elif request.session.current_user_type == 'instructor' %}
+                        <p class="text-muted">You must be a student to leave a review.</p>
                     {% endif %}
                 </div>
 

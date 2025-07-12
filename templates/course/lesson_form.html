@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+{% load static %}
+{% block body %}
+<div class="container mt-5">
+    <h2>{% if lesson %}Update{% else %}Add{% endif %} Lesson</h2>
+    <form id="lesson-form" method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="mb-3">
+            <label for="id_title" class="form-label">Title</label>
+            <input type="text" name="title" class="form-control" id="id_title" value="{{ lesson.title|default_if_none:'' }}" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="id_required_score" class="form-label">Required Score</label>
+            <input type="text" name="required_score" class="form-control" id="id_required_score" value="{{ lesson.required_score|default_if_none:0 }}" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="id_order" class="form-label">Order</label>
+            <input type="text" name="order" class="form-control" id="id_order" value="{{ lesson.order|default_if_none:0 }}" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="id_description" class="form-label">Description</label>
+            <div id="quill-editor" style="height: 200px;">{{ lesson.description|default_if_none:''|safe }}</div>
+            <input type="hidden" name="description" id="id_description" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="video-dropzone" class="form-label">Video Upload</label>
+            <div id="drag-drop-area"></div>
+            <input type="hidden" name="video_path" id="video_path">
+            {% if lesson and lesson.video %}
+                <small>Current video: <a href="{{ lesson.video.url }}" target="_blank">View</a></small>
+            {% endif %}
+        </div>
+
+        <hr>
+        <div class="mb-3">
+            <label for="id_video_url" class="form-label">Video URL</label>
+            <input type="text" name="video_url" class="form-control" id="id_video_url" value="{{ lesson.video_url|default_if_none:'' }}" >
+        </div>
+
+        <div id="progress-container" class="mb-3" style="display: none;">
+            <div id="progress-bar" style="width: 0%; height: 24px; background-color: #28a745; text-align: center; color: white;"></div>
+            <div class="spinner-border text-primary mt-2" role="status" id="spinner" style="display: none;"></div>
+        </div>
+
+        <button type="submit" class="btn btn-primary" id="submit-btn">{% if lesson %}Update{% else %}Add{% endif %} Lesson</button>
+    </form>
+</div>
+
+<!-- Quill -->
+<link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+<script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
+
+<!-- Uppy -->
+<link href="https://releases.transloadit.com/uppy/v3.14.0/uppy.min.css" rel="stylesheet">
+<script src="https://releases.transloadit.com/uppy/v3.14.0/uppy.min.js"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    // Quill
+    const quill = new Quill('#quill-editor', {
+        theme: 'snow',
+        placeholder: 'Write lesson description...'
+    });
+    const descriptionInput = document.getElementById('id_description');
+    // Set Quill content if editing
+    {% if lesson and lesson.description %}
+        quill.root.innerHTML = "{{ lesson.description|default:''|escapejs }}";
+        descriptionInput.value = quill.root.innerHTML;
+    {% endif %}
+    document.getElementById('lesson-form').addEventListener('submit', function () {
+        descriptionInput.value = quill.root.innerHTML;
+    });
+
+    const uppy = new Uppy.Uppy({
+    restrictions: {
+        maxNumberOfFiles: 1,
+        allowedFileTypes: ['video/*']
+    },
+    autoProceed: false
+});
+
+uppy.use(Uppy.Dashboard, {
+    inline: true,
+    target: '#drag-drop-area',
+    showProgressDetails: true,
+    proudlyDisplayPoweredByUppy: false,
+    height: 300,
+    width: '100%',
+    theme: 'dark',
+    note: 'Only video files allowed.',
+});
+
+uppy.use(Uppy.Form, {
+    target: '#lesson-form',
+    resultName: 'video'  // Must match your Django input name
+});
+
+uppy.use(Uppy.XHRUpload, {
+    endpoint: "{% url 'upload_video' %}",
+    method: 'POST',
+    fieldName: 'video',
+    formData: true,
+    headers: {
+        'X-CSRFToken': '{{ csrf_token }}',
+        'X-Requested-With': 'XMLHttpRequest'
+    }
+});
+
+const submitBtn = document.getElementById('submit-btn');
+const progressContainer = document.getElementById('progress-container');
+const progressBar = document.getElementById('progress-bar');
+const spinner = document.getElementById('spinner');
+
+document.getElementById('lesson-form').addEventListener('submit', function (e) {
+    e.preventDefault();
+
+    // Add Quill content to hidden input
+    document.getElementById('id_description').value = quill.root.innerHTML;
+
+    // Disable button, show progress
+    submitBtn.disabled = true;
+    progressContainer.style.display = 'block';
+    spinner.style.display = 'inline-block';
+
+    uppy.upload().then(result => {
+        if (result.failed.length > 0) {
+            alert("Upload failed!");
+            submitBtn.disabled = false;
+            progressBar.style.backgroundColor = '#dc3545';
+            return;
+        }
+
+        // All done, now submit form manually
+        e.target.submit();
+    });
+});
+
+uppy.on('upload-progress', (file, progress) => {
+    const percent = Math.round(progress.bytesUploaded / progress.bytesTotal * 100);
+    progressBar.style.width = percent + '%';
+    progressBar.textContent = percent + '%';
+});
+
+uppy.on('upload-success', (file, response) => {
+    const savedPath = response.body.video_path;  // Assuming you return this in Django response
+    document.getElementById('video_path').value = savedPath;
+    progressBar.textContent = 'Upload complete!';
+    spinner.style.display = 'none';
+    submitBtn.disabled = false;
+});
+
+
+});
+</script>
+{% endblock %}

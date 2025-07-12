@@ -5,10 +5,17 @@ from Courseapp.models import Quiz, Course
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
-from utils.models import FeedBack
+from utils.models import FeedBack, Activity
 from Users.models import Profile, Student, Instructor
 from django.db.models import Sum
 import json
+from django.http import JsonResponse
+from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
+from django.views.decorators.csrf import csrf_exempt
+from django.http import JsonResponse
+from django.core.files.storage import FileSystemStorage
+from django.conf import settings
+import os
 
 # Create your views here.
 def quiz_helper(request) -> HttpResponse:
@@ -142,6 +149,8 @@ def index(request):
         context = {} # Initialize context for authenticated users
         try:
             profile = Profile.objects.get(user=current_user)
+            request.session['isDarkTheme'] = profile.isDarkTheme
+            request.session['theme'] = profile.theme
             if Student.objects.filter(profile=profile).exists():
                 enrolled_courses = Course.objects.filter(is_bought_by_users=profile)
                 
@@ -292,3 +301,77 @@ def custom_500(request):
         "method": request.method,
         "error_code": 500
     }, status=500)
+
+@login_required
+def toggle_dark_mode(request):
+    profile = request.user.profile
+    profile.isDarkTheme = not profile.isDarkTheme
+    profile.save()
+    return JsonResponse({"status": "success", "reload": True})
+
+@login_required
+def toggle_theme(request):
+    themes = ['modern', 'elegant', 'default']
+    profile = request.user.profile
+    current = profile.theme or 'default'
+    next_theme = themes[(themes.index(current) + 1) % len(themes)]
+    profile.theme = next_theme
+    profile.save()
+    return JsonResponse({"status": "success", "reload": True})
+
+def activity_loader(request):
+    """Loads the HTMX-powered activity page"""
+    request.session["page"] = "activity"
+    return render(request, "misc/activity_loader.html")
+
+
+def activity_page(request):
+    """Fetches activity content asynchronously"""
+    request.session["page"] = "activity"
+    logged_in_profile = Profile.objects.get(user=request.user)
+    activities = Activity.objects.filter(user=request.user).order_by(
+        "-timestamp"
+    )
+
+    paginator = Paginator(activities, 10)
+    page_number = request.GET.get("page")
+
+    try:
+        page_obj = paginator.page(page_number)
+    except PageNotAnInteger:
+        page_obj = paginator.page(1)  # Default to first page
+    except EmptyPage:
+        page_obj = paginator.page(paginator.num_pages)
+
+    return render(request, "misc/activity_history.html", {"activities": page_obj})
+
+
+def delete_activity_request(request):
+    """Handles the activity deletion request"""
+    if request.method == "POST":
+        logged_in_profile = Profile.objects.get(user=request.user)
+        Activity.objects.filter(author=logged_in_profile).delete()
+        messages.success(
+            request, "✅ All activity logs have been deleted successfully!"
+        )
+
+        # Return a message response (HTMX will insert this into #delete-message)
+        return HttpResponse(
+            '<div class="alert alert-success">✅ All activity logs have been deleted successfully!</div>'
+        )
+
+    return HttpResponse(
+        '<div class="alert alert-danger">❌ Invalid request.</div>', status=400
+    )
+
+
+@csrf_exempt
+def upload_video(request):
+    if request.method == 'POST' and request.FILES.get('video'):
+        video = request.FILES['video']
+        fs = FileSystemStorage(location=os.path.join(settings.MEDIA_ROOT, 'lesson_videos'))
+        filename = fs.save(video.name, video)
+        video_path = fs.url(filename)  # '/media/lesson_videos/filename.mp4'
+
+        return JsonResponse({'success': True, 'video_path': f'lesson_videos/{filename}'})
+    return JsonResponse({'success': False, 'error': 'No video uploaded.'}, status=400)

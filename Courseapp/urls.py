@@ -18,6 +18,8 @@ urlpatterns: list[URLPattern] = [
     path('courses/search_lesson/', login_required(views.search_lessons), name='search_lessons'),
     path('courses/search_faqs/', login_required(views.search_faqs), name='search_faqs'),
     path('courses/search_articles/', login_required(views.search_article), name='search_articles'),
+    path("search-courses-htmx/", views.search_courses_htmx, name="search_courses_htmx"),
+
 
     path("detail/<int:lesson_id>/", login_required(views.video_detail_page), name="video_detail_page"),
     path("article/<int:article_id>/", login_required(views.article_detail), name="article_detail"),
@@ -40,4 +42,7 @@ urlpatterns: list[URLPattern] = [
 
     path('warmup/', views.quiz_warmup_start, name='quiz_warmup_start'),
     path('warmup/<int:quiz_id>/<int:qid>/', views.quiz_warmup_question, name='quiz_warmup_question'),
+
+    path('lesson/add/', login_required(views.lesson_form), name='lesson_form'),
+    path('lesson/<int:lesson_id>/', login_required(views.lesson_form), name='lesson_form'),
 ]
