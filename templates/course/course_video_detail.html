@@ -54,7 +54,7 @@
                                 hx-post="{% url 'bookmark_course' course.id %}"
                                 hx-target="#save-button"
                                 hx-swap="outerHTML">
-                                <i class="ph ph-floppy-disk"></i> Save
+                                <i class="ph ph-floppy-disk"></i> Bookmark
                             </button>
                         </div>
 
@@ -297,10 +297,16 @@
                                 <div id="notes-list">
                                     {% if course_notes %}
                                         {% for Notes in course_notes %}
-                                        <p class="small border-bottom pb-2 text-muted"><b>{{Notes.user.profile.user.first_name}}</b>: {{Notes.note_text}}</p>
+                                        <div class="card border-secondary mb-3">
+                                            <div class="card-header text-muted">
+                                                <b>{{Notes.user.profile.user.first_name}}</b>
+                                            </div>
+                                            <div class="card-body">
+                                                <p class="card-text">{{Notes.note_text}}</p>
+                                            </div>
+                                        </div>
                                         {% endfor %}
                                     {% endif %}
-                                    {% comment %} <p class="small border-bottom pb-2 text-muted">Don't forget to check moving averages.</p> {% endcomment %}
                                 </div>
                             </div>
                         </div>

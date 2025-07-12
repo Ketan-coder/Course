@@ -301,8 +301,9 @@ def search_tags(request) -> JsonResponse:
 
 def search_sections(request) -> JsonResponse:
     search_term = request.GET.get("q")
+    used_sections = Course.objects.values_list('sections__id', flat=True).distinct()
     if search_term:
-        sections= Section.objects.filter(title__icontains=search_term).values(
+        sections= Section.objects.filter(title__icontains=search_term).exclude(id__in=used_sections).values(
             "id", "title"
         )
         return JsonResponse(list(sections), safe=False)
@@ -310,8 +311,9 @@ def search_sections(request) -> JsonResponse:
 
 def search_lessons(request) -> JsonResponse:
     search_term = request.GET.get("q")
+    used_lessons = Course.objects.values_list('sections__lesson__id', flat=True).distinct()
     if search_term:
-        lessons= Lesson.objects.filter(title__icontains=search_term).values(
+        lessons= Lesson.objects.filter(title__icontains=search_term).exclude(id__in=used_lessons).values(
             "id", "title"
         )
         return JsonResponse(list(lessons), safe=False)
@@ -329,8 +331,9 @@ def search_faqs(request) -> JsonResponse:
 
 def search_article(request) -> JsonResponse:
     search_term = request.GET.get("q")
+    used_articles = Section.objects.values_list('article__id', flat=True).distinct()
     if search_term:
-        articles= Article.objects.filter(title__icontains=search_term).values(
+        articles= Article.objects.filter(title__icontains=search_term).exclude(id__in=used_articles).values(
             "id", "title"
         )
         return JsonResponse(list(articles), safe=False)
@@ -339,7 +342,7 @@ def search_article(request) -> JsonResponse:
 def search_courses_htmx(request):
     try:
         query = request.GET.get("q", "")
-        courses = Course.objects.filter(title__icontains=query)[:10]
+        courses = Course.objects.filter(Q(title__icontains=query) | Q(description__icontains=query) | Q(language__name__icontains=query) | Q(tags__name__icontains=query) | Q(sections__title__icontains=query) | Q(prerequisites__icontains=query)).distinct()[:10]
         html = render_to_string("components/_search_results.html", {"courses": courses})
         return HttpResponse(html)
     except Exception as e:
@@ -450,7 +453,7 @@ def course_detail(request, pk) -> HttpResponseRedirect | HttpResponsePermanentRe
                     messages.error(request, "No lessons available in this course.")
                     return redirect("course_detail", pk=pk)
             return redirect("course_detail", pk=pk)
-    return render(request, "course/course_detail.html", locals())
+    return render(request, "course/course_detail_new_page.html", locals())
 
 
 def video_detail_page(request,lesson_id) -> HttpResponseRedirect | HttpResponsePermanentRedirect | HttpResponse:
@@ -686,6 +689,7 @@ def create_section(request) -> HttpResponse:
         order = request.POST.get("order", 0)
         is_open = request.POST.get("is_open", False) == "on"
         article = request.POST.get("article", "")
+        content = request.POST.get("content", "")
         prompt = request.POST.get("prompt", "")
 
         selected_lessons = request.POST.getlist("selected_lesson")
@@ -701,6 +705,7 @@ def create_section(request) -> HttpResponse:
             section.order = order
             section.is_open = is_open
             section.article = article
+            section.content = content
             section.lesson.set(selected_lessons)  # Update lessons
             section.save(prompt=prompt)  # Save prompt if needed
             return HttpResponse(

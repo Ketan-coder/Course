@@ -1,59 +1,125 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}
-   Sajan | Update Profile
+    {{ user.first_name|default:user.username }} | Update Profile
 {% endblock title %}
 
 {% block body %}
-<div class="container mt-4">
-    <div class="row justify-content-center">
-        <div class="col-md-10">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="card-title">Update Profile</h5>
+
+<div class="container-fluid py-4">
+    <div class="row">
+        <!-- Left Column: Profile Card -->
+        <div class="col-lg-4">
+            <div class="card shadow-sm p-3">
+                <div class="content text-center">
+                    <img src="https://placehold.co/128x128/EBF1FF/7F9CF5?text={{ user.username.0|upper }}" alt="User Avatar" class="img-fluid rounded-circle mb-3" style="width: 128px; height: 128px;">
+                    <h2 class="content-title font-weight-bold">
+                        {{ user.first_name }} {{ user.last_name }}
+                    </h2>
+                    <p class="text-muted">@{{ user.username }}</p>
+                    <hr>
+                    <div class="text-start">
+                        <p class="text-muted mb-1"><i class="ph ph-envelope mr-2"></i> {{ user.email }}</p>
+                        <p class="text-muted mb-0"><i class="ph ph-calendar mr-2"></i> Joined {{ user.date_joined|date:"F Y" }}</p>
+                        <p class="text-muted mb-0"><i class="ph ph-pin mr-2"></i> Last Login {{ user.last_login|date:"d F, Y - h:i A" }}</p>
+                    </div>
                 </div>
-                <div class="card-body">
+            </div>
+        </div>
+
+        <!-- Right Column: Update Form -->
+        <div class="col-lg-8 mt-3 mt-lg-0">
+            <div class="card shadow-sm">
+                <div class="content p-4">
+                    <h1 class="content-title font-weight-bold mb-4">Update Profile</h1>
+
                     {% if messages %}
                         {% for message in messages %}
-                            <p style="color: red;">{{ message }}</p>
+                            <div class="alert alert-danger" role="alert">
+                                {{ message }}
+                            </div>
                         {% endfor %}
                     {% endif %}
+
                     <form action="{% url 'update_user' %}" method="post">
                         {% csrf_token %}
 
-                        <div class="form-group">
-                            <label>Username</label>
-                            <input type="text" name="username" value="{{ user.username }}" class="form-control" disabled required>
-                        </div>
-                        <div class="form-group">
-                            <label>Email (Must be Verified)</label>
-                            <div class="input-group mb-3">
-                                <input type="email" name="email" class="form-control" value="{{ user.email }}" placeholder="Email address" aria-label="Email address" aria-describedby="button-add-on-1" disabled>
-                                <button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#updateEmailModal">Update Email</button>
+                        <!-- Personal Information Section -->
+                        <h4 class="mb-3 font-weight-bold border-bottom pb-2">Personal Information</h4>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="first-name" class="form-label">First Name</label>
+                                <input type="text" id="first-name" name="first_name" value="{{ user.first_name }}" class="form-control">
                             </div>
-                            <!-- <input type="email" name="email" value="{{ user.email }}" class="form-control" disabled> -->
-                            <!-- <button type="button" class="btn btn-secondary mt-2" data-bs-toggle="modal" data-bs-target="#updateEmailModal">Update Email</button> -->
+                            <div class="col-md-6 mb-3">
+                                <label for="last-name" class="form-label">Last Name</label>
+                                <input type="text" id="last-name" name="last_name" value="{{ user.last_name }}" class="form-control">
+                            </div>
                         </div>
-                        <div class="form-group">
-                            <label>First Name</label>
-                            <input type="text" name="first_name" value="{{ user.first_name }}" class="form-control">
+                        <div class="mb-3">
+                            <label for="dob" class="form-label">Date of Birth</label>
+                            <input type="date" id="dob" name="date_of_birth" value="{{ profile.date_of_birth|date:'Y-m-d' }}" class="form-control">
                         </div>
-                        <div class="form-group">
-                            <label>Last Name</label>
-                            <input type="text" name="last_name" value="{{ user.last_name }}" class="form-control">
+
+                        <!-- Account Information Section -->
+                        <h4 class="mt-4 mb-3 font-weight-bold border-bottom pb-2">Account Information</h4>
+                        <div class="mb-3">
+                            <label class="form-label">Username</label>
+                            <input type="text" value="{{ user.username }}" class="form-control" disabled>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Email (Must be Verified)</label>
+                            <div class="input-group">
+                                <input type="email" name="email" class="form-control" value="{{ user.email }}" placeholder="Email address" disabled>
+                                <button type="button" class="btn" data-bs-toggle="modal" data-bs-target="#updateEmailModal">Update Email</button>
+                            </div>
+                        </div>
+
+                        <!-- Contact & Preferences Section -->
+                        <h4 class="mt-4 mb-3 font-weight-bold border-bottom pb-2">Contact & Preferences</h4>
+                        <div class="mb-3">
+                            <label for="phone_no_prefix" class="form-label">Phone No.</label>
+                            <div class="input-group">
+                                <select class="form-select" name="phone_no_prefix" id="phone_no_prefix" style="max-width: 150px;">
+                                    <option value="">Prefix</option>
+                                    {% for prefix in phone_no_prefixes %}
+                                        <option value="{{ prefix.id }}" {% if prefix.id == user.profile.phone_no_prefix.id %}selected{% endif %}>{{ prefix.phone_no_prefix }}</option>
+                                    {% endfor %}
+                                </select>
+                                <input type="tel" class="form-control" placeholder="1234567890" aria-label="Phone No." name="phone_no" value="{{ profile.phone_no|default:'' }}">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="currencies" class="form-label">Preferred Currency</label>
+                            <select class="form-select" name="currencies" id="currencies">
+                                <option value="">Select Currency</option>
+                                {% for currency in currencies %}
+                                    <option value="{{ currency.id }}" {% if currency.id == user.profile.currency.id %}selected{% endif %}>{{ currency.symbol }} - {{ currency.name }}</option>
+                                {% endfor %}
+                            </select>
                         </div>
                         
+                        <!-- Professional Information Section -->
+                        <h4 class="mt-4 mb-3 font-weight-bold border-bottom pb-2">Professional Information</h4>
                         {% if not is_student or instuructor %}
-                        <div class="form-group">
-                            <label>Experience</label>
-                            <input type="text" name="experience" value="{{ user.experience }}" class="form-control">
+                        <div class="mb-3">
+                            <label for="experience" class="form-label">Experience (in years)</label>
+                            <input type="number" id="experience" name="experience" value="{{ user.experience }}" class="form-control">
                         </div>
                         {% endif %}
-                        <div class="form-group">
-                            <label>Bio</label>
-                            <textarea name="bio" id="id_bio" class="form-control">{{ profile.bio }}</textarea>
+                        <div class="mb-3">
+                            <label for="id_bio" class="form-label">Bio</label>
+                            <textarea name="bio" id="id_bio" style="display: none;">{{ profile.bio }}</textarea>
+                            <div id="editor_bio" class="quill-editor" style="height: 200px;"></div>
                         </div>
-                        <button type="submit" class="btn btn-primary mt-3">Update Profile</button>
+
+                        <div class="text-end mt-4">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="ph ph-check-circle mr-1"></i>
+                                Save Changes
+                            </button>
+                        </div>
                     </form>
                 </div>
             </div>
@@ -62,52 +128,53 @@
 </div>
 
 <!-- Update Email Modal -->
-<div class="modal fade" id="updateEmailModal" tabindex="-1" aria-labelledby="updateEmailModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
+<div class="modal" id="updateEmailModal" tabindex="-1" aria-labelledby="updateEmailModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="updateEmailModalLabel">Update Email</h5>
+        <h5 class="modal-title" id="updateEmailModalLabel">Update Email Address</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
         <form action="{% url 'update_email' %}" method="post">
           {% csrf_token %}
-          <div class="form-group">
-            <label>New Email</label>
-            <input type="email" name="new_email" class="form-control" required>
+          <div class="mb-3">
+            <label for="new-email" class="form-label">New Email</label>
+            <input type="email" id="new-email" name="new_email" class="form-control" required>
           </div>
-          <button type="submit" class="btn btn-primary mt-3">Send Verification Email</button>
+          <button type="submit" class="btn btn-primary w-full">Send Verification Email</button>
         </form>
       </div>
     </div>
   </div>
 </div>
 
-<!-- Quill Styles -->
-<link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
-<!-- Quill Script -->
-<script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const quillFields = ["bio"];
-        quillFields.forEach(field => {
-            const textArea = document.getElementById(`id_${field}`);
-            if (!textArea) return;
-            const parent = textArea.parentNode;
-            const wrapper = document.createElement("div");
-            wrapper.innerHTML = `<div id="editor_${field}" class="quill-editor" style="height: 200px;">${textArea.value}</div>`;
-            parent.insertBefore(wrapper, textArea);
-            textArea.style.display = "none";
-
-            const quill = new Quill(`#editor_${field}`, {
-                theme: 'snow'
-            });
-
-            quill.on('text-change', () => {
-                textArea.value = quill.root.innerHTML;
-            });
+document.addEventListener('DOMContentLoaded', function () {
+    // Initialize Quill Editor for the 'bio' field
+    const bioTextArea = document.getElementById('id_bio');
+    if (bioTextArea) {
+        const quill = new Quill('#editor_bio', {
+            theme: 'snow',
+            modules: {
+                toolbar: [
+                    [{ 'header': [1, 2, 3, false] }],
+                    ['bold', 'italic', 'underline'],
+                    [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                    ['link'],
+                    ['clean']
+                ]
+            }
         });
-    });
-</script>
+        
+        // Set initial content from the hidden textarea
+        quill.root.innerHTML = bioTextArea.value;
 
+        // Update the hidden textarea on text change
+        quill.on('text-change', () => {
+            bioTextArea.value = quill.root.innerHTML;
+        });
+    }
+});
+</script>
 {% endblock body %}

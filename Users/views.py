@@ -19,13 +19,12 @@ from django.urls import reverse_lazy
 from django.views.generic import ListView
 # from Notes.models import Activity
 from utils.utils import send_email
-from utils.models import Activity, Currency
+from utils.models import Activity, Currency, PhoneNoPrefix
 
 from Course import settings as project_settings
 from utils.media_handler import MediaHandler
 from .forms import ProfileForm, UserRegistrationForm
 from .models import Profile, Instructor, Student
-
 
 #  Request Password Reset (User submits email)
 class CustomPasswordResetView(PasswordResetView):
@@ -63,6 +62,8 @@ def updateUser(request):
         return redirect("email_confirmation_pending")
 
     profile = Profile.objects.get(user=user)
+    currencies = Currency.objects.all()
+    phone_no_prefixes = PhoneNoPrefix.objects.all().order_by('-created_at')
     if Student.objects.filter(profile=profile).exists():
         is_student = True
     elif Instructor.objects.filter(profile=profile).exists():
@@ -86,7 +87,6 @@ def updateUser(request):
         # Check if email exists in User or Profile (excluding the current user)
         if email and (
             User.objects.filter(email=email).exclude(pk=user.pk).exists()
-            or Profile.objects.filter(email=email).exclude(pk=profile.pk).exists()
         ):
             messages.error(request, "❌ Email is already in use.")
             return redirect("update_user")
@@ -144,7 +144,8 @@ def updateUser(request):
         messages.success(request, "Profile updated successfully")
         return redirect("home")
 
-    context = {"user": user, "profile": profile, "is_student": is_student, "instructor": instructor if not is_student else None}
+    context = {"user": user, "profile": profile, "is_student": is_student, "instructor": instructor if not is_student else None, 
+               "currencies": currencies, "phone_no_prefixes": phone_no_prefixes, "title": "Update User Profile"}
     return render(request, "user/userupdate.html", context)
 
 

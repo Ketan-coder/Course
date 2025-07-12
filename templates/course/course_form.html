@@ -17,7 +17,7 @@
         <p class="text-muted">You can add Tags, FAQs, Sections, Articles and Lessons to your course using the buttons above.</p>
         <p class="text-muted">Make sure to save your course after adding these elements.</p>
         <blockquote class="blockquote">
-            <p class="mb-0">Note: Quiz and Lessons are not editable for now!</p>
+            <p class="mb-0">Note: Quiz are not editable for now!</p>
         </blockquote>
     </div>
 
@@ -66,7 +66,7 @@
     </div>
 
     <!-- Offcanvas: Add Section -->
-    <div class="offcanvas offcanvas-start" tabindex="-1" id="offcanvas-add-section">
+    <div class="offcanvas offcanvas-start" tabindex="-1" id="offcanvas-add-section" style="width: 110vh;">
       <div class="offcanvas-header">
         <h5 class="offcanvas-title">Add Section</h5>
         <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
@@ -78,6 +78,10 @@
             <div class="mb-3">
                 <label for="section-title" class="form-label">Title</label>
                 <input type="text" class="form-control" name="title" id="section-title" required>
+            </div>
+            <div class="mb-3">
+                <label for="section-description" class="form-label">Description</label>
+                <textarea class="form-control" name="description" id="section-description" rows="4"></textarea>
             </div>
             <div class="mb-3">
                 <label for="section-order" class="form-label">Order</label>
@@ -103,8 +107,8 @@
                 <div id="lesson_search_results" class="list-group mt-2"></div>
                 <div id="selected_lesson" class="mt-2">
                     {% for lesson in course.section.lesson.all %}
-                    <span class="badge bg-secondary mr-1 selected-lesson" data-lesson-id="{{ lesson.id }}">
-                        {{ lesson.name }} <button type="button" class="btn btn-sm btn-outline-light ml-1 p-0 border-0" aria-label="Remove" onclick="removeLesson(this)">&times;</button>
+                    <span class="badge bg-secondary mr-1 selected-lesson m-1" data-lesson-id="{{ lesson.id }}">
+                        {{ lesson.name }} | <a href="{% url 'lesson_form' lesson.id %}" class="btn btn-sm btn-outline-light">Edit</a> | <button type="button" class="btn btn-sm btn-outline-light ml-1 p-0 border-0" aria-label="Remove" onclick="removeLesson(this)">&times;</button>
                     </span>
                     <input type="hidden" name="selected_lesson" value="{{ lessson.id }}">
                     {% endfor %}
@@ -130,7 +134,7 @@
 
             <div class="form-group mt-2 mb-3">
                 <label for="id_prompt" class="form-label">Prompt for Generating Quiz:</label>
-                <textarea name="prompt" id="id_prompt" class="form-control"></textarea>
+                <textarea name="prompt" id="id_prompt" class="form-control" rows="15"></textarea>
             </div>
             <script>
             document.getElementById('id_article_search').addEventListener('input', function () {
@@ -140,6 +144,10 @@
                     fetch(`/course/courses/search_articles/?q=${searchTerm}`)
                         .then(response => response.json())
                         .then(data => {
+                            if (data.length === 0) {
+                                resultsDiv.innerHTML = '<div class="list-group-item bg-danger text-white">No articles found! It might does not exist or Used by other course</div>';
+                                return;
+                            }
                             resultsDiv.innerHTML = '';
                             data.forEach(article => {
                                 const articleElement = document.createElement('a');
@@ -599,6 +607,10 @@
             fetch(`/course/courses/search_lesson/?q=${searchTerm}`) // Replace with your actual URL
                 .then(response => response.json())
                 .then(data => {
+                    if (data.length === 0) {
+                        resultsDiv.innerHTML = '<div class="list-group-item bg-danger text-white">No lessons found! It might does not exist or Used by other course</div>';
+                        return;
+                    }
                     resultsDiv.innerHTML = '';
                     data.forEach(lesson => {
                         const lessonElement = document.createElement('a');
@@ -611,9 +623,9 @@
                             const selectedLessonDiv = document.getElementById('selected_lesson');
                             if (!selectedLessonDiv.querySelector(`span[data-lesson-id="${lesson.id}"]`)) {
                                 const selectedLessonElement = document.createElement('span');
-                                selectedLessonElement.classList.add('badge', 'bg-secondary', 'mr-1', 'selected-lesson');
+                                selectedLessonElement.classList.add('badge', 'bg-secondary', 'mr-1', 'selected-lesson', 'm-1');
                                 selectedLessonElement.dataset.lessonId = lesson.id; selectedLessonElement.classList.add('d-inline-flex', 'align-items-center'); // Add flex and align items
-                                selectedLessonElement.innerHTML = `${lesson.title} <button type="button" class="close ml-1" aria-label="Remove" onclick="removeLesson(this)">&times;</button>`;
+                                selectedLessonElement.innerHTML = `${lesson.title} | <a href="${window.location.origin}/course/lesson/add/${lesson.id}/" class="btn btn-sm btn-outline-light">Edit</a> | <button type="button" class="close ml-1" aria-label="Remove" onclick="removeLesson(this)">&times;</button>`;
 
                                 const hiddenInput = document.createElement('input');
                                 hiddenInput.type = 'hidden';
@@ -653,6 +665,10 @@
             fetch(`/course/courses/search_sections/?q=${searchTerm}`) // Replace with your actual URL
                 .then(response => response.json())
                 .then(data => {
+                    if (data.length === 0) {
+                        resultsDiv.innerHTML = '<div class="list-group-item bg-danger text-white">No sections found! It might does not exist or Used by other course</div>';
+                        return;
+                    }
                     resultsDiv.innerHTML = '';
                     data.forEach(section => {
                         const sectionElement = document.createElement('a');
@@ -820,10 +836,11 @@ function openEditSection(id, title, order, is_open, lesson_ids, lesson_titles) {
             idsArray.forEach((id, index) => {
                 if (id && titlesArray[index]) {
                     const lessonBadge = document.createElement('span');
-                    lessonBadge.className = 'badge bg-secondary mr-1 selected-lesson mb-1';
+                    lessonBadge.className = 'badge bg-secondary mr-1 selected-lesson mb-1 m-1';
                     lessonBadge.setAttribute('data-lesson-id', id.trim());
                     lessonBadge.innerHTML = `
                         ${titlesArray[index].trim()} 
+                        | <a href="/course/lesson/${id}" class="btn btn-sm btn-outline-light">Edit</a> |
                         <button type="button" 
                                 class="btn btn-sm btn-outline-light ml-1 p-0 border-0" 
                                 aria-label="Remove" 

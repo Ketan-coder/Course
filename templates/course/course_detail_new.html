@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ course.title|default:"Course Details" }}{% endblock title %}
+
+{% block body %}
+{# 
+  REQUIREMENTS:
+  Ensure base.html includes Halfmoon CSS/JS, Phosphor Icons, and Quill JS/CSS.
+#}
+
+<!-- Main Content Wrapper -->
+<div class="content-wrapper">
+    <!-- Hero Section -->
+    <div class="bg-dark-light text-white">
+        <div class="container py-4">
+            <div class="row align-items-center">
+                <div class="col-lg-7">
+                    <h1 class="fs-1 font-weight-bolder">{{ course.title|default:"Stock Market Basics" }}</h1>
+                    <p class="fs-4 text-muted">{{ course.description|safe|default:"A simple and fun way to learn finance." }}</p>
+                    <div class="d-flex align-items-center mt-3">
+                        <img src="{{ course.instructor.profile.avatar.url|default:'https://placehold.co/40x40/EBF1FF/7F9CF5?text=A' }}" alt="Instructor" class="rounded-circle" width="40" height="40">
+                        <div class="ms-2">
+                            <div class="font-weight-bold">{{ course.instructor.profile.user.get_full_name|default:course.instructor.profile.user.username }}</div>
+                            <div class="text-muted font-size-12">Instructor</div>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center mt-3 font-size-14 text-muted">
+                        <span><i class="ph-fill ph-star text-warning me-1"></i> 4.8 (1,200 ratings)</span>
+                        <span class="mx-2">|</span>
+                        <span><i class="ph ph-student me-1"></i> 5,432 students</span>
+                    </div>
+                </div>
+                <div class="col-lg-5 mt-3 mt-lg-0">
+                    <!-- This right column is intentionally left for a potential future video preview or key graphic -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container mt-4">
+        <div class="row">
+            <!-- Left Column: Main course content (Tabs) -->
+            <div class="col-lg-8">
+                <!-- Tabs Navigation -->
+                <ul class="nav nav-tabs" id="courseTab" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="syllabus-tab" data-bs-toggle="tab" data-bs-target="#syllabus" type="button" role="tab">Syllabus</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="description-tab" data-bs-toggle="tab" data-bs-target="#description" type="button" role="tab">Description</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="reviews-tab" data-bs-toggle="tab" data-bs-target="#reviews" type="button" role="tab">Reviews</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="faq-tab" data-bs-toggle="tab" data-bs-target="#faq" type="button" role="tab">FAQ</button>
+                    </li>
+                </ul>
+
+                <!-- Tab Content -->
+                <div class="tab-content pt-3">
+                    <!-- Syllabus Tab -->
+                    <div class="tab-pane fade show active" id="syllabus" role="tabpanel">
+                        <div class="accordion" id="courseAccordion">
+                            {% for chapter in course.sections.all %}
+                                {% if course.course_type == 'free' or course.instructor.profile.user.id == request.user.id or logged_in_profile in course.is_bought_by_users.all or course.is_open_to_all %}
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header" id="heading-{{ forloop.counter }}">
+                                        <button class="accordion-button {% if not forloop.first %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-{{ forloop.counter }}" aria-expanded="{% if forloop.first %}true{% else %}false{% endif %}">
+                                            Chapter {{ forloop.counter }}: {{ chapter.title }}
+                                        </button>
+                                    </h2>
+                                    <div id="collapse-{{ forloop.counter }}" class="accordion-collapse collapse {% if forloop.first %}show{% endif %}" data-bs-parent="#courseAccordion">
+                                        <div class="accordion-body">
+                                            <p class="text-muted mb-3">{{ chapter.description|safe|default:"No description available." }}</p>
+                                            {% for lesson in chapter.lesson.all %}
+                                            <div class="d-flex align-items-center justify-content-between p-2 mb-2 rounded-2 bg-light">
+                                                <div class="d-flex align-items-center">
+                                                    <i class="ph ph-play-circle me-2 text-primary fs-4"></i>
+                                                    <span class="font-weight-semi-bold">{{ lesson.title|default:"Lesson Topic" }}</span>
+                                                </div>
+                                                <a href="{% url 'video_detail_page' lesson_id=lesson.id %}" class="btn btn-sm">Watch</a>
+                                            </div>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endif %}
+                            {% empty %}
+                                <div class="card card-body text-center text-muted">The syllabus for this course is not yet available.</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <!-- Description Tab -->
+                    <div class="tab-pane fade" id="description" role="tabpanel">
+                        <div class="card card-body">{{ course.description|safe|linebreaksbr }}</div>
+                    </div>
+                    <!-- Reviews Tab -->
+                    <div class="tab-pane fade" id="reviews" role="tabpanel">
+                        <!-- Review submission form and testimonials go here, logic preserved -->
+                    </div>
+                    <!-- FAQ Tab -->
+                    <div class="tab-pane fade" id="faq" role="tabpanel">
+                        <div class="accordion" id="faqAccordion">
+                            {% for faq in course.faqs.all %}
+                            <div class="accordion-item">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq-collapse-{{ forloop.counter }}">
+                                        {{ faq.question }}
+                                    </button>
+                                </h2>
+                                <div id="faq-collapse-{{ forloop.counter }}" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                                    <div class="accordion-body">{{ faq.answer|safe|linebreaksbr }}</div>
+                                </div>
+                            </div>
+                            {% empty %}
+                            <div class="card card-body text-center text-muted">No FAQs available for this course.</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Sticky purchase card -->
+            <div class="col-lg-4">
+                <div class="card shadow-sm sticky-top" style="top: 1.25rem;">
+                    <video autoplay muted loop playsinline class="card-img-top" poster="{{ course.thumbnail.url|default:'https://placehold.co/600x400/171923/FFFFFF?text=Course+Preview' }}">
+                        <source src="{% if course.intro_video %}{{ course.intro_video.url }}{% else %}{% static 'resoures/videos/hero-section-video.mp4' %}{% endif %}" type="video/mp4">
+                    </video>
+                    <div class="content p-3">
+                        <div class="d-flex align-items-baseline mb-3">
+                            <h2 class="font-weight-bolder mb-0">{{ course.price|default:'$99.99' }}</h2>
+                            <span class="text-muted text-decoration-line-through ms-2">{{ course.original_price|default:'$199.99' }}</span>
+                        </div>
+                        
+                        <form method="post" action="." class="d-grid gap-2">
+                            {% csrf_token %}
+                            {% if course.instructor.profile.user.id == request.user.id %}
+                                <a href="{% url 'course_update' pk=course.id %}" class="btn btn-primary btn-lg">Edit Course</a>
+                            {% else %}
+                                {% if logged_in_profile in course.is_bought_by_users.all or course.is_open_to_all and logged_in_profile in course.is_bought_by_users.all %}
+                                    <button class="btn btn-dark-light btn-lg" name="continue_now" value="1">Continue Course</button>
+                                {% else %}
+                                    {% if course.course_type == 'free' %}
+                                        <button type="submit" name="enroll_now" value="1" class="btn btn-primary btn-lg">Enroll Now</button>
+                                    {% else %}
+                                        <button type="submit" name="buy_now" value="1" class="btn btn-primary btn-lg">Buy Now</button>
+                                    {% endif %}
+                                {% endif %}
+                            {% endif %}
+                        </form>
+
+                        <p class="text-muted text-center font-size-12 my-3">30-Day Money-Back Guarantee</p>
+                        
+                        <h4 class="font-size-16 font-weight-bold">This course includes:</h4>
+                        <ul class="list-unstyled font-size-14">
+                            <li class="mb-2"><i class="ph ph-monitor-play me-2"></i> 12.5 hours on-demand video</li>
+                            <li class="mb-2"><i class="ph ph-article me-2"></i> 25 articles</li>
+                            <li class="mb-2"><i class="ph ph-download-simple me-2"></i> 52 downloadable resources</li>
+                            <li class="mb-2"><i class="ph ph-trophy me-2"></i> Certificate of completion</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% include "footer.html" %}
+{% endblock body %}
