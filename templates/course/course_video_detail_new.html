@@ -1,0 +1,338 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ lesson.title }} - Course Video Detail{% endblock title %}
+
+{% block head %}
+    <!-- Plyr CSS -->
+    <link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css" />
+    <!-- Plyr JS -->
+    <script src="https://cdn.plyr.io/3.7.8/plyr.polyfilled.js"></script>
+{% endblock head %}
+
+{% block body %}
+<!-- Theater Mode Overlay -->
+<div id="theater-overlay"></div>
+
+<!-- Main Content Wrapper -->
+<div class="container-fluid py-4">
+    <div class="row">
+        <!-- Main Content Column -->
+        <div class="col-lg-8">
+            <div class="content-wrapper">
+                <!-- Video Player Container -->
+                <div id="video-container" class="card shadow-sm mb-4">
+                    {% if lesson.video %}
+                        <div class="plyr__video-embed" id="player">
+                            <video id="lesson-video" playsinline controls controlsList="nodownload" poster="{{ course.thumbnail.url|default:'https://placehold.co/1920x1080/171923/FFFFFF?text=Loading+Video...' }}">
+                                <!-- The <source> will be added dynamically via JS -->
+                            </video>
+                        </div>
+                    {% elif lesson.video_url %}
+                        <div id="youtube-player-container" class="plyr__video-embed"></div>
+                    {% else %}
+                        <div class="alert alert-warning text-center p-5 m-0">
+                            No video available for this lesson.
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Title and Actions -->
+                <div class="d-flex flex-column flex-md-row justify-content-md-between align-items-md-center mb-4">
+                    <h1 class="fs-2 font-weight-bold mb-2 mb-md-0">{{ lesson.title }}</h1>
+                    <div class="d-flex align-items-center gap-2">
+                        <button id="theater-mode-toggle" class="btn btn-sm" data-bs-toggle="tooltip" data-bs-placement="top" title="Theater Mode">
+                            <i class="ph ph-lightbulb fs-4"></i>
+                        </button>
+                        <button class="btn btn-sm"><i class="ph ph-share-network fs-4"></i></button>
+                        <div id="save-button">
+                            <button class="btn btn-sm" hx-post="{% url 'bookmark_course' course.id %}" hx-target="#save-button" hx-swap="outerHTML">
+                                <i class="ph ph-bookmark-simple fs-4"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Main Content Tabs -->
+                <ul class="nav nav-pills nav-pills-border-bottom mb-4" id="lessonTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="description-tab" data-bs-toggle="tab" data-bs-target="#description-pane" type="button" role="tab">Description</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="notes-tab" data-bs-toggle="tab" data-bs-target="#notes-pane" type="button" role="tab">Notes</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="stocks-tab" data-bs-toggle="tab" data-bs-target="#stocks-pane" type="button" role="tab">Related Stocks</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="quiz-tab" data-bs-toggle="tab" data-bs-target="#quiz-pane" type="button" role="tab">Quiz</button>
+                    </li>
+                </ul>
+
+                <div class="tab-content" id="lessonTabsContent">
+                    <!-- Description Pane -->
+                    <div class="tab-pane fade show active" id="description-pane" role="tabpanel">
+                        <div class="card card-body">
+                            {{ lesson.description|safe|default:"No description available." }}
+                        </div>
+                    </div>
+                    <!-- Notes Pane -->
+                    <div class="tab-pane fade" id="notes-pane" role="tabpanel">
+                        <div class="card card-body">
+                            <h2 class="h5 fw-bold mb-3">My Notes for this Lesson</h2>
+                            {% if student_profile %}
+                            {% for sec in course.sections.all %}
+                            
+                            <form 
+                                id="note-form-{{ sec.id }}"
+                                hx-post="{% url 'create_course_notes' %}"
+                                hx-target="#notes-list"
+                                hx-swap="beforeend"
+                                hx-on::after-request="this.reset()"
+                                class="mb-4"
+                            >
+                                {% csrf_token %}
+                                <input type="hidden" name="student_id" value="{{ student_profile.id }}">
+                                <input type="hidden" name="lesson_id" value="{{ lesson.id }}">
+                                <input type="hidden" name="section_id" value="{{ sec.id }}">
+                                <input type="hidden" name="course_id" value="{{ course.id }}">
+                                <div class="form-group">
+                                    <textarea name="notes" class="form-control" rows="3" placeholder="Write your notes here..." required></textarea>
+                                </div>
+                                <button class="btn btn-sm btn-primary mt-2">Add Note</button>
+                            </form>
+                            {% endfor %}
+                            {% endif %}
+                            
+                            <div id="notes-list">
+                                {% for note in course_notes %}
+                                    {% if note.lesson.id == lesson.id %}
+                                    <div class="card border-secondary mb-3" hx-get="{% url 'fetch_realtime_notes' course_id=course.id section_id=note.section.id lesson_id=lesson.id %}" hx-trigger="every 5s" hx-swap="outerHTML">
+                                        <div class="card-header text-muted d-flex justify-content-between">
+                                            <span><b>{{ note.user.profile.user.first_name }}</b></span>
+                                            <small>{{ note.created_at|timesince }} ago</small>
+                                        </div>
+                                        <div class="card-body">
+                                            <p class="card-text">{{ note.note_text }}</p>
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                {% empty %}
+                                    <p class="text-muted">No notes for this lesson yet.</p>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Stocks Pane -->
+                    <div class="tab-pane fade" id="stocks-pane" role="tabpanel">
+                        <div class="card card-body">
+                            {% for share in stock %}
+                                {% include "components/stock_card.html" with stock=share %}
+                            {% empty %}
+                                <p class="text-muted">No related stocks for this lesson.</p>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <!-- Quiz Pane -->
+                    <div class="tab-pane fade" id="quiz-pane" role="tabpanel">
+                        <div class="card card-body">
+                            <p class="text-muted">Quizzes for this section are available in the timeline after completing the lessons.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar Column -->
+        <div class="col-lg-4 mt-4 mt-lg-0">
+            <div class="sticky-top" style="top: 1.25rem;">
+                <div class="card">
+                    <div class="content">
+                        <h2 class="content-title font-size-18">Course Content</h2>
+                    </div>
+                    <div class="list-group list-group-flush course-timeline">
+                        {% for section in course.sections.all %}
+                            <div class="list-group-item">
+                                <h5 class="mb-2 font-weight-bold font-size-16">{{ section.title }}</h5>
+                                {% for l in section.lesson.all %}
+                                    <a href="{% url 'video_detail_page' l.id %}" class="list-group-item list-group-item-action lesson-item {% if l.id == lesson.id %}active{% endif %}">
+                                        <div class="d-flex align-items-center">
+                                            <i class="ph {% if logged_in_profile in l.completed_by_users.all %}ph-check-circle-fill text-success{% else %}ph-play-circle text-primary{% endif %} me-2 fs-4"></i>
+                                            <div class="flex-grow-1">
+                                                <div class="font-weight-semi-bold">{{ l.title }}</div>
+                                                <div class="progress" style="height: 4px;">
+                                                    <div class="progress-bar" role="progressbar" style="width: {% if logged_in_profile in l.completed_by_users.all %}100%{% else %}0%{% endif %};"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </a>
+                                {% endfor %}
+                                <!-- Quiz buttons in timeline -->
+                                {% for quiz in quizes %}
+                                    {% if quiz.section.id == section.id %}
+                                        <div class="mt-2 p-2">
+                                            {% for questions in questions_list %}
+                                                {% if questions.quiz.id == quiz.id %}
+                                                    {% if questions.type == "SINGLE_SELECT" %}
+                                                        <button type="button" class="btn btn-sm btn-outline-primary w-100 mb-1" data-bs-toggle="modal" data-bs-target="#modal-mcq-{{ questions.id }}">MCQ Quiz</button>
+                                                    {% elif questions.type == "IMAGE_MC" %}
+                                                        <button type="button" class="btn btn-sm btn-outline-primary w-100 mb-1" data-bs-toggle="modal" data-bs-target="#modal-imcq-{{ questions.id }}">Image Quiz</button>
+                                                    {% endif %}
+                                                {% endif %}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- All Quiz Modals (placed at the end for proper rendering) -->
+{% for quiz in quizes %}
+    {% for questions in questions_list %}
+        {% if questions.quiz.id == quiz.id %}
+            {% if questions.type == "SINGLE_SELECT" %}
+                {% include "components/modal_mcq.html" with quiz_data=questions %}
+            {% elif questions.type == "IMAGE_MC" %}
+                {% include "components/image_modal_mcq.html" with quiz_data=questions %}
+            {% elif questions.type == "TEXT" %}
+                {% include "components/text_quiz_modal.html" with quiz_data=questions %}
+            {% elif questions.type == "MULTIPLE_SELECT" %}
+                {% include "components/multiple_select_modal.html" with quiz_data=questions %}
+            {% elif questions.type == "DRAG_DROP" %}
+                {% include "components/drag_and_drop_quiz_modal.html" with quiz_data=questions correct_mapping=questions.correct_mapping %}
+            {% endif %}
+        {% endif %}
+    {% endfor %}
+{% endfor %}
+
+<style>
+    :root { --plyr-color-main: #0d6efd; }
+    #theater-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.85);
+        z-index: 1050; /* Below modals */
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.3s ease, visibility 0.3s ease;
+    }
+    body.theater-mode #theater-overlay {
+        opacity: 1;
+        visibility: visible;
+    }
+    #video-container {
+        transition: z-index 0.3s, transform 0.3s;
+        z-index: 1;
+        position: relative;
+    }
+    body.theater-mode #video-container {
+        z-index: 1051; /* Above overlay */
+    }
+    .course-timeline .list-group-item {
+        border: none;
+        padding: 0.5rem 0.75rem;
+    }
+    .course-timeline .lesson-item {
+        border-radius: 0.25rem;
+        margin-bottom: 0.25rem;
+    }
+    .nav-pills-border-bottom .nav-link { 
+        border-radius: 0.25rem 0.25rem 0 0; 
+        border: 1px solid transparent; 
+        border-bottom: 1px solid var(--bs-border-color); 
+    }
+    .nav-pills-border-bottom .nav-link.active { 
+        border-color: var(--bs-border-color) var(--bs-border-color) transparent; 
+        font-weight: 600; 
+    }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const videoContainer = document.getElementById('video-container');
+    const theaterToggle = document.getElementById('theater-mode-toggle');
+    const overlay = document.getElementById('theater-overlay');
+
+    if (theaterToggle) {
+        theaterToggle.addEventListener('click', () => {
+            document.body.classList.toggle('theater-mode');
+        });
+    }
+    if (overlay) {
+        overlay.addEventListener('click', () => {
+            document.body.classList.remove('theater-mode');
+        });
+    }
+
+    // Initialize Plyr player for self-hosted video
+    {% if lesson.video %}
+        const videoEl = document.getElementById('lesson-video');
+        if (videoEl) {
+            const player = new Plyr(videoEl);
+            // Dynamically add source to prevent premature loading
+            if (!videoEl.querySelector('source')) {
+                const source = document.createElement('source');
+                source.src = "{{ lesson.video.url }}";
+                source.type = "video/mp4";
+                videoEl.appendChild(source);
+            }
+
+            let isMarkedComplete = {{ is_completed|yesno:"true,false" }};
+            player.on('timeupdate', () => {
+                const percent = (player.currentTime / player.duration) * 100;
+                if (percent >= 85 && !isMarkedComplete) {
+                    isMarkedComplete = true;
+                    fetch("{% url 'mark_lesson_complete' lesson_id=lesson.id user_profile=logged_in_profile.id %}", {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': '{{ csrf_token }}'
+                        },
+                        body: JSON.stringify({})
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        console.log("Lesson marked complete:", data);
+                        window.location.reload(); // Reload to update timeline UI
+                    })
+                    .catch(err => console.error("Error marking complete:", err));
+                }
+            });
+        }
+    {% endif %}
+
+    // Initialize Plyr player for YouTube
+    {% if lesson.video_url %}
+        function getYoutubeID(url) {
+            const regExp = /(?:v=|\/|embed\/|youtu.be\/)([a-zA-Z0-9_-]{11})/;
+            const match = url.match(regExp);
+            return (match && match[1]) ? match[1] : null;
+        }
+        const ytID = getYoutubeID("{{ lesson.video_url }}");
+        const playerContainer = document.getElementById('youtube-player-container');
+        if (ytID && playerContainer) {
+            const div = document.createElement('div');
+            div.setAttribute('data-plyr-provider', 'youtube');
+            div.setAttribute('data-plyr-embed-id', ytID);
+            playerContainer.appendChild(div);
+            const player = new Plyr(div);
+        }
+    {% endif %}
+
+    // Enable Bootstrap tooltips
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl)
+    })
+});
+</script>
+{% endblock body %}

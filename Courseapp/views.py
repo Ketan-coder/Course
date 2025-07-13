@@ -488,7 +488,7 @@ def video_detail_page(request,lesson_id) -> HttpResponseRedirect | HttpResponseP
             for qid, question_data in quiz.questions.items():
                 question_data['quiz_id'] = quiz.pk  # optional
                 questions_list.append(question_data)
-    return render(request, "course/course_video_detail.html", locals())
+    return render(request, "course/course_video_detail_new.html", locals())
 
 def bookmarked_courses(request) -> HttpResponseRedirect | HttpResponsePermanentRedirect | HttpResponse:
     user = request.user
@@ -878,11 +878,36 @@ def create_course_notes(request) -> HttpResponse:
                 return JsonResponse({"error": "Student not found."}, status=400)
             course_id = request.POST.get("course_id")
             section_id = request.POST.get("section_id")
+            lesson_id = request.POST.get("lesson_id")
             notes = request.POST.get("notes")
-            course_notes = CourseNotes.objects.create(user=student,section_id=section_id, course_id=course_id, note_text=notes)
+            course_notes = CourseNotes.objects.create(user=student,section_id=section_id, course_id=course_id, lesson_id=lesson_id, note_text=notes)
             # return JsonResponse({"id": course_notes.pk, "notes": course_notes.notes})
-            return HttpResponse(f"{student.profile.user.first_name} left a note: {notes}")
+            return HttpResponse(
+                f"""
+                <div class="alert alert-success border-0 rounded-0 d-flex align-items-center" role="alert">
+                    <i class="fa-light fa-check-circle text-success-emphasis me-2"></i>
+                    <div>{student.profile.user.first_name} left a note: <strong>{notes}</strong></div>
+                </div>
+                """
+            )
         return HttpResponse("Invalid request.", status=400)
+    except Exception as e:
+        print(str(e))
+        return JsonResponse({"error": str(e)}, status=400)
+    
+def get_course_notes_htmx(request, course_id, section_id=None,lesson_id=None):
+    try:
+        if request.method != "GET":
+            return JsonResponse({"error": "Invalid request method."}, status=400)
+        if not request.user.is_authenticated:
+            return JsonResponse({"error": "User not authenticated."}, status=401)
+
+        course_notes = CourseNotes.objects.filter(course_id=course_id)
+        if section_id:
+            course_notes = course_notes.filter(section_id=section_id)
+        if lesson_id:
+            course_notes = course_notes.filter(lesson_id=lesson_id)
+        return render(request, "course/course_notes_list.html", {"course_notes": course_notes})
     except Exception as e:
         print(str(e))
         return JsonResponse({"error": str(e)}, status=400)

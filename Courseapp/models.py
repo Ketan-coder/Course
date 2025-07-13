@@ -5,6 +5,7 @@ from requests import Response
 from utils.media_handler import MediaHandler
 from decimal import Decimal
 from utils.utils import generate_quiz_from_content
+from utils.decorators import check_load_time, retry_on_failure
 
 def validate_discount(value) -> None:
     if value < 0:
@@ -63,6 +64,8 @@ class Course(models.Model):
     def __str__(self):
         return self.title
     
+    @check_load_time
+    @retry_on_failure(retries=3, delay=2)
     def generate_qr(self, ref="outside", auto_save=False):
         import qrcode
         from io import BytesIO
@@ -87,6 +90,8 @@ class Course(models.Model):
             super(Course, self).save(update_fields=['qr_code'])
 
 
+    @check_load_time
+    @retry_on_failure(retries=3, delay=2)
     def save(self, *args, **kwargs):
         self.extra_fields['last_updated'] = str(self.updated_at)
         self.extra_fields['is_active'] = self.is_published
@@ -103,6 +108,10 @@ class Course(models.Model):
             print(f"Error calculating discount percentage: {e}")
             self.extra_fields['discount_percentage'] = 0  # Or handle it as needed
 
+        if self.intro_video and '_resized' not in self.intro_video.name:
+            resized_path = MediaHandler.optimize_video(self.intro_video)
+            if resized_path:
+                self.intro_video = resized_path
 
         # Removed MediaHandler import and usage to fix circular import issue
         # from utils.media_handler import MediaHandler
@@ -119,10 +128,12 @@ class Course(models.Model):
         # Delete the associated media files when the model instance is deleted
         # Removed MediaHandler import and usage to fix circular import issue
         # from utils.media_handler import MediaHandler
-        # if self.thumbnail:
-        #     MediaHandler.delete_media_file(self.thumbnail.name)
-        # if self.video:
-        #     MediaHandler.delete_media_file(self.video.name)
+        if self.thumbnail:
+            MediaHandler.delete_media_file(self.thumbnail.name)
+        if self.video:
+            MediaHandler.delete_media_file(self.video.name)
+        if self.qr_code:
+            MediaHandler.delete_media_file(self.qr_code.name)
         super().delete(*args, **kwargs)
 
 
@@ -138,13 +149,12 @@ class Section(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        
         return self.title
     
+    @check_load_time
+    @retry_on_failure(retries=3, delay=2)
     def save(self, prompt='',*args, **kwargs):
         self.extra_fields['last_updated'] = str(self.updated_at)
-        print(f"Saving section: {self.title} with lessons: {[lesson.title for lesson in self.lesson.all()]}")
-
         # Generate quiz from the first lesson's content if it exists
         quiz_data = generate_quiz_from_content(self.title, self.lesson.first().content if self.lesson.exists() else '', prompt=prompt)
         if quiz_data:
@@ -193,17 +203,24 @@ class Lesson(models.Model):
     def __str__(self):
         return f"{self.title}"
 
+    @check_load_time
+    @retry_on_failure(retries=3, delay=2)
     def save(self, *args, **kwargs):
         self.extra_fields['last_updated'] = str(self.updated_at)
+        if self.video and '_resized' not in self.video.name:
+            resized_path = MediaHandler.optimize_video(self.video)
+            if resized_path:
+                self.video = resized_path
         super().save(*args, **kwargs)
 
     def delete(self, *args, **kwargs):
         # Delete the associated media files when the model instance is deleted
         # Removed MediaHandler import and usage to fix circular import issue
         # from utils.media_handler import MediaHandler
-        # if self.thumbnail:
-            # MediaHandler.delete_media_file(self.thumbnail.name)
-        # if self.video:
+        if self.thumbnail:
+            MediaHandler.delete_media_file(self.thumbnail.name)
+        if self.video:
+            MediaHandler.delete_media_file(self.video.name)
         super().delete(*args, **kwargs)
 
 
@@ -426,6 +443,7 @@ class CourseNotes(models.Model):
     user = models.ForeignKey('Users.Student', on_delete=models.CASCADE, related_name='course_notes')
     course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='notes')
     section = models.ForeignKey(Section, on_delete=models.CASCADE)
+    lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE, blank=True, null=True)
     note_text = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -433,7 +451,7 @@ class CourseNotes(models.Model):
         ordering: list[str] = ['-created_at']
 
     def __str__(self) -> str:
-        return f"{self.user.profile.user.first_name} left a note on {self.course.title} - {self.section.title} - {self.note_text[:20]}"
+        return f"{self.user.profile.user.first_name} left a note on {self.course.title} - {self.section.title} - {self.lesson.title} - {self.note_text[:20]}"
     
 class Article(models.Model):
     title = models.CharField(max_length=200)

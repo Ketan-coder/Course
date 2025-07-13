@@ -45,4 +45,8 @@ urlpatterns: list[URLPattern] = [
 
     path('lesson/add/', login_required(views.lesson_form), name='lesson_form'),
     path('lesson/<int:lesson_id>/', login_required(views.lesson_form), name='lesson_form'),
+
+    path('fetch-realtime-notes/<int:course_id>/', views.get_course_notes_htmx, name='fetch_realtime_notes'),
+    path('fetch-realtime-notes/<int:course_id>/<int:section_id>/', views.get_course_notes_htmx, name='fetch_realtime_notes'),
+    path('fetch-realtime-notes/<int:course_id>/<int:section_id>/<int:lesson_id>/', views.get_course_notes_htmx, name='fetch_realtime_notes'),
 ]

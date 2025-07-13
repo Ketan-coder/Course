@@ -11,6 +11,8 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y \
     curl \
     gcc \
+    ffmpeg \
+    libpq-dev \
     libxml2-dev \
     libxslt1-dev \
     python3-dev \

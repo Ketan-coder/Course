@@ -1,4 +1,5 @@
-from asyncio import subprocess
+# from asyncio import subprocess
+import subprocess
 import os
 from django.conf import settings
 from django.core.files.storage import default_storage
