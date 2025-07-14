@@ -702,11 +702,16 @@ def create_section(request) -> HttpResponse:
         if section_id:
             section = get_object_or_404(Section, id=section_id)
             section.title = title
-            section.order = order
-            section.is_open = is_open
-            section.article = article
+            section.order = order or 0
+            section.is_open = is_open or False
             section.content = content
-            section.lesson.set(selected_lessons)  # Update lessons
+
+            if selected_lessons:
+                section.lesson.set(selected_lessons)  
+            
+            if article:
+                section.article = article
+            
             section.save(prompt=prompt)  # Save prompt if needed
             return HttpResponse(
                 """<div class="alert alert-success border-0 rounded-0 d-flex align-items-center" role="alert">
@@ -716,8 +721,12 @@ def create_section(request) -> HttpResponse:
             )
         else:
             section = Section.objects.create(title=title, order=order, is_open=is_open)
-            section.article = article
-            section.lesson.set(selected_lessons)  # Update lessons
+            if content:
+                section.content = content
+            if article:
+                section.article = article
+            if selected_lessons:
+                section.lesson.set(selected_lessons)  # Update lessons
             section.save(prompt=prompt)
             return HttpResponse(
                 """<div class="alert alert-success border-0 rounded-0 d-flex align-items-center" role="alert">
@@ -727,6 +736,7 @@ def create_section(request) -> HttpResponse:
                 status=201
             )
     except Exception as e:
+        print(e)
         return HttpResponse(
             """<div class="alert alert-danger border-0 rounded-0 d-flex align-items-center" role="alert">
                 <i class="fa-light fa-exclamation-circle text-danger-emphasis me-2"></i>

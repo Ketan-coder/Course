@@ -35,7 +35,13 @@
                 <label for="tag-name" class="form-label">Name</label>
                 <input type="text" class="form-control" name="name" id="tag-name" required>
             </div>
-            <button type="submit" class="btn btn-primary" id="tag-submit-btn">Save Tag</button>
+            {% comment %} <button type="submit" class="btn btn-primary" id="tag-submit-btn">Save Tag</button> {% endcomment %}
+            <div class="d-flex align-items-center gap-3 mt-3">
+                <button type="submit" class="btn btn-warning" id="tag-submit-btn">Save Tag</button>
+                <div class="spinner-border text-primary d-none" id="tag-spinner" role="status">
+                    <span class="visually-hidden">Saving...</span>
+                </div>
+            </div>
         </form>
         <div id="tag-select"></div>
       </div>
@@ -59,7 +65,13 @@
                 <label for="faq-answer" class="form-label">Answer</label>
                 <textarea class="form-control" name="answer" id="faq-answer" rows="4" required></textarea>
             </div>
-            <button type="submit" class="btn btn-success" id="faq-submit-btn">Save FAQ</button>
+            {% comment %} <button type="submit" class="btn btn-success" id="faq-submit-btn">Save FAQ</button> {% endcomment %}
+            <div class="d-flex align-items-center gap-3 mt-3">
+                <button type="submit" class="btn btn-warning" id="faq-submit-btn">Save FAQ</button>
+                <div class="spinner-border text-primary d-none" id="faq-spinner" role="status">
+                    <span class="visually-hidden">Saving...</span>
+                </div>
+            </div>
         </form>
         <div id="faq-select"></div>
       </div>
@@ -72,7 +84,7 @@
         <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
       </div>
       <div class="offcanvas-body">
-        <form hx-post="{% url 'create_section' %}" hx-target="#section-select" hx-swap="outerHTML" id="section-form">
+        <form hx-post="{% url 'create_section' %}" hx-target="#section-select" hx-swap="outerHTML" id="section-form" hx-indicator=".htmx-indicator">
             {% csrf_token %}
             <input type="hidden" id="section-id" name="id"> <!-- used for edit -->
             <div class="mb-3">
@@ -136,6 +148,11 @@
                 <label for="id_prompt" class="form-label">Prompt for Generating Quiz:</label>
                 <textarea name="prompt" id="id_prompt" class="form-control" rows="15"></textarea>
             </div>
+            {% comment %} <div class="htmx-indicator">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div> {% endcomment %}
             <script>
             document.getElementById('id_article_search').addEventListener('input', function () {
                 const searchTerm = this.value;
@@ -172,7 +189,15 @@
             </script>
             {% comment %} <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#modal-add-lesson">Add Lesson</button> {% endcomment %}
             <a type="button" class="btn btn-outline-info" href="{% url "lesson_form" %}">Add Lesson</a>
-            <button type="submit" class="btn btn-warning" id="section-submit-btn">Save Section</button>
+            {% comment %} <button type="submit" class="btn btn-warning" id="section-submit-btn">Save Section</button> {% endcomment %}
+            <!-- Submit Button & Spinner -->
+            <div class="d-flex align-items-center gap-3 mt-3">
+                <button type="submit" class="btn btn-warning" id="section-submit-btn">Save Section</button>
+                <div class="spinner-border text-primary d-none" id="section-spinner" role="status">
+                    <span class="visually-hidden">Saving...</span>
+                </div>
+            </div>
+
         </form>
         <div id="section-select"></div> 
       </div>
@@ -483,6 +508,54 @@
 {% endblock body %}
 
 {% block script %}
+<script>
+    const addSpinnerAndHideBtn = (btnId, spinnerId) => {
+        const btn = document.getElementById(btnId);
+        const spinner = document.getElementById(spinnerId);
+
+        if (btn && spinner) {
+            btn.classList.add("d-none");
+            spinner.classList.remove("d-none");
+        }
+    };
+
+    const removeSpinnerAndShowBtn = (btnId, spinnerId) => {
+        const btn = document.getElementById(btnId);
+        const spinner = document.getElementById(spinnerId);
+
+        if (btn && spinner) {
+            btn.classList.remove("d-none");
+            spinner.classList.add("d-none");
+        }
+    };
+
+    document.addEventListener("htmx:beforeRequest", function (event) {
+        addSpinnerAndHideBtn("section-submit-btn", "section-spinner");
+        addSpinnerAndHideBtn("faq-submit-btn", "faq-spinner");
+        addSpinnerAndHideBtn("tag-submit-btn", "tag-spinner");
+    });
+
+    document.addEventListener("htmx:afterRequest", function (event) {
+        removeSpinnerAndShowBtn("section-submit-btn", "section-spinner");
+        removeSpinnerAndShowBtn("faq-submit-btn", "faq-spinner");
+        removeSpinnerAndShowBtn("tag-submit-btn", "tag-spinner");
+
+        // Optional: reset the form after successful creation
+        const forms = [
+            { formId: "section-form", btnId: "section-submit-btn" },
+            { formId: "faq-form", btnId: "faq-submit-btn" },
+            { formId: "tag-form", btnId: "tag-submit-btn" },
+        ];
+
+        forms.forEach(formData => {
+            const form = document.getElementById(formData.formId);
+            if (form && event.detail.successful) {
+                form.reset();
+            }
+        });
+    });
+</script>
+
 <script>
     // JavaScript for tag search (example)
     document.getElementById('id_tags_search').addEventListener('input', function () {
