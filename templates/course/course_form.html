@@ -115,8 +115,14 @@
                 <input type="text" class="form-control" name="title" id="section-title" required>
             </div>
             <div class="mb-3">
-                <label for="section-description" class="form-label">Description</label>
-                <textarea class="form-control" name="description" id="section-description" rows="4"></textarea>
+                {% comment %} <label for="section-description" class="form-label">Description</label>
+                <textarea class="form-control" name="description" id="section-description" rows="4"></textarea> {% endcomment %}
+                <smart-quill
+                    name="description"
+                    id="section-description"
+                    label="Section Description"
+                    placeholder="Write your awesome content here..."
+                ></smart-quill>
             </div>
             <div class="mb-3">
                 <label for="section-order" class="form-label">Order</label>
@@ -168,9 +174,15 @@
             </div>
 
             <div class="form-group mt-2 mb-3">
-                <label for="id_prompt" class="form-label">Prompt for Generating Quiz:</label>
-                <textarea name="prompt" id="id_prompt" class="form-control" rows="15"></textarea>
+                {% comment %} <label for="id_prompt" class="form-label">Prompt for Generating Quiz:</label>
+                <textarea name="prompt" id="id_prompt" class="form-control" rows="15"></textarea> {% endcomment %}
+                <smart-quill
+                    name="prompt"
+                    label="Prompt for Generating Quiz"
+                    placeholder="Write your awesome content here..."
+                ></smart-quill>
             </div>
+            <div id="section-select"></div> 
             {% comment %} <div class="htmx-indicator">
                 <div class="spinner-border text-primary" role="status">
                     <span class="visually-hidden">Loading...</span>
@@ -234,7 +246,7 @@
 
 
         </form>
-        <div id="section-select"></div> 
+        
       </div>
     </div>
 
@@ -303,36 +315,60 @@
         </div>
         {% endif %}
 
-        <div class="form-group">
-            <label for="id_title" class="form-label">Title:</label>
-            <input type="text" name="title" id="id_title" value="{{ course.title|default:'' }}" class="form-control"
-                required>
-            {% if form.title.errors %}
+        <div class="form-group mt-2 mb-2">
+            <smart-input label="Title" name="title" id="id_title" value="{{ course.title|default:'' }}" type="text" required></smart-input>
+            {% comment %} <label for="id_title" class="form-label">Title:</label> {% endcomment %}
+            {% comment %} <input type="text" name="title" id="id_title" value="{{ course.title|default:'' }}" class="form-control"
+                required> {% endcomment %}
+
+            {% comment %} {% if form.title.errors %}
             <div class="invalid-feedback d-block">{{ form.title.errors }}</div>
-            {% endif %}
+            {% endif %} {% endcomment %}
         </div>
 
-        <div class="form-group">
-            <label for="id_description" class="form-label">Description:</label>
+        <div class="form-group mt-2 mb-2">
+            {% comment %} <label for="id_description" class="form-label">Description:</label>
             <textarea name="description" id="id_description" class="form-control">{{ course.description|default:'' }}</textarea>
             {% if form.description.errors %}
             <div class="invalid-feedback d-block">{{ form.description.errors }}</div>
-            {% endif %}
+            {% endif %} {% endcomment %}
+            <smart-quill 
+                name="description" 
+                label="Course Description" 
+                placeholder="Write your awesome content here...">
+                {{ form.description.value|safe }}
+            </smart-quill>
+
         </div>
 
-        <div class="form-group">
-            <label for="id_course_type" class="form-label">Course Type:</label>
+        <div class="form-group mt-2 mb-2">
+            <smart-input 
+                type="select" 
+                name="course_type" 
+                label="Course Type"
+                value="{{ course.course_type|default:'free' }}"
+                data-options='[{"id": "free", "name": "Free"}, {"id": "paid", "name": "Paid"}]'
+            ></smart-input>
+
+            {% comment %} <label for="id_course_type" class="form-label">Course Type:</label>
             <select name="course_type" id="id_course_type" class="form-control">
                 <option value="free" {% if course.course_type == 'free' %}selected{% endif %}>Free</option>
                 <option value="paid" {% if course.course_type == 'paid' %}selected{% endif %}>Paid</option>
             </select>
             {% if form.course_type.errors %}
             <div class="invalid-feedback d-block">{{ form.course_type.errors }}</div>
-            {% endif %}
+            {% endif %} {% endcomment %}
         </div>
 
-        <div class="form-group">
-            <label for="id_course_level" class="form-label">Course Level:</label>
+        <div class="form-group mt-2 mb-2">
+            <smart-input 
+                type="select"
+                name="course_level"
+                label="Course Level"
+                value="{{ course.course_level|default:'all' }}"
+                data-options='[{"id": "beginner", "name": "Beginner"}, {"id": "intermediate", "name": "Intermediate"}, {"id": "advanced", "name": "Advanced"}, {"id": "all", "name": "All"}]'
+            ></smart-input>
+            {% comment %} <label for="id_course_level" class="form-label">Course Level:</label>
             <select name="course_level" id="id_course_level" class="form-control">
                 <option value="beginner" {% if course.course_level == 'beginner' %}selected{% endif %}>Beginner</option>
                 <option value="intermediate" {% if course.course_level == 'intermediate' %}selected{% endif %}>Intermediate</option>
@@ -341,11 +377,18 @@
             </select>
             {% if form.course_level.errors %}
             <div class="invalid-feedback d-block">{{ form.course_level.errors }}</div>
-            {% endif %}
+            {% endif %} {% endcomment %}
         </div>
 
-        <div class="form-group">
-            <label for="id_language" class="form-label">Language:</label>
+        <div class="form-group mt-2 mb-2">
+            <smart-input
+                type="select"
+                name="language"
+                label="Language"
+                value="{{ course.language|default:'EN' }}"
+                data-options='[{% for lang in languages %}{"id": "{{ lang.pk }}", "name": "{{ lang.name|escapejs }}"}{% if not forloop.last %},{% endif %}{% endfor %}]'
+            ></smart-input>
+            {% comment %} <label for="id_language" class="form-label">Language:</label>
             <select name="language" id="id_language" class="form-control">
                 {% for lang in languages %}
                 <option value="{{ lang.pk }}" {% if course.language == lang %}selected{% endif %}>{{ lang.name }}</option>
@@ -353,7 +396,7 @@
             </select>
             {% if form.language.errors %}
             <div class="invalid-feedback d-block">{{ form.language.errors }}</div>
-            {% endif %}
+            {% endif %} {% endcomment %}
         </div>
 
         {% comment %} <div class="form-group">
@@ -368,7 +411,7 @@
             {% endif %}
         </div> {% endcomment %}
 
-        <div class="form-group">
+        <div class="form-group mt-2 mb-2">
             <label for="id_thumbnail" class="form-label">Thumbnail:</label>
             <input type="file" name="thumbnail" id="id_thumbnail" class="form-control" onchange="previewImage(event, 'thumbnail-preview')">
             {% if course.thumbnail %}
@@ -378,7 +421,7 @@
             {% endif %}
         </div>
 
-        <div class="form-group">
+        <div class="form-group mt-2 mb-2">
             <label for="id_intro_video" class="form-label">Intro Video:</label>
             <input type="file" name="intro_video" id="id_intro_video" class="form-control">
             {% if course.intro_video %}
@@ -389,7 +432,7 @@
             {% endif %}
         </div>
 
-        <div class="form-group">
+        <div class="form-group mt-2 mb-2">
             <label for="id_tags" class="form-label">Tags:</label>
             <input type="text" id="id_tags_search" class="form-control" placeholder="Search and add tags">
             <div id="tags_search_results" class="list-group mt-2"></div>
@@ -406,23 +449,35 @@
             {% endif %}
         </div>
 
-        <div class="form-group">
-            <label for="id_prerequisites" class="form-label">Prerequisites:</label>
+        <div class="form-group mt-2 mb-2">
+            {% comment %} <label for="id_prerequisites" class="form-label">Prerequisites:</label>
             <textarea name="prerequisites" id="id_prerequisites" class="form-control">{{ course.prerequisites|default:'' }}</textarea>
             {% if form.prerequisites.errors %}
             <div class="invalid-feedback d-block">{{ form.prerequisites.errors }}</div>
-            {% endif %}
+            {% endif %} {% endcomment %}
+            <smart-quill
+                name="prerequisites" 
+                label="Prerequisites" 
+                placeholder="Write your awesome content here...">
+                {{ course.prerequisites|safe|default_if_none:"" }}
+            </smart-quill>
         </div>
 
-        <div class="form-group">
-            <label for="id_circulam" class="form-label">Curriculum:</label>
+        <div class="form-group mt-2 mb-2">
+            {% comment %} <label for="id_circulam" class="form-label">Curriculum:</label>
             <textarea name="circulam" id="id_circulam" class="form-control">{{ course.circulam|default:'' }}</textarea>
             {% if form.circulam.errors %}
             <div class="invalid-feedback d-block">{{ form.circulam.errors }}</div>
-            {% endif %}
+            {% endif %} {% endcomment %}
+            <smart-quill
+                name="circulam" 
+                label="Curriculum" 
+                placeholder="Write your awesome content here...">
+                {{ course.circulam|safe|default_if_none:"" }}
+            </smart-quill>
         </div>
 
-        <div class="form-group">
+        <div class="form-group mt-2 mb-2">
             <label for="id_faqs" class="form-label">FAQs:</label>
             <input type="text" id="id_faqs_search" class="form-control" placeholder="Search and add FAQs">
             <div id="faqs_search_results" class="list-group mt-2"></div>
@@ -439,10 +494,8 @@
             {% endif %}
         </div>
 
-        <div class="form-group">
+        <div class="form-group mt-2 mb-2">
             <label for="id_price" class="form-label">Price:</label>
-            <!-- <input type="number" name="price" id="id_price" value="{{ course.price|default:'0.0' }}" step="0.01"
-                class="form-control"> -->
             <div class="input-group mb-3">
               <span class="input-group-text" id="add-on-1">
                 {% if course %} 
@@ -468,8 +521,8 @@
                     {% if course %}
                         {{course.instructor.profile.currency.symbol}}
                     {% else %}
-                        {{logined_profile.currency.symbol}}</span>
-                    {% endif %}
+                        {{logined_profile.currency.symbol}}
+                    {% endif %}</span>
                 <input type="number" name="discount_price" id="id_discount_price"
                 value="{{ course.discount_price|default:'0.0' }}" step="0.01" class="form-control">
               </div>
@@ -514,6 +567,7 @@
                             onclick="openEditSection(
                                 '{{ section.id }}', 
                                 '{{ section.title }}', 
+                                '{{ section.description }}',
                                 '{{ section.order }}', 
                                 '{{ section.is_open }}',
                                 '{% for lesson in section.lesson.all %}{{ lesson.id }}{% if not forloop.last %},{% endif %}{% endfor %}',
@@ -521,7 +575,7 @@
                             )">
                         Edit
                     </button> | 
-                    <button type="button" class="btn btn-sm btn-outline-light ml-1 p-0 border-0" aria-label="Remove" onclick="removeSection(this)">
+                    <button type="button" class="btn btn-sm btn-outline-light ml-1 p-0 border-0" aria-label="Remove" onclick="removeSection(this);">
                         &times;
                     </button>
                 </span>
@@ -543,8 +597,10 @@
 {% endblock body %}
 
 {% block script %}
-<script type="module" src="{% static 'resoures/js/components/button.js' %}"></script>  
-<script>
+<script type="module" src="{% static 'resoures/js/components/button.js' %}"></script> 
+<script type="module" src="{% static 'resoures/js/components/input.js' %}"></script>
+<script type="module" src="{% static 'resoures/js/components/rich_text_input.js' %}"></script>  
+{% comment %} <script>
     const addSpinnerAndHideBtn = (btnId, spinnerId) => {
         const btn = document.getElementById(btnId);
         const spinner = document.getElementById(spinnerId);
@@ -590,7 +646,24 @@
             }
         });
     });
-</script>
+    const quillFields = ["description", "prerequisites", "circulam"];
+    quillFields.forEach(field => {
+        const textArea = document.getElementById(`id_${field}`);
+        const parent = textArea.parentNode;
+        const wrapper = document.createElement("div");
+        wrapper.innerHTML = `<div id="editor_${field}" class="quill-editor">${textArea.value}</div>`;
+        parent.insertBefore(wrapper, textArea);
+        textArea.style.display = "none";
+
+        const quill = new Quill(`#editor_${field}`, {
+            theme: 'snow'
+        });
+        quill.on('text-change', () => {
+            textArea.value = quill.root.innerHTML;
+        });
+    });
+
+</script> {% endcomment %}
 
 <script>
     // JavaScript for tag search (example)
@@ -822,23 +895,7 @@
             hiddenInput.remove();
         }
     }
-    const quillFields = ["description", "prerequisites", "circulam"];
-    quillFields.forEach(field => {
-        const textArea = document.getElementById(`id_${field}`);
-        const parent = textArea.parentNode;
-        const wrapper = document.createElement("div");
-        wrapper.innerHTML = `<div id="editor_${field}" class="quill-editor">${textArea.value}</div>`;
-        parent.insertBefore(wrapper, textArea);
-        textArea.style.display = "none";
-
-        const quill = new Quill(`#editor_${field}`, {
-            theme: 'snow'
-        });
-        quill.on('text-change', () => {
-            textArea.value = quill.root.innerHTML;
-        });
-    });
-
+    
     function previewImage(event, id) {
         const reader = new FileReader();
         reader.onload = function () {
@@ -922,11 +979,14 @@ function openEditFAQ(id, question, answer) {
   }
 
 // Function to open the offcanvas for adding/editing sections
-function openEditSection(id, title, order, is_open, lesson_ids, lesson_titles) {
+function openEditSection(id, title, description, order, is_open, lesson_ids, lesson_titles) {
     // Set basic fields
     document.getElementById('section-id').value = id;
     document.getElementById('section-title').value = title;
     document.getElementById('section-order').value = order;
+    document.getElementById('section-description').value = description;
+    //const quill = document.getElementById('section-description').querySelector('.ql-editor');
+    //quill.root.innerHTML = description;
     
     // Set is_open toggle switch
     const isOpenSwitch = document.getElementById('section-is_open');

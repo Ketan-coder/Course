@@ -108,7 +108,7 @@ class Course(models.Model):
             print(f"Error calculating discount percentage: {e}")
             self.extra_fields['discount_percentage'] = 0  # Or handle it as needed
 
-        if self.intro_video and '_resized' not in self.intro_video.name:
+        if self.intro_video and ('_resized' not in self.intro_video.name or '_optimized' not in self.intro_video.name):
             resized_path = MediaHandler.optimize_video(self.intro_video)
             if resized_path:
                 self.intro_video = resized_path

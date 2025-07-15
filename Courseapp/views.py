@@ -158,6 +158,7 @@ def course_create(request) -> HttpResponseRedirect | HttpResponsePermanentRedire
 
 @user_passes_test(lambda u: Instructor.objects.filter(profile=u.profile).exists())
 def course_update(request, pk) -> HttpResponseRedirect | HttpResponsePermanentRedirect | HttpResponse:
+    print("pk:", pk)
     course: Course = get_object_or_404(Course, pk=pk)
     instructors: BaseManager[Instructor] = Instructor.objects.all()
     logined_profile = Profile.objects.get(user=request.user)
@@ -165,6 +166,7 @@ def course_update(request, pk) -> HttpResponseRedirect | HttpResponsePermanentRe
     lessons = Lesson.objects.all() 
     request.session["page"] = "course"
     if request.method == "POST":
+        print("request.POST:", request.POST)
         # Manually get data from request.POST for each field
         course.title = request.POST.get("title")
         course.description = request.POST.get("description")
