@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block body %}
 <div class="container mt-4">
@@ -28,7 +29,8 @@
         <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
       </div>
       <div class="offcanvas-body">
-        <form hx-post="{% url 'create_tag' %}" hx-target="#tag-select" hx-swap="outerHTML" id="tag-form">
+        {% comment %} <form hx-post="{% url 'create_tag' %}" hx-target="#tag-select" hx-swap="outerHTML" id="tag-form"> {% endcomment %}
+        <form id="tag-form">
             {% csrf_token %}
             <input type="hidden" id="tag-id" name="id"> <!-- used for edit -->
             <div class="mb-3">
@@ -36,12 +38,22 @@
                 <input type="text" class="form-control" name="name" id="tag-name" required>
             </div>
             {% comment %} <button type="submit" class="btn btn-primary" id="tag-submit-btn">Save Tag</button> {% endcomment %}
-            <div class="d-flex align-items-center gap-3 mt-3">
+            {% comment %} <div class="d-flex align-items-center gap-3 mt-3">
                 <button type="submit" class="btn btn-warning" id="tag-submit-btn">Save Tag</button>
                 <div class="spinner-border text-primary d-none" id="tag-spinner" role="status">
                     <span class="visually-hidden">Saving...</span>
                 </div>
-            </div>
+            </div> {% endcomment %}
+            <custom-button
+                label="Save Tag"
+                form-id="tag-form"
+                post="{% url 'create_tag' %}"
+                method="POST"
+                showspinner="true"
+                buttontype="success"
+                class="my-3"
+                target="#tag-select"
+            ></custom-button>
         </form>
         <div id="tag-select"></div>
       </div>
@@ -54,7 +66,7 @@
         <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
       </div>
       <div class="offcanvas-body">
-        <form hx-post="{% url 'create_faq' %}" hx-target="#faq-select" hx-swap="outerHTML" id="faq-form">
+        <form id="faq-form">
             {% csrf_token %}
             <input type="hidden" id="faq-id" name="id"> <!-- used for edit -->
             <div class="mb-3">
@@ -66,12 +78,22 @@
                 <textarea class="form-control" name="answer" id="faq-answer" rows="4" required></textarea>
             </div>
             {% comment %} <button type="submit" class="btn btn-success" id="faq-submit-btn">Save FAQ</button> {% endcomment %}
-            <div class="d-flex align-items-center gap-3 mt-3">
+            {% comment %} <div class="d-flex align-items-center gap-3 mt-3">
                 <button type="submit" class="btn btn-warning" id="faq-submit-btn">Save FAQ</button>
                 <div class="spinner-border text-primary d-none" id="faq-spinner" role="status">
                     <span class="visually-hidden">Saving...</span>
                 </div>
-            </div>
+            </div> {% endcomment %}
+            <custom-button
+                label="Save FAQ"
+                form-id="faq-form"
+                post="{% url 'create_faq' %}"
+                method="POST"
+                showspinner="true"
+                buttontype="success"
+                class="my-3"
+                target="#faq-select"
+            ></custom-button>
         </form>
         <div id="faq-select"></div>
       </div>
@@ -84,7 +106,8 @@
         <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
       </div>
       <div class="offcanvas-body">
-        <form hx-post="{% url 'create_section' %}" hx-target="#section-select" hx-swap="outerHTML" id="section-form" hx-indicator=".htmx-indicator">
+        {% comment %} <form hx-post="{% url 'create_section' %}" hx-target="#section-select" hx-swap="outerHTML" id="section-form" hx-indicator=".htmx-indicator"> {% endcomment %}
+            <form id="section-form">
             {% csrf_token %}
             <input type="hidden" id="section-id" name="id"> <!-- used for edit -->
             <div class="mb-3">
@@ -191,12 +214,24 @@
             <a type="button" class="btn btn-outline-info" href="{% url "lesson_form" %}">Add Lesson</a>
             {% comment %} <button type="submit" class="btn btn-warning" id="section-submit-btn">Save Section</button> {% endcomment %}
             <!-- Submit Button & Spinner -->
-            <div class="d-flex align-items-center gap-3 mt-3">
+            {% comment %} <div class="d-flex align-items-center gap-3 mt-3">
                 <button type="submit" class="btn btn-warning" id="section-submit-btn">Save Section</button>
                 <div class="spinner-border text-primary d-none" id="section-spinner" role="status">
                     <span class="visually-hidden">Saving...</span>
                 </div>
-            </div>
+            </div> {% endcomment %}
+
+            <custom-button
+                label="Save Section"
+                form-id="section-form"
+                post="{% url 'create_section' %}"
+                method="POST"
+                showspinner="true"
+                buttontype="success"
+                class="my-3"
+                target="#section-select"
+            ></custom-button>
+
 
         </form>
         <div id="section-select"></div> 
@@ -508,6 +543,7 @@
 {% endblock body %}
 
 {% block script %}
+<script type="module" src="{% static 'resoures/js/components/button.js' %}"></script>  
 <script>
     const addSpinnerAndHideBtn = (btnId, spinnerId) => {
         const btn = document.getElementById(btnId);
@@ -863,7 +899,7 @@ function openEditTag(id, name) {
   const form = document.getElementById('tag-form');
   //form.setAttribute('hx-post', `/course/tags/edit/${id}/`); // dynamic edit URL
 
-  document.getElementById('tag-submit-btn').textContent = "Update Tag";
+  //document.getElementById('tag-submit-btn').textContent = "Update Tag";
 
   // Open the offcanvas
   const tagCanvas = new bootstrap.Offcanvas('#offcanvas-add-tag');
@@ -878,7 +914,7 @@ function openEditFAQ(id, question, answer) {
   
     const form = document.getElementById('faq-form');
   
-    document.getElementById('faq-submit-btn').textContent = "Update FAQ";
+    //document.getElementById('faq-submit-btn').textContent = "Update FAQ";
   
     // Open the offcanvas
     const tagCanvas = new bootstrap.Offcanvas('#offcanvas-add-faq');
@@ -937,7 +973,7 @@ function openEditSection(id, title, order, is_open, lesson_ids, lesson_titles) {
     }
   
     // Update button text
-    document.getElementById('section-submit-btn').textContent = id ? "Update Section" : "Add Section";
+    //document.getElementById('section-submit-btn').textContent = id ? "Update Section" : "Add Section";
   
     // Open the offcanvas
     const tagCanvas = new bootstrap.Offcanvas('#offcanvas-add-section');
