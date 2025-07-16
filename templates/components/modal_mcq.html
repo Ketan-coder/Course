@@ -45,6 +45,7 @@ document.addEventListener('DOMContentLoaded', function () {
   const correctAnswerMCQ = "{{ quiz_data.answer|escapejs }}";
   const correctFeedback = "Correct! Well done.";
   const incorrectFeedback = "Incorrect. Try again.";
+  const quizObjectId = "{{ quiz.id }}";
 
   const form = document.getElementById(`form-mcq-${quizId}`);
   const submitBtn = document.getElementById(`submit-mcq-${quizId}`);
@@ -87,7 +88,7 @@ document.addEventListener('DOMContentLoaded', function () {
       submitBtn.disabled = true;
       form.querySelectorAll('input').forEach(r => r.disabled = true);
       //  Send to backend to mark as completed
-      fetch(`/course/quiz/submit/${quizId}/`, {
+      fetch(`/course/quiz/submit/${quizObjectId}/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

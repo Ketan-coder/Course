@@ -100,14 +100,22 @@ def updateUser(request):
 
         profile.bio = bio
         profile.phone_no = request.POST.get("phone_no", "").strip() or profile.phone_no
-        profile.phone_no_prefix = request.POST.get(
+        profile.phone_no_prefix_id = request.POST.get(
             "phone_no_prefix", ""
         ).strip() or profile.phone_no_prefix
         profile.address = request.POST.get("address", "").strip() or profile.address
-        profile.date_of_birth = request.POST.get("date_of_birth", profile.date_of_birth).strip()
+        # profile.date_of_birth = request.POST.get("date_of_birth", profile.date_of_birth).strip()
+        date_of_birth_str = request.POST.get('date_of_birth')
+        if date_of_birth_str:
+            try:
+                profile.date_of_birth = datetime.strptime(date_of_birth_str, "%Y-%m-%d").date()
+            except ValueError:
+                profile.date_of_birth = None
+        else:
+            profile.date_of_birth = None
         profile.image = request.FILES.get("profile_pic", profile.image)
-        if request.POST.get("currency_id"):
-            currency = get_object_or_404(Currency, pk=request.POST.get("currency_id"))
+        if request.POST.get("currencies"):
+            currency = get_object_or_404(Currency, pk=request.POST.get("currencies"))
             profile.currency = currency or profile.currency
         profile.is_profile_complete = all([profile.phone_no,profile.phone_no_prefix, profile.address, profile.date_of_birth, profile.image, profile.currency])
         profile.is_email_verified = (
@@ -159,6 +167,7 @@ def login_form(request):
             login(request, user)
             if project_settings.DEBUG is False:
                 try:
+                    print("user.email", user.email)
                     send_email(
                         to_email=user.email,
                         subject="Login Alert",

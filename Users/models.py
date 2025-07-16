@@ -20,7 +20,7 @@ class Profile(models.Model):
 
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     # phone_no_prefix = models.CharField(max_length=5, blank=True, null=True)
-    phone_no_prefix = models.OneToOneField(PhoneNoPrefix, on_delete=models.SET_NULL, null=True, blank=True)
+    phone_no_prefix = models.ForeignKey(PhoneNoPrefix, on_delete=models.SET_NULL, null=True, blank=True)
     phone_no = models.CharField(max_length=15, blank=True, null=True)
     address = models.CharField(max_length=255, blank=True, null=True)
     image = models.ImageField(default='default_profile_pic.jpg', upload_to='profile_pics')
@@ -29,7 +29,7 @@ class Profile(models.Model):
     is_email_verified = models.BooleanField(default=False)
     is_phone_verified = models.BooleanField(default=False)
     is_profile_complete = models.BooleanField(default=False)
-    currency = models.OneToOneField(Currency, on_delete=models.SET_NULL, null=True, blank=True)
+    currency = models.ForeignKey(Currency, on_delete=models.SET_NULL, null=True, blank=True)
     email_confirmation_token = models.UUIDField(unique=True, blank=True, null=True)
     isDarkTheme = models.BooleanField(default=True)  # True for dark mode, False for light mode
     theme = models.CharField(max_length=20, choices=THEMES, default='default')
@@ -51,9 +51,16 @@ class Profile(models.Model):
         self.extra_fields['date_joined'] = self.user.date_joined.strftime('%Y-%m-%d %H:%M:%S') if self.user.date_joined else None
         self.extra_fields['whole_phone_no'] = self.phone_no_prefix.phone_no_prefix + self.phone_no if self.phone_no_prefix and self.phone_no else None
         if self.date_of_birth:
-            # Get the date part of user.date_joined
+            # Convert date_of_birth string to a date object (if needed)
+            if isinstance(self.date_of_birth, str):
+                dob = datetime.strptime(self.date_of_birth, "%Y-%m-%d").date()
+            else:
+                dob = self.date_of_birth
+
+            # Ensure join_date is a date
             join_date = self.user.date_joined.date()
-            age_in_days = (join_date - self.date_of_birth).days
+
+            age_in_days = (join_date - dob).days
             self.extra_fields['age'] = age_in_days // 365
         else:
             self.extra_fields['age'] = None

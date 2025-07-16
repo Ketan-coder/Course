@@ -490,7 +490,7 @@ def video_detail_page(request,lesson_id) -> HttpResponseRedirect | HttpResponseP
             for qid, question_data in quiz.questions.items():
                 question_data['quiz_id'] = quiz.pk  # optional
                 questions_list.append(question_data)
-    return render(request, "course/course_video_detail_new.html", locals())
+    return render(request, "course/course_video_detail.html", locals())
 
 def bookmarked_courses(request) -> HttpResponseRedirect | HttpResponsePermanentRedirect | HttpResponse:
     user = request.user
@@ -945,6 +945,9 @@ def submit_quiz(request, quiz_id):
 
             if not user_answer:
                 return JsonResponse({"error": "Answer is required"}, status=400)
+            
+            print("request.POST ==> ",request.POST)
+            print("quiz_id ==> ",quiz_id)
 
             quiz = get_object_or_404(Quiz, id=quiz_id)
             profile = get_object_or_404(Profile, user=request.user)
@@ -952,9 +955,12 @@ def submit_quiz(request, quiz_id):
             for qid, qdata in (quiz.questions or {}).items():
                 correct_answer = qdata.get("answer") if qdata.get("type") != 'DRAG_DROP' else qdata.get("correct_mapping")
                 if correct_answer and str(user_answer).strip().lower() == str(correct_answer).strip().lower():
+                    qdata["is_completed"] = True
+                    quiz.questions[qid] = qdata
+                    quiz.save(update_fields=["questions"])
                     quiz.completed_by_users.add(profile)
-                    update_score(request,profile, 10)
-                    update_streak(request,profile)
+                    update_score(request, profile, 10)
+                    update_streak(request, profile)
                     Activity.objects.create(
                         user=request.user,
                         activity_type="Quiz Completion",

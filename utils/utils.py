@@ -36,8 +36,8 @@ def render_to_pdf(template_src, context_dict={}):
     return None
 
 
-@check_load_time
-@retry_on_failure
+# @check_load_time
+# @retry_on_failure
 def send_email(to_email, subject, title, body, anchor_link=None, anchor_text="Click Here"):
     """
     Sends a customizable email with an optional anchor link.
@@ -49,38 +49,43 @@ def send_email(to_email, subject, title, body, anchor_link=None, anchor_text="Cl
     :param anchor_link: (Optional) Link to include in the email
     :param anchor_text: (Optional) Text for the anchor link (default: 'Click Here')
     """
-    
-    # Convert single email to list
-    if isinstance(to_email, str):
-        to_email = [to_email]
-    
-    # Construct anchor link if provided
-    anchor_html = f'<p><a href="{anchor_link}" style="padding: 10px; background-color: #0076d1; color: white; text-decoration: none;">{anchor_text}</a></p>' if anchor_link else ""
+    try:
+        # Convert single email to list
+        if isinstance(to_email, str):
+            to_email = [to_email]
+        
+        # Construct anchor link if provided
+        anchor_html = f'<p><a href="{anchor_link}" style="padding: 10px; background-color: #0076d1; color: white; text-decoration: none;">{anchor_text}</a></p>' if anchor_link else ""
 
-    # Email content (HTML)
-    html_content = f'''
-    <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>{title}</title>
-    </head>
-    <body style="font-family: 'Poppins', Arial, sans-serif; background: #ffffff; padding: 20px;">
-        <h2 style="color: #0076d1;">{title}</h2>
-        <p>{body}</p>
-        {anchor_html}
-        <p>If you did not request this, please ignore this email.</p>
-    </body>
-    </html>
-    '''
+        # Email content (HTML)
+        html_content = f'''
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1">
+            <title>{title}</title>
+        </head>
+        <body style="font-family: 'Poppins', Arial, sans-serif; background: #ffffff; padding: 20px;">
+            <h2 style="color: #0076d1;">{title}</h2>
+            <p>{body}</p>
+            {anchor_html}
+            <p>If you did not request this, please ignore this email.</p>
+        </body>
+        </html>
+        '''
 
-    # Plain text fallback
-    text_content = f"{title}\n\n{body}\n\n{anchor_link if anchor_link else ''}"
+        # Plain text fallback
+        text_content = f"{title}\n\n{body}\n\n{anchor_link if anchor_link else ''}"
 
-    # Send email
-    msg = EmailMultiAlternatives(subject, text_content, settings.DEFAULT_FROM_EMAIL, to_email)
-    msg.attach_alternative(html_content, "text/html")
-    msg.send()
+        # Send email
+        msg = EmailMultiAlternatives(subject, text_content, settings.DEFAULT_FROM_EMAIL, to_email)
+        msg.attach_alternative(html_content, "text/html")
+        msg.send()
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise e
+
 
 
 @check_load_time
@@ -117,13 +122,14 @@ Return JSON in this format:
     "options": [...],
     "type": "SINGLE_SELECT",
     "answer": "..."
+    "is_completed": "False"
   }},
   "2": {{ ... }},
   ...
 }}
 
 Here is an example of a question:
-{{"1": {{"id": "1", "question": "What is the capital of France?", "options": [{{"id": "Paris", "text": "Paris"}}, {{"id": "London", "text": "London"}}], "type": "MULTIPLE_SELECT", "answer": "Paris"}}, "2": {{"id": "2", "question": "What is 2 + 2?", "options": [{{"id": "1", "text": "1"}}, {{"id": "2", "text": "2"}}, {{"id": "3", "text": "3"}}, {{"id": "4", "text": "4"}}], "type": "SINGLE_SELECT", "answer": "4"}}, "3": {{"id": "3", "question": "Capital of Nepal?", "options": [], "type": "TEXT", "answer": "Kathmandu"}}, "4": {{"id": "4", "question": "Which monument is shown?", "type": "IMAGE_MC", "image": "media/monuments/eiffel.jpg", "options": [{{"id": "Taj Mahal", "text": "Taj Mahal"}}, {{"id": "Colosseum", "text": "Colosseum"}}, {{"id": "Eiffel Tower", "text": "Eiffel Tower"}}], "answer": "Eiffel Tower"}}, "5": {{"id": "5", "question": "Complete the sentence", "type": "DRAG_DROP", "sentence_parts": ["The quick brown ", null, " jumps over the ", null, " dog."], "draggable_options": [{{"id": "fox", "text": "fox"}}, {{"id": "lazy", "text": "lazy"}}, {{"id": "quick", "text": "quick"}}], "correct_mapping": {{"0": "fox", "1": "lazy"}}}}}}
+{{"1": {{"id": "1", "question": "What is the capital of France?", "options": [{{"id": "Paris", "text": "Paris"}}, {{"id": "London", "text": "London"}}], "type": "MULTIPLE_SELECT", "answer": "Paris", "is_completed": False}}, "2": {{"id": "2", "question": "What is 2 + 2?", "options": [{{"id": "1", "text": "1"}}, {{"id": "2", "text": "2"}}, {{"id": "3", "text": "3"}}, {{"id": "4", "text": "4"}}], "type": "SINGLE_SELECT", "answer": "4", "is_completed": "False"}}, "3": {{"id": "3", "question": "Capital of Nepal?", "options": [], "type": "TEXT", "answer": "Kathmandu","is_completed": "False"}}, "4": {{"id": "4", "question": "Which monument is shown?", "type": "IMAGE_MC", "image": "media/monuments/eiffel.jpg", "options": [{{"id": "Taj Mahal", "text": "Taj Mahal"}}, {{"id": "Colosseum", "text": "Colosseum"}}, {{"id": "Eiffel Tower", "text": "Eiffel Tower"}}], "answer": "Eiffel Tower", "is_completed": "False"}}, "5": {{"id": "5", "question": "Complete the sentence", "is_completed": "False" ,"type": "DRAG_DROP", "sentence_parts": ["The quick brown ", null, " jumps over the ", null, " dog."], "draggable_options": [{{"id": "fox", "text": "fox"}}, {{"id": "lazy", "text": "lazy"}}, {{"id": "quick", "text": "quick"}}], "correct_mapping": {{"0": "fox", "1": "lazy"}}}}}}
 
 Output **only valid JSON**, with no comments or markdown.
 
@@ -138,7 +144,7 @@ You are an expert quiz creator.
 {prompt}
 
 Here is an example of a question you have to generate:
-{{"1": {{"id": "1", "question": "What is the capital of France?", "options": [{{"id": "Paris", "text": "Paris"}}, {{"id": "London", "text": "London"}}], "type": "MULTIPLE_SELECT", "answer": "Paris"}}, "2": {{"id": "2", "question": "What is 2 + 2?", "options": [{{"id": "1", "text": "1"}}, {{"id": "2", "text": "2"}}, {{"id": "3", "text": "3"}}, {{"id": "4", "text": "4"}}], "type": "SINGLE_SELECT", "answer": "4"}}, "3": {{"id": "3", "question": "Capital of Nepal?", "options": [], "type": "TEXT", "answer": "Kathmandu"}}, "4": {{"id": "4", "question": "Which monument is shown?", "type": "IMAGE_MC", "image": "media/monuments/eiffel.jpg", "options": [{{"id": "Taj Mahal", "text": "Taj Mahal"}}, {{"id": "Colosseum", "text": "Colosseum"}}, {{"id": "Eiffel Tower", "text": "Eiffel Tower"}}], "answer": "Eiffel Tower"}}, "5": {{"id": "5", "question": "Complete the sentence", "type": "DRAG_DROP", "sentence_parts": ["The quick brown ", null, " jumps over the ", null, " dog."], "draggable_options": [{{"id": "fox", "text": "fox"}}, {{"id": "lazy", "text": "lazy"}}, {{"id": "quick", "text": "quick"}}], "correct_mapping": {{"0": "fox", "1": "lazy"}}}}}}
+{{"1": {{"id": "1", "question": "What is the capital of France?", "options": [{{"id": "Paris", "text": "Paris"}}, {{"id": "London", "text": "London"}}], "type": "MULTIPLE_SELECT", "answer": "Paris", "is_completed": "False"}}, "2": {{"id": "2", "question": "What is 2 + 2?", "options": [{{"id": "1", "text": "1"}}, {{"id": "2", "text": "2"}}, {{"id": "3", "text": "3"}}, {{"id": "4", "text": "4"}}], "type": "SINGLE_SELECT", "answer": "4", "is_completed": "False"}}, "3": {{"id": "3", "question": "Capital of Nepal?", "options": [], "type": "TEXT", "answer": "Kathmandu","is_completed": "False"}}, "4": {{"id": "4", "question": "Which monument is shown?", "type": "IMAGE_MC", "image": "media/monuments/eiffel.jpg", "options": [{{"id": "Taj Mahal", "text": "Taj Mahal"}}, {{"id": "Colosseum", "text": "Colosseum"}}, {{"id": "Eiffel Tower", "text": "Eiffel Tower"}}], "answer": "Eiffel Tower", "is_completed": "False"}}, "5": {{"id": "5", "question": "Complete the sentence", "is_completed": "False" ,"type": "DRAG_DROP", "sentence_parts": ["The quick brown ", null, " jumps over the ", null, " dog."], "draggable_options": [{{"id": "fox", "text": "fox"}}, {{"id": "lazy", "text": "lazy"}}, {{"id": "quick", "text": "quick"}}], "correct_mapping": {{"0": "fox", "1": "lazy"}}}}}}
 
 Output **only valid JSON**, with no comments or markdown.
 

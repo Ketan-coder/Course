@@ -87,7 +87,7 @@
                                         <option value="{{ prefix.id }}" {% if prefix.id == user.profile.phone_no_prefix.id %}selected{% endif %}>{{ prefix.phone_no_prefix }}</option>
                                     {% endfor %}
                                 </select>
-                                <input type="tel" class="form-control" placeholder="1234567890" aria-label="Phone No." name="phone_no" value="{{ profile.phone_no|default:'' }}">
+                                <input type="tel" class="form-control" placeholder="1234567890" aria-label="Phone No." name="phone_no" max="10" value="{{ profile.phone_no|default:'' }}">
                             </div>
                         </div>
                         <div class="mb-3">

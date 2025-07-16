@@ -256,16 +256,17 @@ class Quiz(models.Model):
         self.extra_fields['last_updated'] = str(self.updated_at)
         if not self.questions:
             self.questions = {  
-                "1": {"id":"1","question": "What is the capital of France?", "options": [{"id": "Paris", "text": "Paris"}, {"id": "London", "text": "London"}], "type": "MULTIPLE_SELECT", "answer": "Paris"},
-                "2": {"id":"2","question": "What is 2 + 2?", "options": [{"id": "1", "text": "1"}, {"id": "2", "text": "2"}, {"id": "3", "text": "3"}, {"id": "4", "text": "4"}], "type": "SINGLE_SELECT", "answer": "4"},
-                "3": {"id":"3","question": "Capital of Nepal?", "options": [], "type": "TEXT", "answer": "Kathmandu"},
+                "1": {"id":"1","question": "What is the capital of France?", "options": [{"id": "Paris", "text": "Paris"}, {"id": "London", "text": "London"}], "type": "MULTIPLE_SELECT", "answer": "Paris", "is_completed": False},
+                "2": {"id":"2","question": "What is 2 + 2?", "options": [{"id": "1", "text": "1"}, {"id": "2", "text": "2"}, {"id": "3", "text": "3"}, {"id": "4", "text": "4"}], "type": "SINGLE_SELECT", "answer": "4", "is_completed": False},
+                "3": {"id":"3","question": "Capital of Nepal?", "options": [], "type": "TEXT", "answer": "Kathmandu","is_completed": False},
                 "4": {
                     "id":"4",
                     "question": "Which monument is shown?",
                     "type": "IMAGE_MC",
                     "image": "media/monuments/eiffel.jpg",
                     "options": [{"id": "Taj Mahal","text": "Taj Mahal",},{"id": "Colosseum","text": "Colosseum",},{"id": "Eiffel Tower","text": "Eiffel Tower",}],
-                    "answer": "Eiffel Tower"
+                    "answer": "Eiffel Tower",
+                    "is_completed": False
                 },
                 "5": {
                     "id":"5",
@@ -277,7 +278,8 @@ class Quiz(models.Model):
                         {"id": "lazy", "text": "lazy"},
                         {"id": "quick", "text": "quick"}
                     ],
-                    "correct_mapping": { "0": "fox", "1": "lazy" }
+                    "correct_mapping": { "0": "fox", "1": "lazy" },
+                    "is_completed": False
                 }
             }
         super().save(*args, **kwargs)

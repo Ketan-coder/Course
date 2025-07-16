@@ -35,6 +35,7 @@ def update_streak(request,profile):
                 activity_type="Streak",
                 description=f"Streak is incremented to {student_profile.streak}",
             )
+            request.session['streak'] = student_profile.streak
             return
         
         # Missed one day but has freezes available
@@ -43,6 +44,7 @@ def update_streak(request,profile):
             student_profile.streak_freezes -= 1
             student_profile.streak_last_updated_date = timezone.now()
             student_profile.save()
+            request.session['streak'] = student_profile.streak
             return
         
         elif days_missed == 2 and student_profile.streak_freezes > 1:
@@ -50,6 +52,7 @@ def update_streak(request,profile):
             student_profile.streak_freezes -= 1
             student_profile.streak_last_updated_date = timezone.now()
             student_profile.save()
+            request.session['streak'] = student_profile.streak
             return
         
         # Missed more than one day or no freezes available
@@ -57,6 +60,7 @@ def update_streak(request,profile):
             student_profile.streak = 1  # Reset to 1 for today's completion
             student_profile.streak_last_updated_date = timezone.now()
             student_profile.save()
+            request.session['streak'] = student_profile.streak
             return
         
     except Student.DoesNotExist:
@@ -92,9 +96,9 @@ def update_score(request,profile, increment_score_by=10):
         
         # Daily score cap (prevent abuse)
         today = timezone.now().date()
-        if student_profile.last_score_update.date() != today:
+        if student_profile.last_score_update_date.date() != today:
             student_profile.daily_score = 0
-            student_profile.last_score_update = timezone.now()
+            student_profile.last_score_update_date = timezone.now()
         
         MAX_DAILY_SCORE = 100
         if (student_profile.daily_score + increment_score_by) > MAX_DAILY_SCORE:
@@ -107,6 +111,8 @@ def update_score(request,profile, increment_score_by=10):
         
         student_profile.save()
         leaderboard_student_profile.save()
+
+        request.session['score'] = student_profile.score
         
         # Return points actually added (considering caps and bonuses)
         actual_points_added = increment_score_by

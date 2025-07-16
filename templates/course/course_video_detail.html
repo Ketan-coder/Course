@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load course_tags %}
 
 {% block title %}{{ lesson.title }} - Course Video Detail{% endblock title %}
 
@@ -172,7 +173,7 @@
                                                     <br>
                                                     <h4> Quizzes for this Section:</h4>
                                                     {% for questions in questions_list %}
-                                                        {% if questions.type == "SINGLE_SELECT" %}
+                                                        {% comment %} {% if questions.type == "SINGLE_SELECT" %}
                                                         {% if not logged_in_profile in l.completed_by_users.all %}
                                                             <span class="d-inline-block" tabindex="999" data-bs-toggle="popover" data-bs-placement="top" data-bs-content="Disabled popover" data-bs-trigger="hover focus">
                                                                 <button type="button" class="btn btn-primary" disabled>
@@ -184,7 +185,7 @@
                                                             Open MCQ Quiz
                                                         </button>
                                                         {% endif %}
-                                                        {% comment %} {% include "components/modal_mcq.html" with quiz_data=questions %} {% endcomment %}
+                                                        
 
                                                         {% elif questions.type == "IMAGE_MC" %}
                                                         {% if not logged_in_profile in l.completed_by_users.all %}
@@ -199,7 +200,7 @@
                                                         </button>
                                                         {% endif %}
                                                         
-                                                        {% comment %} {% include "components/image_modal_mcq.html" with quiz_data=questions %} {% endcomment %}
+                                                        
 
                                                         {% elif questions.type == "TEXT" %}
                                                         {% if not logged_in_profile in l.completed_by_users.all %}
@@ -214,7 +215,7 @@
                                                         </button>
                                                         {% endif %}
                                                         
-                                                        {% comment %} {% include "components/text_quiz_modal.html" with quiz_data=questions %} {% endcomment %}
+                                                        
 
                                                         {% elif questions.type == "MULTIPLE_SELECT" %}
                                                         {% if not logged_in_profile in l.completed_by_users.all %}
@@ -229,7 +230,7 @@
                                                         </button>
                                                         {% endif %}
                                                         
-                                                        {% comment %} {% include "components/multiple_select_modal.html" with quiz_data=questions %} {% endcomment %}
+                                                        
 
                                                         {% elif questions.type == "DRAG_DROP" %}
                                                         {% if not logged_in_profile in l.completed_by_users.all %}
@@ -244,10 +245,99 @@
                                                         </button>
                                                         {% endif %}
                                                         
-                                                        {% comment %} {% include "components/drag_and_drop_quiz_modal.html" with quiz_data=questions correct_mapping=questions.correct_mapping %} {% endcomment %}
+                                                        
                                                         {% else %}
                                                         <p class="text-danger">Unsupported quiz type: {{ questions.question_type }}</p>
+                                                        {% endif %} {% endcomment %}
+                                                        {% if questions.type == "SINGLE_SELECT" %}
+                                                            {% if not i|has_completed_all_lessons:logged_in_profile %}
+                                                                <span class="d-inline-block" tabindex="999" data-bs-toggle="popover" data-bs-placement="top" data-bs-content="Finish all lessons first" data-bs-trigger="hover focus">
+                                                                    <button type="button" class="btn btn-primary" disabled>
+                                                                        Finish The Section
+                                                                    </button>
+                                                                </span>
+                                                            {% elif questions.is_completed == True %}
+                                                                <button type="button" class="btn btn-success" disabled>
+                                                                    Completed
+                                                                </button>
+                                                            {% else %}
+                                                                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modal-mcq-{{ questions.id }}">
+                                                                    Open MCQ Quiz
+                                                                </button>
+                                                            {% endif %}
+
+                                                        {% elif questions.type == "IMAGE_MC" %}
+                                                            {% if not i|has_completed_all_lessons:logged_in_profile %}
+                                                                <span class="d-inline-block" tabindex="999" data-bs-toggle="popover" data-bs-placement="top" data-bs-content="Finish all lessons first" data-bs-trigger="hover focus">
+                                                                    <button type="button" class="btn btn-primary" disabled>
+                                                                        Finish The Section
+                                                                    </button>
+                                                                </span>
+                                                            {% elif questions.is_completed == True %}
+                                                                <button type="button" class="btn btn-success" disabled>
+                                                                    Completed
+                                                                </button>
+                                                            {% else %}
+                                                                <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#modal-imcq-{{ questions.id }}">
+                                                                    Open Image MCQ Quiz
+                                                                </button>
+                                                            {% endif %}
+
+                                                        {% elif questions.type == "TEXT" %}
+                                                            {% if not i|has_completed_all_lessons:logged_in_profile %}
+                                                                <span class="d-inline-block" tabindex="999" data-bs-toggle="popover" data-bs-placement="top" data-bs-content="Finish all lessons first" data-bs-trigger="hover focus">
+                                                                    <button type="button" class="btn btn-primary" disabled>
+                                                                        Finish The Section
+                                                                    </button>
+                                                                </span>
+                                                            {% elif questions.is_completed == True %}
+                                                                <button type="button" class="btn btn-success" disabled>
+                                                                    Completed
+                                                                </button>
+                                                            {% else %}
+                                                                <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#modal-text-quiz-{{ questions.id }}">
+                                                                    Open Text Quiz
+                                                                </button>
+                                                            {% endif %}
+
+                                                        {% elif questions.type == "MULTIPLE_SELECT" %}
+                                                            {% if not i|has_completed_all_lessons:logged_in_profile %}
+                                                                <span class="d-inline-block" tabindex="999" data-bs-toggle="popover" data-bs-placement="top" data-bs-content="Finish all lessons first" data-bs-trigger="hover focus">
+                                                                    <button type="button" class="btn btn-primary" disabled>
+                                                                        Finish The Section
+                                                                    </button>
+                                                                </span>
+                                                            {% elif questions.is_completed == True %}
+                                                                <button type="button" class="btn btn-success" disabled>
+                                                                    Completed
+                                                                </button>
+                                                            {% else %}
+                                                                <button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#modal-msq-{{ questions.id }}">
+                                                                    Open Multiple Select Quiz
+                                                                </button>
+                                                            {% endif %}
+
+                                                        {% elif questions.type == "DRAG_DROP" %}
+                                                            {% if not i|has_completed_all_lessons:logged_in_profile %}
+                                                                <span class="d-inline-block" tabindex="999" data-bs-toggle="popover" data-bs-placement="top" data-bs-content="Finish all lessons first" data-bs-trigger="hover focus">
+                                                                    <button type="button" class="btn btn-primary" disabled>
+                                                                        Finish The Section
+                                                                    </button>
+                                                                </span>
+                                                            {% elif questions.is_completed == True %}
+                                                                <button type="button" class="btn btn-success" disabled>
+                                                                    Completed
+                                                                </button>
+                                                            {% else %}
+                                                                <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modal-drag-drop-{{ questions.id }}">
+                                                                    Open Drag & Drop Quiz
+                                                                </button>
+                                                            {% endif %}
+
+                                                        {% else %}
+                                                            <p class="text-danger">Unsupported quiz type: {{ questions.question_type }}</p>
                                                         {% endif %}
+
                                                     {% endfor %}
                                                 {% endif %}
                                             {% endfor %}    
@@ -318,7 +408,7 @@
 {% for quiz in quizes %}
     {% for questions in questions_list %}
         {% if questions.type == "SINGLE_SELECT" %}
-            {% include "components/modal_mcq.html" with quiz_data=questions %}
+            {% include "components/modal_mcq.html" with quiz_data=questions quiz=quiz %}
         {% elif questions.type == "IMAGE_MC" %}
             {% include "components/image_modal_mcq.html" with quiz_data=questions %}
         {% elif questions.type == "TEXT" %}
