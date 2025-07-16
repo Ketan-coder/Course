@@ -79,7 +79,13 @@
                     <!-- Notes Pane -->
                     <div class="tab-pane fade" id="notes-pane" role="tabpanel">
                         <div class="card card-body">
-                            <h2 class="h5 fw-bold mb-3">My Notes for this Lesson</h2>
+                            <h2 class="h5 fw-bold mb-3 d-flex align-items-center gap-2">
+                                <span>
+                                <div id="note-spinner" class="spinner-grow spinner-grow-sm text-primary" role="status" hx-indicator>
+                                    <span class="visually-hidden">Loading...</span>
+                                </div> Notes for this Lesson</span>
+                            </h2>
+                            
                             {% if student_profile %}
                             {% for sec in course.sections.all %}
                             
@@ -103,11 +109,14 @@
                             </form>
                             {% endfor %}
                             {% endif %}
+                            {% comment %} <div id="note-spinner" class="spinner-border spinner-border-sm text-primary d-none" role="status" hx-indicator>
+                                <span class="visually-hidden">Loading...</span>
+                            </div> {% endcomment %}
                             
                             <div id="notes-list">
                                 {% for note in course_notes %}
                                     {% if note.lesson.id == lesson.id %}
-                                    <div class="card border-secondary mb-3" hx-get="{% url 'fetch_realtime_notes' course_id=course.id section_id=note.section.id lesson_id=lesson.id %}" hx-trigger="every 5s" hx-swap="outerHTML">
+                                    <div class="card border-secondary mb-3" hx-get="{% url 'fetch_realtime_notes' course_id=course.id section_id=note.section.id lesson_id=lesson.id %}" hx-trigger="every 5s" hx-swap="outerHTML" hx-indicator="#note-spinner">
                                         <div class="card-header text-muted d-flex justify-content-between">
                                             <span><b>{{ note.user.profile.user.first_name }}</b></span>
                                             <small>{{ note.created_at|timesince }} ago</small>
@@ -157,7 +166,7 @@
                                 {% for l in section.lesson.all %}
                                     <a href="{% url 'video_detail_page' l.id %}" class="list-group-item list-group-item-action lesson-item {% if l.id == lesson.id %}active{% endif %}">
                                         <div class="d-flex align-items-center">
-                                            <i class="ph {% if logged_in_profile in l.completed_by_users.all %}ph-check-circle-fill text-success{% else %}ph-play-circle text-primary{% endif %} me-2 fs-4"></i>
+                                            <i class="ph {% if logged_in_profile in l.completed_by_users.all %}ph-check-circle-fill text-success{% else %}ph-play-circle {% if l.id == lesson.id %} text-light {% else %} text-primary {% endif %} {% endif %} me-2 fs-4"></i>
                                             <div class="flex-grow-1">
                                                 <div class="font-weight-semi-bold">{{ l.title }}</div>
                                                 <div class="progress" style="height: 4px;">

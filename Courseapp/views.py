@@ -907,21 +907,32 @@ def create_course_notes(request) -> HttpResponse:
         print(str(e))
         return JsonResponse({"error": str(e)}, status=400)
     
-def get_course_notes_htmx(request, course_id, section_id=None,lesson_id=None):
+def get_course_notes_htmx(request, course_id, section_id=None, lesson_id=None):
     try:
         if request.method != "GET":
             return JsonResponse({"error": "Invalid request method."}, status=400)
         if not request.user.is_authenticated:
             return JsonResponse({"error": "User not authenticated."}, status=401)
 
+        lesson = None
+        if lesson_id:
+            try:
+                lesson = Lesson.objects.get(id=lesson_id)
+            except Lesson.DoesNotExist:
+                return JsonResponse({"error": "Lesson not found"}, status=404)
+
         course_notes = CourseNotes.objects.filter(course_id=course_id)
         if section_id:
             course_notes = course_notes.filter(section_id=section_id)
-        if lesson_id:
-            course_notes = course_notes.filter(lesson_id=lesson_id)
-        return render(request, "course/course_notes_list.html", {"course_notes": course_notes})
+        if lesson:
+            course_notes = course_notes.filter(lesson=lesson)
+
+        return render(
+            request,
+            "course/components/course_notes_list.html",
+            {"course_notes": course_notes, "lesson": lesson},
+        )
     except Exception as e:
-        print(str(e))
         return JsonResponse({"error": str(e)}, status=400)
 
 @csrf_exempt

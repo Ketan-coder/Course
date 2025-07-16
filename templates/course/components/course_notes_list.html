@@ -1,0 +1,18 @@
+{% for note in course_notes %}
+    {% if lesson and note.lesson.id == lesson.id %}
+    <div class="card border-secondary mb-3" 
+         hx-get="{% url 'fetch_realtime_notes' course_id=note.course.id section_id=note.section.id lesson_id=note.lesson.id %}" 
+         hx-trigger="every 5s" 
+         hx-swap="outerHTML">
+        <div class="card-header text-muted d-flex justify-content-between">
+            <span><b>{{ note.user.profile.user.first_name }}</b></span>
+            <small>{{ note.created_at|timesince }} ago</small>
+        </div>
+        <div class="card-body">
+            <p class="card-text">{{ note.note_text }}</p>
+        </div>
+    </div>
+    {% endif %}
+{% empty %}
+    <p class="text-muted">No notes for this lesson yet.</p>
+{% endfor %}

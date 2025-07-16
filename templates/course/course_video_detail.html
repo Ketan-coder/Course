@@ -167,94 +167,90 @@
                                         {% empty %}
                                             <p class="text-muted">No lessons available.</p>
                                         {% endfor %}
-                                        {% for quiz in quizes %}
+                                        {% for quiz in quizes %}                                                    
+                                                {% if quiz.section.id == i.id %}
+                                                    <br>
+                                                    <h4> Quizzes for this Section:</h4>
+                                                    {% for questions in questions_list %}
+                                                        {% if questions.type == "SINGLE_SELECT" %}
+                                                        {% if not logged_in_profile in l.completed_by_users.all %}
+                                                            <span class="d-inline-block" tabindex="999" data-bs-toggle="popover" data-bs-placement="top" data-bs-content="Disabled popover" data-bs-trigger="hover focus">
+                                                                <button type="button" class="btn btn-primary" disabled>
+                                                                    Finish The Section
+                                                                </button>
+                                                            </span>
+                                                        {% else %}
+                                                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modal-mcq-{{ questions.id }}" >
+                                                            Open MCQ Quiz
+                                                        </button>
+                                                        {% endif %}
+                                                        {% comment %} {% include "components/modal_mcq.html" with quiz_data=questions %} {% endcomment %}
 
-                                                    
-                                                    {% if quiz.section.id == i.id %}
-                                                        <br>
-                                                        <h4> Quizzes for this Section:</h4>
-                                                        {% for questions in questions_list %}
-                                                            {% if questions.type == "SINGLE_SELECT" %}
-                                                            {% if not logged_in_profile in l.completed_by_users.all %}
-                                                                <span class="d-inline-block" tabindex="999" data-bs-toggle="popover" data-bs-placement="top" data-bs-content="Disabled popover" data-bs-trigger="hover focus">
-                                                                    <button type="button" class="btn btn-primary" disabled>
-                                                                        Finish The Section
-                                                                    </button>
-                                                                </span>
-                                                            {% else %}
-                                                            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modal-mcq-{{ questions.id }}" >
-                                                                Open MCQ Quiz
-                                                            </button>
-                                                            {% endif %}
-                                                            {% comment %} {% include "components/modal_mcq.html" with quiz_data=questions %} {% endcomment %}
-
-                                                            {% elif questions.type == "IMAGE_MC" %}
-                                                            {% if not logged_in_profile in l.completed_by_users.all %}
-                                                                <span class="d-inline-block" tabindex="999" data-bs-toggle="popover" data-bs-placement="top" data-bs-content="Disabled popover" data-bs-trigger="hover focus">
-                                                                    <button type="button" class="btn btn-primary" disabled>
-                                                                        Finish The Section
-                                                                    </button>
-                                                                </span>
-                                                            {% else %}
-                                                            <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#modal-imcq-{{ questions.id }}">
-                                                                Open Image MCQ Quiz
-                                                            </button>
-                                                            {% endif %}
-                                                            
-                                                            {% comment %} {% include "components/image_modal_mcq.html" with quiz_data=questions %} {% endcomment %}
-
-                                                            {% elif questions.type == "TEXT" %}
-                                                            {% if not logged_in_profile in l.completed_by_users.all %}
-                                                                <span class="d-inline-block" tabindex="999" data-bs-toggle="popover" data-bs-placement="top" data-bs-content="Disabled popover" data-bs-trigger="hover focus">
-                                                                    <button type="button" class="btn btn-primary" disabled>
-                                                                        Finish The Section
-                                                                    </button>
-                                                                </span>
-                                                            {% else %}
-                                                            <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#modal-text-quiz-{{ questions.id }}">
-                                                                Open Text Quiz
-                                                            </button>
-                                                            {% endif %}
-                                                            
-                                                            {% comment %} {% include "components/text_quiz_modal.html" with quiz_data=questions %} {% endcomment %}
-
-                                                            {% elif questions.type == "MULTIPLE_SELECT" %}
-                                                            {% if not logged_in_profile in l.completed_by_users.all %}
-                                                                <span class="d-inline-block" tabindex="999" data-bs-toggle="popover" data-bs-placement="top" data-bs-content="Disabled popover" data-bs-trigger="hover focus">
-                                                                    <button type="button" class="btn btn-primary" disabled>
-                                                                        Finish The Section
-                                                                    </button>
-                                                                </span>
-                                                            {% else %}
-                                                            <button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#modal-msq-{{ questions.id }}">
-                                                                Open Multiple Select Quiz
-                                                            </button>
-                                                            {% endif %}
-                                                            
-                                                            {% comment %} {% include "components/multiple_select_modal.html" with quiz_data=questions %} {% endcomment %}
-
-                                                            {% elif questions.type == "DRAG_DROP" %}
-                                                            {% if not logged_in_profile in l.completed_by_users.all %}
-                                                                <span class="d-inline-block" tabindex="999" data-bs-toggle="popover" data-bs-placement="top" data-bs-content="Disabled popover" data-bs-trigger="hover focus">
-                                                                    <button type="button" class="btn btn-primary" disabled>
-                                                                        Finish The Section
-                                                                    </button>
-                                                                </span>
-                                                            {% else %}
-                                                            <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modal-drag-drop-{{ questions.id }}">
-                                                                Open Drag & Drop Quiz
-                                                            </button>
-                                                            {% endif %}
-                                                            
-                                                            {% comment %} {% include "components/drag_and_drop_quiz_modal.html" with quiz_data=questions correct_mapping=questions.correct_mapping %} {% endcomment %}
-                                                            {% else %}
-                                                            <p class="text-danger">Unsupported quiz type: {{ questions.question_type }}</p>
-                                                            {% endif %}
-                                                        {% endfor %}
-                                                    {% endif %}
+                                                        {% elif questions.type == "IMAGE_MC" %}
+                                                        {% if not logged_in_profile in l.completed_by_users.all %}
+                                                            <span class="d-inline-block" tabindex="999" data-bs-toggle="popover" data-bs-placement="top" data-bs-content="Disabled popover" data-bs-trigger="hover focus">
+                                                                <button type="button" class="btn btn-primary" disabled>
+                                                                    Finish The Section
+                                                                </button>
+                                                            </span>
+                                                        {% else %}
+                                                        <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#modal-imcq-{{ questions.id }}">
+                                                            Open Image MCQ Quiz
+                                                        </button>
+                                                        {% endif %}
                                                         
+                                                        {% comment %} {% include "components/image_modal_mcq.html" with quiz_data=questions %} {% endcomment %}
+
+                                                        {% elif questions.type == "TEXT" %}
+                                                        {% if not logged_in_profile in l.completed_by_users.all %}
+                                                            <span class="d-inline-block" tabindex="999" data-bs-toggle="popover" data-bs-placement="top" data-bs-content="Disabled popover" data-bs-trigger="hover focus">
+                                                                <button type="button" class="btn btn-primary" disabled>
+                                                                    Finish The Section
+                                                                </button>
+                                                            </span>
+                                                        {% else %}
+                                                        <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#modal-text-quiz-{{ questions.id }}">
+                                                            Open Text Quiz
+                                                        </button>
+                                                        {% endif %}
                                                         
-                                                    {% endfor %}    
+                                                        {% comment %} {% include "components/text_quiz_modal.html" with quiz_data=questions %} {% endcomment %}
+
+                                                        {% elif questions.type == "MULTIPLE_SELECT" %}
+                                                        {% if not logged_in_profile in l.completed_by_users.all %}
+                                                            <span class="d-inline-block" tabindex="999" data-bs-toggle="popover" data-bs-placement="top" data-bs-content="Disabled popover" data-bs-trigger="hover focus">
+                                                                <button type="button" class="btn btn-primary" disabled>
+                                                                    Finish The Section
+                                                                </button>
+                                                            </span>
+                                                        {% else %}
+                                                        <button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#modal-msq-{{ questions.id }}">
+                                                            Open Multiple Select Quiz
+                                                        </button>
+                                                        {% endif %}
+                                                        
+                                                        {% comment %} {% include "components/multiple_select_modal.html" with quiz_data=questions %} {% endcomment %}
+
+                                                        {% elif questions.type == "DRAG_DROP" %}
+                                                        {% if not logged_in_profile in l.completed_by_users.all %}
+                                                            <span class="d-inline-block" tabindex="999" data-bs-toggle="popover" data-bs-placement="top" data-bs-content="Disabled popover" data-bs-trigger="hover focus">
+                                                                <button type="button" class="btn btn-primary" disabled>
+                                                                    Finish The Section
+                                                                </button>
+                                                            </span>
+                                                        {% else %}
+                                                        <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modal-drag-drop-{{ questions.id }}">
+                                                            Open Drag & Drop Quiz
+                                                        </button>
+                                                        {% endif %}
+                                                        
+                                                        {% comment %} {% include "components/drag_and_drop_quiz_modal.html" with quiz_data=questions correct_mapping=questions.correct_mapping %} {% endcomment %}
+                                                        {% else %}
+                                                        <p class="text-danger">Unsupported quiz type: {{ questions.question_type }}</p>
+                                                        {% endif %}
+                                                    {% endfor %}
+                                                {% endif %}
+                                            {% endfor %}    
                                     {% endfor %}
                                 </div>
                             </div>
