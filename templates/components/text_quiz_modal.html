@@ -94,11 +94,15 @@ document.addEventListener('DOMContentLoaded', function () {
                 'Content-Type': 'application/json',
                 'X-CSRFToken': '{{ csrf_token }}'
                 },
-                body: JSON.stringify({ answer: userAnswe })
+                body: JSON.stringify({ answer: userAnswer })
             }).then(response => {
-                if (!response.ok) {
-                console.warn("Failed to mark quiz as complete.");
-                }
+            if (response.status === 200) {
+            showRewardAnimation(10, "Points"); // 🎉 Your animation trigger
+            const modalInstance = bootstrap.Modal.getInstance(document.getElementById(`modal-text-quiz-${quizIdText}`));
+            modalInstance.hide();
+            } else {
+                console.log("Wrong answer or incomplete.");
+            }
             }).catch(console.error);
 
         } else {

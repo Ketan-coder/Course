@@ -1,215 +1,158 @@
-{% comment %}
-    Template: modal_imcq.html
-    Description: An image-based multiple-choice question modal.
-    Context: Expects a 'quiz_data' object with:
-        - id: A unique ID for this quiz instance (e.g., "imcq1").
-        - title: (Optional) Title for the modal header (e.g., "Image Multiple Choice Question").
-        - current_question_number: (Optional) e.g., 1.
-        - total_questions: (Optional) e.g., 4.
-        - progress_percentage: Calculated percentage (current_question_number / total_questions * 100)
-        - question: The question text.
-        - image_to_show_url: URL for the image to be displayed in the secondary modal.
-        - image_alt_text: (Optional) Alt text for the image.
-        - options: A list of dictionaries, each with:
-            - text: The option text.
-            - id: A unique ID for this option (e.g., "iopt1").
-        - correct_option_id: The ID of the correct option.
-        - correct_feedback: (Optional) Text to show for correct answer.
-        - incorrect_feedback: (Optional) Text to show for incorrect answer.
-{% endcomment %}
 {% load static %}
 
 <!-- Main IMCQ Modal -->
 <div class="modal fade" id="modal-imcq-{{ quiz_data.id }}" tabindex="-1" aria-labelledby="modalLabel-imcq-{{ quiz_data.id }}" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="modalLabel-imcq-{{ quiz_data.id }}">
-                    Image-based Multiple Choice Question
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                {% if quiz_data.current_question_number and quiz_data.total_questions %}
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                    <span class="text-muted small">Question {{ quiz_data.current_question_number }}/{{ quiz_data.total_questions }}</span>
-                </div>
-                <div class="progress mb-3 imcq-progress-bar-height">
-                    <div class="progress-bar bg-primary" role="progressbar" style="width: {{ quiz_data.progress_percentage }}%;" aria-valuenow="{{ quiz_data.progress_percentage }}" aria-valuemin="0" aria-valuemax="100"></div>
-                </div>
-                {% endif %}
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
 
-                <p class="fw-bold mb-3">{{ quiz_data.question }}</p>
+      <!-- Modal Header -->
+      <div class="modal-header">
+        <h5 class="modal-title">Image-based MCQ</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
 
-                <form id="form-imcq-{{ quiz_data.id }}">
-                    {% for option in quiz_data.options %}
-                    <div class="form-check mb-2">
-                        <input class="form-check-input" type="radio" name="imcq-option-{{ quiz_data.id }}" id="imcq-{{ quiz_data.id }}-option-{{ option.id }}" value="{{ option.id }}">
-                        <label class="form-check-label w-100 border rounded p-2 hover-bg-light-gray cursor-pointer" for="imcq-{{ quiz_data.id }}-option-{{ option.id }}">
-                            {{ option.text }}
-                        </label>
-                    </div>
-                    {% endfor %}
-                </form>
-                <div id="feedback-imcq-{{ quiz_data.id }}" class="mt-3 small"></div>
-            </div>
-            <div class="modal-footer justify-content-between">
-                <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modal-image-viewer-{{ quiz_data.id }}">
-                    See Image
-                </button>
-                <button type="button" class="btn btn-primary" id="submit-imcq-{{ quiz_data.id }}">Submit</button>
-            </div>
+      <!-- Modal Body -->
+      <div class="modal-body">
+        {% if quiz_data.current_question_number and quiz_data.total_questions %}
+        <div class="d-flex justify-content-between mb-1 small text-muted">
+          <span>Question {{ quiz_data.current_question_number }}/{{ quiz_data.total_questions }}</span>
         </div>
+        <div class="progress mb-3 imcq-progress-bar-height">
+          <div class="progress-bar bg-primary" style="width: {{ quiz_data.progress_percentage }}%"></div>
+        </div>
+        {% endif %}
+
+        <p class="fw-bold mb-3">{{ quiz_data.question }}</p>
+
+        <form id="form-imcq-{{ quiz_data.id }}">
+          {% for option in quiz_data.options %}
+          <label class="form-check-label w-100 border rounded p-2 d-flex align-items-center mb-2 option-label" for="imcq-{{ quiz_data.id }}-option-{{ option.id }}">
+            <input type="radio" class="form-check-input me-2" name="imcq-option-{{ quiz_data.id }}" id="imcq-{{ quiz_data.id }}-option-{{ option.id }}" value="{{ option.id }}">
+            <span>{{ option.text }}</span>
+          </label>
+          {% endfor %}
+        </form>
+
+        <div id="feedback-imcq-{{ quiz_data.id }}" class="mt-2 small text-center"></div>
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="modal-footer justify-content-between">
+        <button class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#modal-image-viewer-{{ quiz_data.id }}">See Image</button>
+        <button class="btn btn-primary" id="submit-imcq-{{ quiz_data.id }}">Submit</button>
+      </div>
     </div>
+  </div>
 </div>
 
-<!-- Secondary Modal for Image Viewing -->
+<!-- Image Modal -->
 <div class="modal fade" id="modal-image-viewer-{{ quiz_data.id }}" tabindex="-1" aria-labelledby="modalLabel-image-viewer-{{ quiz_data.id }}" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="modalLabel-image-viewer-{{ quiz_data.id }}">Image</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body text-center">
-                <img src="{{ quiz_data.image_to_show_url }}" class="img-fluid rounded imcq-modal-image" alt="{{ quiz_data.image_alt_text|default:'Quiz Image' }}" width="800" height="600">
-            </div>
-            <div class="modal-footer">
-                 <button type="button" class="btn btn-secondary" data-bs-target="#modal-imcq-{{ quiz_data.id }}" data-bs-toggle="modal">Back to Question</button>
-            </div>
-        </div>
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Quiz Image</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body text-center">
+        <img src="{{ quiz_data.image }}" class="img-fluid rounded" alt="{{ quiz_data.image_alt_text|default:'Quiz Image' }}" style="max-height: 70vh;">
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#modal-imcq-{{ quiz_data.id }}">Back to Question</button>
+      </div>
     </div>
+  </div>
 </div>
 
+<!-- JS -->
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-    const quizIdIMCQ = "{{ quiz_data.id|escapejs }}";
-    const modalElementIMCQ = document.getElementById(`modal-imcq-${quizIdIMCQ}`);
-    if (!modalElementIMCQ) return;
+document.addEventListener('DOMContentLoaded', () => {
+  const quizId = "{{ quiz_data.id|escapejs }}";
+  const form = document.getElementById(`form-imcq-${quizId}`);
+  const submitBtn = document.getElementById(`submit-imcq-${quizId}`);
+  const feedback = document.getElementById(`feedback-imcq-${quizId}`);
+  const correctAnswer = "{{ quiz_data.answer|escapejs }}";
+  const correctFeedback = "{{ quiz_data.correct_feedback|default:'Correct!'|escapejs }}";
+  const incorrectFeedback = "{{ quiz_data.incorrect_feedback|default:'Incorrect. Try again.'|escapejs }}";
+  const quizObjectId = "{{ quiz.id }}";
 
-    const formIMCQ = document.getElementById(`form-imcq-${quizIdIMCQ}`);
-    const submitButtonIMCQ = document.getElementById(`submit-imcq-${quizIdIMCQ}`);
-    const feedbackElementIMCQ = document.getElementById(`feedback-imcq-${quizIdIMCQ}`);
-    const correctOptionIdIMCQ = "{{ quiz_data.answer|escapejs }}";
-    const correctFeedbackIMCQ = "{{ quiz_data.correct_feedback|default:'Correct!'|escapejs }}";
-    const incorrectFeedbackIMCQ = "{{ quiz_data.incorrect_feedback|default:'Incorrect. Try again.'|escapejs }}";
+  // Label select effect
+  form.addEventListener('change', e => {
+    if (e.target.type === 'radio') {
+      form.querySelectorAll('label.option-label').forEach(label => {
+        label.classList.remove('border-primary', 'bg-primary-subtle', 'text-primary-emphasis');
+      });
+      const selectedLabel = e.target.closest('label');
+      if (selectedLabel) {
+        selectedLabel.classList.add('border-primary', 'bg-primary-subtle', 'text-primary-emphasis');
+      }
+    }
+  });
 
-    // Style for selected radio button label
-    formIMCQ.addEventListener('change', function(event) {
-        if (event.target.type === 'radio') {
-            formIMCQ.querySelectorAll('label.border-primary').forEach(label => {
-                label.classList.remove('border-primary', 'bg-primary-subtle', 'text-primary-emphasis');
-                label.classList.add('border');
-            });
-            const selectedLabel = formIMCQ.querySelector(`label[for="${event.target.id}"]`);
-            if (selectedLabel) {
-                selectedLabel.classList.add('border-primary', 'bg-primary-subtle', 'text-primary-emphasis');
-                selectedLabel.classList.remove('border');
-            }
+  // Submit handler
+  submitBtn.addEventListener('click', () => {
+    const selected = form.querySelector(`input[name="imcq-option-${quizId}"]:checked`);
+    feedback.className = 'mt-2 small text-center';
+    feedback.textContent = "";
+
+    if (!selected) {
+      feedback.classList.add('text-warning');
+      feedback.textContent = "Please select an answer.";
+      return;
+    }
+
+    if (selected.value === correctAnswer) {
+      feedback.classList.add('text-success');
+      feedback.textContent = correctFeedback;
+      submitBtn.textContent = "Correct!";
+      submitBtn.classList.replace("btn-primary", "btn-success");
+      submitBtn.disabled = true;
+      form.querySelectorAll('input').forEach(inp => inp.disabled = true);
+      
+      fetch(`/course/quiz/submit/${quizObjectId}/`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": "{{ csrf_token }}"
+        },
+        body: JSON.stringify({ answer: selected.value })
+      }).then(response => {
+        if (response.ok) {
+          showRewardAnimation(10, "Points");
+          bootstrap.Modal.getInstance(document.getElementById(`modal-imcq-${quizId}`)).hide();
         }
-    });
+      });
+    } else {
+      feedback.classList.add('text-danger');
+      feedback.textContent = incorrectFeedback;
+    }
+  });
 
-    submitButtonIMCQ.addEventListener('click', function () {
-        const selectedOption = formIMCQ.querySelector(`input[name="imcq-option-${quizIdIMCQ}"]:checked`);
-        feedbackElementIMCQ.innerHTML = '';
-        feedbackElementIMCQ.classList.remove('text-success', 'text-danger', 'text-warning');
-
-        if (selectedOption) {
-            if (selectedOption.value === correctOptionIdIMCQ) {
-                feedbackElementIMCQ.textContent = correctFeedbackIMCQ;
-                feedbackElementIMCQ.classList.add('text-success');
-                submitButtonIMCQ.classList.remove('btn-primary');
-                submitButtonIMCQ.classList.add('btn-success');
-                submitButtonIMCQ.textContent = 'Correct!';
-                formIMCQ.querySelectorAll('input[type="radio"]').forEach(radio => radio.disabled = true);
-                submitButtonIMCQ.disabled = true;
-            } else {
-                feedbackElementIMCQ.textContent = incorrectFeedbackIMCQ;
-                feedbackElementIMCQ.classList.add('text-danger');
-                 const selectedLabel = formIMCQ.querySelector(`label[for="${selectedOption.id}"]`);
-                if(selectedLabel) {
-                    selectedLabel.classList.remove('border-primary', 'bg-primary-subtle', 'text-primary-emphasis');
-                    selectedLabel.classList.add('border-danger', 'bg-danger-subtle');
-                     setTimeout(() => {
-                         if (!selectedLabel.classList.contains('border-primary')) {
-                            selectedLabel.classList.remove('border-danger', 'bg-danger-subtle');
-                            selectedLabel.classList.add('border');
-                         }
-                    }, 2000);
-                }
-            }
-        } else {
-            feedbackElementIMCQ.textContent = 'Please select an answer.';
-            feedbackElementIMCQ.classList.add('text-warning');
-        }
+  // Reset modal
+  document.getElementById(`modal-imcq-${quizId}`).addEventListener("hidden.bs.modal", () => {
+    form.reset();
+    form.querySelectorAll('label.option-label').forEach(label => {
+      label.classList.remove('border-primary', 'bg-primary-subtle', 'text-primary-emphasis');
     });
-
-    // Reset state when modal is hidden
-    modalElementIMCQ.addEventListener('hidden.bs.modal', function () {
-        formIMCQ.reset();
-        feedbackElementIMCQ.innerHTML = '';
-        feedbackElementIMCQ.classList.remove('text-success', 'text-danger', 'text-warning');
-        submitButtonIMCQ.classList.remove('btn-success');
-        submitButtonIMCQ.classList.add('btn-primary');
-        submitButtonIMCQ.textContent = 'Submit';
-        submitButtonIMCQ.disabled = false;
-        formIMCQ.querySelectorAll('input[type="radio"]').forEach(radio => radio.disabled = false);
-        formIMCQ.querySelectorAll('label.border-primary, label.border-danger').forEach(label => {
-            label.classList.remove('border-primary', 'bg-primary-subtle', 'text-primary-emphasis', 'border-danger', 'bg-danger-subtle');
-            label.classList.add('border');
-        });
-    });
+    form.querySelectorAll('input').forEach(inp => inp.disabled = false);
+    submitBtn.disabled = false;
+    submitBtn.textContent = "Submit";
+    submitBtn.classList.remove("btn-success");
+    submitBtn.classList.add("btn-primary");
+    feedback.textContent = "";
+  });
 });
 </script>
 
+<!-- Styles -->
 <style>
-    /* Shared styles with MCQ modal for consistency */
-    #modal-imcq-{{ quiz_data.id }} .form-check-label.hover-bg-light-gray:hover {
-        background-color: var(--bs-lightgray-100);
-    }
-    #modal-imcq-{{ quiz_data.id }} .form-check-input {
-        position: absolute;
-        opacity: 0;
-        width: 0;
-        height: 0;
-    }
-    #modal-imcq-{{ quiz_data.id }} .form-check-label {
-        display: block;
-        transition: background-color 0.15s ease-in-out, border-color 0.15s ease-in-out;
-    }
-    #modal-imcq-{{ quiz_data.id }} .form-check-label::before {
-        content: "";
-        display: inline-block;
-        width: 1.25em;
-        height: 1.25em;
-        margin-right: 0.5em;
-        border: var(--bs-border-width) solid var(--bs-border-color);
-        border-radius: 50%;
-        vertical-align: middle;
-        background-color: var(--bs-white);
-        transition: border-color 0.15s ease-in-out, background-color 0.15s ease-in-out;
-    }
-    #modal-imcq-{{ quiz_data.id }} .form-check-input:checked + .form-check-label::before {
-        background-color: var(--bs-primary);
-        border-color: var(--bs-primary);
-        background-image: var(--bs-radio-svg-light);
-        background-repeat: no-repeat;
-        background-position: center;
-        background-size: 60%;
-    }
-     #modal-imcq-{{ quiz_data.id }} .form-check-input:focus + .form-check-label::before {
-         box-shadow: 0 0 0 var(--bs-focus-ring-width) var(--bs-focus-ring-color);
-    }
-    #modal-imcq-{{ quiz_data.id }} .form-check-label.border-primary {
-        border-width: 2px !important;
-    }
-    /* Set max-height for image in modal */
-    #modal-image-viewer-{{ quiz_data.id }} .imcq-modal-image {
-        max-height: 70vh;
-        width: auto;
-        height: auto;
-    }
-    .imcq-progress-bar-height {
-        height: 8px;
-    }
+  .option-label {
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  .option-label:hover {
+    background-color: #f8f9fa;
+  }
+  .imcq-progress-bar-height {
+    height: 8px;
+  }
 </style>

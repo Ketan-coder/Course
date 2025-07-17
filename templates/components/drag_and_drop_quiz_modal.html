@@ -296,9 +296,13 @@ document.addEventListener('DOMContentLoaded', function () {
                 },
                 body: JSON.stringify({ answer: submittedMapping })
             }).then(response => {
-                if (!response.ok) {
-                console.warn("Failed to mark quiz as complete.");
-                }
+             if (response.status === 200) {
+                showRewardAnimation(10, "Points"); // 🎉 Your animation trigger
+                const modalInstance = bootstrap.Modal.getInstance(document.getElementById(`modal-drag-drop-${quizIdDnD}`));
+                modalInstance.hide();
+            } else {
+                    console.log("Wrong answer or incomplete.");
+            }
             }).catch(console.error);
 
         } else {

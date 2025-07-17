@@ -954,7 +954,44 @@ def submit_quiz(request, quiz_id):
 
             for qid, qdata in (quiz.questions or {}).items():
                 correct_answer = qdata.get("answer") if qdata.get("type") != 'DRAG_DROP' else qdata.get("correct_mapping")
-                if correct_answer and str(user_answer).strip().lower() == str(correct_answer).strip().lower():
+                # FIX DRAG AND DROP SUBMISSION
+                # if qdata.get("type") == 'DRAG_DROP':
+                #     if correct_answer and str(user_answer).strip().lower() == str(correct_answer).strip().lower():
+                #         qdata["is_completed"] = True
+                #         quiz.questions[qid] = qdata
+                #         quiz.save(update_fields=["questions"])
+                #         quiz.completed_by_users.add(profile)
+                #         update_score(request, profile, 10)
+                #         update_streak(request, profile)
+                #         Activity.objects.create(
+                #             user=request.user,
+                #             activity_type="Quiz Completion",
+                #             description=f"Completed quiz: {quiz.title} with answer: {user_answer}",
+                #         )
+                #         return JsonResponse({"status": "completed"})
+                
+
+                print("user_answer ==> ",user_answer)
+                print("correct_answer ==> ",correct_answer)
+                if isinstance(correct_answer, str) and ',' in correct_answer:
+                    correct_set = set(map(str.strip, correct_answer.lower().split(',')))
+                    user_set = set(map(str.strip, [x.lower() for x in user_answer])) if isinstance(user_answer, list) else set(map(str.strip, user_answer.lower().split(',')))
+                    if correct_set == user_set:
+                        qdata["is_completed"] = True
+                        quiz.questions[qid] = qdata
+                        quiz.save(update_fields=["questions"])
+                        quiz.completed_by_users.add(profile)
+                        update_score(request, profile, 10)
+                        update_streak(request, profile)
+                        Activity.objects.create(
+                            user=request.user,
+                            activity_type="Quiz Completion",
+                            description=f"Completed quiz: {quiz.title} with answer: {user_answer}",
+                        )
+                        return JsonResponse({"status": "completed"})
+                # Handle non-multiple cases as before
+                
+                elif str(user_answer).strip().lower() == str(correct_answer).strip().lower():
                     qdata["is_completed"] = True
                     quiz.questions[qid] = qdata
                     quiz.save(update_fields=["questions"])
@@ -968,15 +1005,12 @@ def submit_quiz(request, quiz_id):
                     )
                     return JsonResponse({"status": "completed"})
 
+
             return JsonResponse({"status": "incorrect"}, status=200)
 
         except Exception as e:
-            import traceback
-            traceback.print_exc()
+            print(str(e))
             return JsonResponse({"error": str(e)}, status=400)
-
-    return JsonResponse({"error": "Invalid request method"}, status=405)
-
 def quiz_warmup_start(request):
     quiz = Quiz.objects.filter(course__isnull=True, section__isnull=True, lesson__isnull=True).first()  # or filter by course/lesson if needed
     if not quiz:

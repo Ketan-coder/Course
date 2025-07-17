@@ -1,3 +1,4 @@
+// smart-counter.js
 class SmartCounter extends HTMLElement {
     constructor() {
         super();
@@ -7,9 +8,18 @@ class SmartCounter extends HTMLElement {
         this._label = this.getAttribute("label") || "Points";
         this.shadowRoot.innerHTML = `
             <style>
+                :host {
+                    /* Default values, can be overridden by consumer */
+                    --counter-font-size: 1.3rem;
+                    --counter-font-weight: bold;
+                    --label-font-size: 0.75rem;
+                    --label-color: gray;
+                    display: inline-block; /* Essential for :host styling to apply layout */
+                }
+
                 .counter {
-                    font-weight: bold;
-                    font-size: 1.3rem;
+                    font-weight: var(--counter-font-weight);
+                    font-size: var(--counter-font-size);
                     position: relative;
                     display: inline-block;
                 }
@@ -23,8 +33,8 @@ class SmartCounter extends HTMLElement {
                     100% { transform: scale(1); }
                 }
                 .label {
-                    font-size: 0.75rem;
-                    color: gray;
+                    font-size: var(--label-font-size);
+                    color: var(--label-color);
                     display: block;
                 }
             </style>
@@ -36,17 +46,28 @@ class SmartCounter extends HTMLElement {
     }
 
     static get observedAttributes() {
-        return ['value'];
+        return ['value', 'label']; // Observe 'label' as well
     }
 
     attributeChangedCallback(name, oldValue, newValue) {
-        if (name === 'value' && oldValue !== newValue) {
+        if (oldValue === newValue) return; // Prevent unnecessary updates
+
+        if (name === 'value') {
             this._value = parseInt(newValue);
             const valEl = this.shadowRoot.getElementById('value');
-            valEl.textContent = this._value;
-            valEl.classList.remove("bounce");
-            void valEl.offsetWidth; // force reflow to restart animation
-            valEl.classList.add("bounce");
+            if (valEl) { // Check if element exists before manipulating
+                valEl.textContent = this._value;
+                valEl.classList.remove("bounce");
+                // Force reflow to restart animation. This is a common trick.
+                void valEl.offsetWidth;
+                valEl.classList.add("bounce");
+            }
+        } else if (name === 'label') {
+            this._label = newValue;
+            const labelEl = this.shadowRoot.querySelector('.label');
+            if (labelEl) {
+                labelEl.textContent = this._label;
+            }
         }
     }
 }

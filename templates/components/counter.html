@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Achievement Unlocked!</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Nunito', sans-serif;
+            overflow: hidden; /* Prevent scrolling when overlay is active */
+        }
+
+        /* The full-page overlay */
+        .achievement-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%); /* Duolingo-esque gradient */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            color: white;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.5s ease-out, visibility 0.5s ease-out;
+            z-index: 1000; /* Ensure it's on top */
+            text-align: center;
+        }
+
+        .achievement-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .achievement-content {
+            transform: translateY(20px);
+            opacity: 0;
+            transition: transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.6s ease-out;
+            transition-delay: 0.3s; /* Delay content animation slightly after overlay appears */
+        }
+
+        .achievement-overlay.active .achievement-content {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .achievement-message {
+            font-size: 3em;
+            font-weight: 900;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 8px rgba(0,0,0,0.2);
+        }
+
+        .achievement-icon {
+            font-size: 6em;
+            margin-bottom: 30px;
+            animation: bounceIn 0.8s ease-out forwards;
+            color: #FFD700; /* Gold color for an award icon */
+            text-shadow: 2px 2px 8px rgba(0,0,0,0.2);
+        }
+
+        @keyframes bounceIn {
+            0% { transform: scale(0.1); opacity: 0; }
+            60% { transform: scale(1.2); opacity: 1; }
+            100% { transform: scale(1); }
+        }
+
+        /* Specific styles for smart-counter within the overlay */
+        .achievement-overlay smart-counter {
+            --counter-font-size: 5em; /* Make counter much larger */
+            --counter-font-weight: 900;
+            --label-font-size: 1.5em; /* Make label larger */
+            color: white; /* Ensure counter text is white */
+            text-shadow: 2px 2px 8px rgba(0,0,0,0.2);
+        }
+    </style>
+</head>
+<body>
+
+    <div id="achievementOverlay" class="achievement-overlay">
+        <div class="achievement-content">
+            <div class="achievement-icon">🎉</div> <div class="achievement-message" id="achievementMessage">Streak Extended!</div>
+            <smart-counter id="mySmartCounter" value="0" label="Days Streak"></smart-counter>
+        </div>
+    </div>
+
+    <h1>Welcome to your learning journey!</h1>
+    <p>Complete tasks to earn rewards.</p>
+    <button onclick="triggerAchievement(15, 'Points Earned!')">Simulate Points Gain</button>
+    <button onclick="triggerAchievement(7, 'Days Streak!')">Simulate Streak Extend</button>
+
+    <script src="smart-counter.js"></script>
+    <script>
+        // Your main JavaScript for triggering the animation
+        const achievementOverlay = document.getElementById('achievementOverlay');
+        const achievementMessage = document.getElementById('achievementMessage');
+        const mySmartCounter = document.getElementById('mySmartCounter');
+
+        async function showAchievement(finalValue, message, label) {
+            achievementMessage.textContent = message;
+            mySmartCounter.setAttribute('label', label);
+            mySmartCounter.setAttribute('value', 0); // Start from 0 for the animation
+
+            // Activate the overlay
+            achievementOverlay.classList.add('active');
+
+            // Wait for the overlay to be visible before starting counter
+            await new Promise(resolve => setTimeout(resolve, 600)); // Match overlay transition duration + a little extra
+
+            // Increment the counter gradually
+            let currentValue = 0;
+            const incrementAmount = Math.max(1, Math.floor(finalValue / 20)); // Adjust increment speed
+            const intervalTime = 50; // Milliseconds between increments
+
+            const counterInterval = setInterval(() => {
+                if (currentValue < finalValue) {
+                    currentValue = Math.min(finalValue, currentValue + incrementAmount);
+                    mySmartCounter.setAttribute('value', currentValue);
+                } else {
+                    clearInterval(counterInterval);
+                    // Animation complete, hide after a delay
+                    setTimeout(() => {
+                        achievementOverlay.classList.remove('active');
+                        // Reset counter and message after hiding
+                        setTimeout(() => {
+                            achievementMessage.textContent = '';
+                            mySmartCounter.setAttribute('value', 0);
+                            mySmartCounter.setAttribute('label', 'Points'); // Or a default label
+                        }, 500); // Wait for overlay to fully hide
+                    }, 2000); // Display for 2 seconds after count finishes
+                }
+            }, intervalTime);
+        }
+
+        // --- Simulate server-side trigger (for demonstration) ---
+        // In a real application, this would be triggered via a WebSocket,
+        // Server-Sent Events, or a long-polling AJAX request.
+        function triggerAchievement(value, type) {
+            let message = "Achievement Unlocked!";
+            let label = "Points";
+
+            if (type === 'Days Streak!') {
+                message = "🔥 Streak Extended!";
+                label = "Days Streak";
+            } else if (type === 'Points Earned!') {
+                message = "✨ Points Gained!";
+                label = "Points";
+            }
+
+            showAchievement(value, message, label);
+        }
+    </script>
+</body>
+</html>

@@ -1,4 +1,27 @@
 {% load static %}
+<style>
+  .mcq-option-label {
+    display: flex;
+    align-items: center;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .mcq-option-label input[type="radio"] {
+    margin-right: 12px;
+    transform: scale(1.2);
+  }
+
+  .mcq-option-label.selected {
+    background-color: #e7f1ff;
+    border-color: #0d6efd;
+    color: #0d6efd;
+  }
+</style>
 
 <div class="modal fade" id="modal-mcq-{{ quiz_data.id }}" tabindex="-1" aria-labelledby="modalLabel-mcq-{{ quiz_data.id }}" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
@@ -18,12 +41,14 @@
 
         <form id="form-mcq-{{ quiz_data.id }}">
           {% for option in quiz_data.options %}
-          <div class="form-check mb-2">
-            <input class="form-check-input" type="radio" name="mcq-option-{{ quiz_data.id }}" id="mcq-{{ quiz_data.id }}-option-{{ forloop.counter }}" value="{{ option.id }}">
-            <label class="form-check-label w-100 border rounded p-2 hover-bg-light-gray cursor-pointer" for="mcq-{{ quiz_data.id }}-option-{{ forloop.counter }}">
-              {{ option.text }}
-            </label>
-          </div>
+          <label class="mcq-option-label" for="mcq-{{ quiz_data.id }}-option-{{ forloop.counter }}">
+            <input class="form-check-input"
+                   type="radio"
+                   name="mcq-option-{{ quiz_data.id }}"
+                   id="mcq-{{ quiz_data.id }}-option-{{ forloop.counter }}"
+                   value="{{ option.id }}">
+            {{ option.text }}
+          </label>
           {% endfor %}
         </form>
 
@@ -38,7 +63,6 @@
     </div>
   </div>
 </div>
-
 <script>
 document.addEventListener('DOMContentLoaded', function () {
   const quizId = "{{ quiz_data.id|escapejs }}";
@@ -53,15 +77,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
   form.addEventListener('change', function (e) {
     if (e.target.type === 'radio') {
-      form.querySelectorAll('label').forEach(lbl => {
-        lbl.classList.remove('border-primary', 'bg-primary-subtle', 'text-primary-emphasis');
-        lbl.classList.add('border');
+      form.querySelectorAll('label.mcq-option-label').forEach(lbl => {
+        lbl.classList.remove('selected');
       });
-      const label = form.querySelector(`label[for="${e.target.id}"]`);
-      if (label) {
-        label.classList.add('border-primary', 'bg-primary-subtle', 'text-primary-emphasis');
-        label.classList.remove('border');
-      }
+      const selectedLabel = e.target.closest('label');
+      selectedLabel?.classList.add('selected');
     }
   });
 
@@ -87,7 +107,7 @@ document.addEventListener('DOMContentLoaded', function () {
       submitBtn.textContent = "Correct!";
       submitBtn.disabled = true;
       form.querySelectorAll('input').forEach(r => r.disabled = true);
-      //  Send to backend to mark as completed
+
       fetch(`/course/quiz/submit/${quizObjectId}/`, {
         method: 'POST',
         headers: {
@@ -96,10 +116,13 @@ document.addEventListener('DOMContentLoaded', function () {
         },
         body: JSON.stringify({ answer: value })
       }).then(response => {
-        if (!response.ok) {
-          console.warn("Failed to mark quiz as complete.");
+        if (response.status === 200) {
+          showRewardAnimation(10, "Points");
+          const modalInstance = bootstrap.Modal.getInstance(document.getElementById(`modal-mcq-${quizId}`));
+          modalInstance.hide();
         }
       }).catch(console.error);
+
       submitBtn.dispatchEvent(new CustomEvent('correctAnswerMCQ', { bubbles: true }));
     } else {
       feedback.textContent = incorrectFeedback;
@@ -116,9 +139,8 @@ document.addEventListener('DOMContentLoaded', function () {
     submitBtn.textContent = 'Submit';
     submitBtn.disabled = false;
     form.querySelectorAll('input').forEach(r => r.disabled = false);
-    form.querySelectorAll('label').forEach(l => {
-      l.classList.remove('border-primary', 'bg-primary-subtle', 'text-primary-emphasis');
-      l.classList.add('border');
+    form.querySelectorAll('label.mcq-option-label').forEach(l => {
+      l.classList.remove('selected');
     });
   });
 });
