@@ -410,13 +410,13 @@
         {% if questions.type == "SINGLE_SELECT" %}
             {% include "components/modal_mcq.html" with quiz_data=questions quiz=quiz %}
         {% elif questions.type == "IMAGE_MC" %}
-            {% include "components/image_modal_mcq.html" with quiz_data=questions %}
+            {% include "components/image_modal_mcq.html" with quiz_data=questions quiz=quiz %}
         {% elif questions.type == "TEXT" %}
-            {% include "components/text_quiz_modal.html" with quiz_data=questions %}
+            {% include "components/text_quiz_modal.html" with quiz_data=questions quiz=quiz %}
         {% elif questions.type == "MULTIPLE_SELECT" %}
-            {% include "components/multiple_select_modal.html" with quiz_data=questions %}
+            {% include "components/multiple_select_modal.html" with quiz_data=questions quiz=quiz %}
         {% elif questions.type == "DRAG_DROP" %}
-            {% include "components/drag_and_drop_quiz_modal.html" with quiz_data=questions correct_mapping=questions.correct_mapping %}
+            {% include "components/drag_and_drop_quiz_modal.html" with quiz_data=questions correct_mapping=questions.correct_mapping quiz=quiz %}
         {% endif %}
     {% endfor %}
   {% endfor %}

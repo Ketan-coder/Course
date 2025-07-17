@@ -93,6 +93,7 @@
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     const quizIdDnD = "{{ quiz_data.id|escapejs }}";
+    const quizObjectId = "{{ quiz.id }}";
     // console.log(`Initializing Drag & Drop for quiz ID: ${quizIdDnD}`);
     const modalElementDnD = document.getElementById(`modal-drag-drop-${quizIdDnD}`);
     if (!modalElementDnD) {
@@ -113,7 +114,7 @@ document.addEventListener('DOMContentLoaded', function () {
     if (correctMappingDataElement && correctMappingDataElement.textContent) {
         try {
             correctMappingDnD = JSON.parse(correctMappingDataElement.textContent);
-            // console.log(`DnD (${quizIdDnD}) - Correct Mapping Loaded:`, correctMappingDnD);
+            //console.log(`DnD (${quizIdDnD}) - Correct Mapping Loaded:`, correctMappingDnD);
         } catch (e) {
             console.error(`DnD (${quizIdDnD}): Failed to parse correct_mapping JSON. Error: ${e}. Content: ${correctMappingDataElement.textContent}`);
         }
@@ -277,6 +278,29 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (item) item.draggable = false; 
             });
             submitButtonDnD.disabled = true;
+            //  Send to backend to mark as completed
+            let submittedMapping = {};
+            dropZones.forEach(zone => {
+                const blankIdx = zone.dataset.blankIndex;
+                const placedItem = zone.querySelector('.draggable-option');
+                if (placedItem && placedItem.dataset.optionId) {
+                    submittedMapping[blankIdx] = placedItem.dataset.optionId;
+                }
+            });
+
+            fetch(`/course/quiz/submit/${quizObjectId}/`, {
+                method: 'POST',
+                headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({ answer: submittedMapping })
+            }).then(response => {
+                if (!response.ok) {
+                console.warn("Failed to mark quiz as complete.");
+                }
+            }).catch(console.error);
+
         } else {
             feedbackElementDnD.textContent = incorrectFeedbackDnD;
             feedbackElementDnD.classList.add('text-danger');

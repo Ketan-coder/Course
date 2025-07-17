@@ -59,6 +59,7 @@
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     const quizIdText = "{{ quiz_data.id|escapejs }}";
+    const quizObjectId = "{{ quiz.id }}";
     const modalElementText = document.getElementById(`modal-text-quiz-${quizIdText}`);
     if (!modalElementText) {
         console.error(`Text Quiz (${quizIdText}): Modal element not found.`);
@@ -86,7 +87,20 @@ document.addEventListener('DOMContentLoaded', function () {
              submitButtonText.classList.add('btn-success');
              submitButtonText.textContent = 'Correct!';
              answerInput.disabled = true; // Disable input after correct answer
-             submitButtonText.disabled = true; // Disable button
+
+            fetch(`/course/quiz/submit/${quizObjectId}/`, {
+                method: 'POST',
+                headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({ answer: userAnswe })
+            }).then(response => {
+                if (!response.ok) {
+                console.warn("Failed to mark quiz as complete.");
+                }
+            }).catch(console.error);
+
         } else {
             feedbackElementText.textContent = incorrectFeedbackText;
             feedbackElementText.classList.add('text-danger');
