@@ -287,19 +287,22 @@ document.addEventListener('DOMContentLoaded', function () {
                     submittedMapping[blankIdx] = placedItem.dataset.optionId;
                 }
             });
-
-            fetch(`/course/quiz/submit/${quizObjectId}/`, {
+            const quizScore = parseInt('{{ quiz_data.score_on_completion }}');
+            fetch(`/course/quiz/submit-dnd/${quizObjectId}/`, {
                 method: 'POST',
                 headers: {
                 'Content-Type': 'application/json',
                 'X-CSRFToken': '{{ csrf_token }}'
                 },
-                body: JSON.stringify({ answer: submittedMapping })
+                body: JSON.stringify({quiz_type: "DRAG_AND_DROP", user_answer: submittedMapping })
             }).then(response => {
              if (response.status === 200) {
-                showRewardAnimation(10, "Points"); // 🎉 Your animation trigger
+                showRewardAnimation(quizScore, "Points"); // 🎉 Your animation trigger
                 const modalInstance = bootstrap.Modal.getInstance(document.getElementById(`modal-drag-drop-${quizIdDnD}`));
                 modalInstance.hide();
+                setTimeout(function(){ 
+                    window.location.reload();
+                }, 3000); // reload page after 1 second
             } else {
                     console.log("Wrong answer or incomplete.");
             }

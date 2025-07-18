@@ -87,19 +87,22 @@ document.addEventListener('DOMContentLoaded', function () {
              submitButtonText.classList.add('btn-success');
              submitButtonText.textContent = 'Correct!';
              answerInput.disabled = true; // Disable input after correct answer
-
+            const quizScore = parseInt('{{ quiz_data.score_on_completion }}');
             fetch(`/course/quiz/submit/${quizObjectId}/`, {
                 method: 'POST',
                 headers: {
                 'Content-Type': 'application/json',
                 'X-CSRFToken': '{{ csrf_token }}'
                 },
-                body: JSON.stringify({ answer: userAnswer })
+                body: JSON.stringify({ answer: userAnswer, quiz_type: "TEXT", quiz_score: quizScore })
             }).then(response => {
             if (response.status === 200) {
-            showRewardAnimation(10, "Points"); // 🎉 Your animation trigger
+            showRewardAnimation(quizScore, "Points"); // 🎉 Your animation trigger
             const modalInstance = bootstrap.Modal.getInstance(document.getElementById(`modal-text-quiz-${quizIdText}`));
             modalInstance.hide();
+            setTimeout(function(){ 
+                window.location.reload();
+            }, 3000); // reload page after 1 second
             } else {
                 console.log("Wrong answer or incomplete.");
             }

@@ -108,7 +108,7 @@
 
             {% if request.session.current_user_type == 'student' %}
               <li class="nav-item"><a class="nav-link"><i class="ph ph-fire"></i> Streak: <b>{{ request.session.streak }}</b></a></li>
-              <li class="nav-item"><a class="nav-link"><i class="ph ph-trophy"></i> Score: <b>{{ request.session.score }}</b></a></li>
+              <li class="nav-item"><a class="nav-link"><i class="ph ph-trophy"></i> Score: <b id="user-score">{{ request.session.score }}</b></a></li>
             {% endif %}
           </ul>
 
@@ -213,6 +213,7 @@
     </script>
 
     {% endif %}
+    {% comment %} <div id="user-score">{{ request.session.score }}</div> {% endcomment %}
     <!-- Search Modal -->
     <div class="modal fade" id="searchModal" tabindex="-1" aria-labelledby="searchModalLabel" aria-hidden="true">
       <div class="modal-dialog modal-dialog-centered modal-lg">
@@ -251,76 +252,143 @@
      {% endblock %}
      <script type="module" src="{% static 'resoures/js/components/counter_animation.js' %}"></script>
      <script>
-      function launchConfetti() {
-        const duration = 2 * 1000;
-        const end = Date.now() + duration;
+      function launchConfetti(score) {
+          const duration = 2 * 1000;
+          const end = Date.now() + duration;
 
-        (function frame() {
-            // Basic burst
-            confetti({
-                particleCount: 5,
+          // Choose type based on score
+          let type = 'basic';
+          if (score > 5 && score <= 20) type = 'custom';
+          else if (score > 20 && score <= 35) type = 'fireworks';
+          else if (score > 35) type = 'fireworks_stars';
+
+          const frame = () => {
+            if (type === 'basic') {
+              confetti({
+                particleCount: 20,
                 angle: 60,
-                spread: 55,
+                spread: 45,
                 origin: { x: 0, y: 1 }
-            });
-            confetti({
-                particleCount: 5,
+              });
+              confetti({
+                particleCount: 20,
                 angle: 120,
-                spread: 55,
+                spread: 45,
                 origin: { x: 1, y: 1 }
-            });
-
-            if (Date.now() < end) {
-                requestAnimationFrame(frame);
+              });
             }
-        })();
-    }
 
-      function showRewardAnimation(score = 10, label = "Points") {
-          const overlay = document.createElement("div");
-          overlay.style.position = "fixed";
-          overlay.style.top = "0";
-          overlay.style.left = "0";
-          overlay.style.width = "100vw";
-          overlay.style.height = "100vh";
-          overlay.style.backgroundColor = "rgba(0, 0, 0, 0.8)";
-          overlay.style.display = "flex";
-          overlay.style.flexDirection = "column";
-          overlay.style.alignItems = "center";
-          overlay.style.justifyContent = "center";
-          overlay.style.zIndex = "99";
-          overlay.style.color = "#fff";
-          overlay.style.transition = "opacity 0.5s ease-in-out";
+            if (type === 'custom') {
+              confetti({
+                particleCount: 30,
+                spread: 70,
+                scalar: 1.2,
+                shapes: ['square', 'circle'],
+                origin: { y: 0.6 }
+              });
+            }
 
-          // Add the smart counter
-          const counter = document.createElement("smart-counter");
-          counter.setAttribute("value", score);
-          counter.setAttribute("label", label);
-          counter.style.fontSize = "4rem";
-          counter.style.marginBottom = "20px";
+            if (type === 'fireworks' || type === 'fireworks_stars') {
+              confetti({
+                particleCount: 40,
+                spread: 90,
+                startVelocity: 30,
+                ticks: 60,
+                origin: {
+                  x: Math.random(),
+                  y: Math.random() * 0.5
+                }
+              });
+            }
 
-          // Add a message
-          const message = document.createElement("div");
-          message.innerText = "🎉 Well Done!";
-          message.style.fontSize = "2rem";
-          message.style.fontWeight = "bold";
-          message.style.marginBottom = "10px";
-          message.style.textAlign = "center";
+            if (type === 'fireworks_stars') {
+              confetti({
+                particleCount: 20,
+                shapes: ['star'],
+                colors: ['#ff0', '#0ff', '#f0f'],
+                spread: 120,
+                origin: {
+                  x: Math.random(),
+                  y: Math.random() * 0.4
+                }
+              });
+            }
 
-          overlay.appendChild(message);
-          overlay.appendChild(counter);
+            if (Date.now() < end) requestAnimationFrame(frame);
+          };
 
-          document.body.appendChild(overlay);
+          frame();
+        }
 
-        launchConfetti();
 
-          // Fade out after 2.5 seconds
-          setTimeout(() => {
-              overlay.style.opacity = "0";
-              setTimeout(() => overlay.remove(), 500);
-          }, 2500);
+      function animateScoreUpdate(current, earned, element) {
+        const total = current + earned;
+        const duration = 1000;
+        const start = performance.now();
+
+        function update(time) {
+          const progress = Math.min((time - start) / duration, 1);
+          const displayScore = Math.floor(current + (earned * progress));
+          element.textContent = displayScore;
+
+          if (progress < 1) {
+            requestAnimationFrame(update);
+          }
+        }
+
+        requestAnimationFrame(update);
       }
 
+
+
+      function showRewardAnimation(score = 10, label = "Points", currentScoreElement = null) {
+        const overlay = document.createElement("div");
+        overlay.style.position = "fixed";
+        overlay.style.top = "0";
+        overlay.style.left = "0";
+        overlay.style.width = "100vw";
+        overlay.style.height = "100vh";
+        overlay.style.backgroundColor = "rgba(0, 0, 0, 0.8)";
+        overlay.style.display = "flex";
+        overlay.style.flexDirection = "column";
+        overlay.style.alignItems = "center";
+        overlay.style.justifyContent = "center";
+        overlay.style.zIndex = "99";
+        overlay.style.color = "#fff";
+        overlay.style.transition = "opacity 0.5s ease-in-out";
+
+        const counter = document.createElement("div");
+        counter.textContent = `+${score} ${label}`;
+        counter.style.fontSize = "4rem";
+        counter.style.marginBottom = "20px";
+
+        const message = document.createElement("div");
+        message.innerText = "🎉 Well Done!";
+        message.style.fontSize = "2rem";
+        message.style.fontWeight = "bold";
+        message.style.marginBottom = "10px";
+        message.style.textAlign = "center";
+
+        overlay.appendChild(message);
+        overlay.appendChild(counter);
+        document.body.appendChild(overlay);
+
+        launchConfetti(score);
+
+        // Animate the user's total score
+        if (currentScoreElement) {
+          const current = parseInt(currentScoreElement.textContent || "0", 10);
+          animateScoreUpdate(current, score, currentScoreElement);
+        }
+
+        // Fade out
+        setTimeout(() => {
+          overlay.style.opacity = "0";
+          setTimeout(() => overlay.remove(), 500);
+        }, 2500);
+      }
+
+      const userScoreElement = document.getElementById("user-score");
       </script>
   
      <script>

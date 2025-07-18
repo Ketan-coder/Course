@@ -107,18 +107,22 @@ document.addEventListener('DOMContentLoaded', () => {
       submitBtn.classList.replace("btn-primary", "btn-success");
       submitBtn.disabled = true;
       form.querySelectorAll('input').forEach(inp => inp.disabled = true);
-      
+      const quizScore = parseInt('{{ quiz_data.score_on_completion }}');
       fetch(`/course/quiz/submit/${quizObjectId}/`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           "X-CSRFToken": "{{ csrf_token }}"
         },
-        body: JSON.stringify({ answer: selected.value })
+        body: JSON.stringify({ answer: selected.value , quiz_type: "IMAGE_MC", quiz_score: quizScore })
       }).then(response => {
         if (response.ok) {
-          showRewardAnimation(10, "Points");
+          //showRewardAnimation(quizScore, "Points");
+          showRewardAnimation(quizScore, "Points", userScoreElement);
           bootstrap.Modal.getInstance(document.getElementById(`modal-imcq-${quizId}`)).hide();
+          setTimeout(function(){ 
+                window.location.reload();
+            }, 3000); // reload page after 1 second
         }
       });
     } else {

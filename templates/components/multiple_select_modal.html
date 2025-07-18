@@ -83,18 +83,22 @@ document.addEventListener('DOMContentLoaded', function() {
 
         if (isCorrect) {
             feedbackDiv.innerHTML = '<div class="alert alert-success">' + correctFeedback + '</div>';
+            const quizScore = parseInt('{{ quiz_data.score_on_completion }}');
             fetch(`/course/quiz/submit/${quizObjectId}/`, {
                 method: 'POST',
                 headers: {
                 'Content-Type': 'application/json',
                 'X-CSRFToken': '{{ csrf_token }}'
                 },
-                body: JSON.stringify({ answer: selectedOptions.join(',') })
+                body: JSON.stringify({ answer: selectedOptions.join(','), quiz_type: "MULTIPLE_SELECT", quiz_score: quizScore })
             }).then(response => {
             if (response.status === 200) {
-                showRewardAnimation(10, "Points"); // 🎉 Your animation trigger
+                showRewardAnimation(quizScore, "Points"); // 🎉 Your animation trigger
                 const modalInstance = bootstrap.Modal.getInstance(quizModal);
                 modalInstance.hide();
+                setTimeout(function(){ 
+                  window.location.reload();
+              }, 3000); // reload page after 1 second
             } else {
                 console.log("Wrong answer or incomplete.");
             }

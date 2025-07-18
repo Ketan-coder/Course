@@ -942,6 +942,8 @@ def submit_quiz(request, quiz_id):
         try:
             data = json.loads(request.body)
             user_answer = data.get('answer')
+            quiz_type = data.get('quiz_type')
+            quiz_score = data.get('quiz_score')
 
             if not user_answer:
                 return JsonResponse({"error": "Answer is required"}, status=400)
@@ -973,13 +975,41 @@ def submit_quiz(request, quiz_id):
 
                 print("user_answer ==> ",user_answer)
                 print("correct_answer ==> ",correct_answer)
+                print("quiz_type ==> ",quiz_type)
+                print("qdata.get('type') ==> ",qdata.get('type'))
                 if isinstance(correct_answer, str) and ',' in correct_answer:
                     correct_set = set(map(str.strip, correct_answer.lower().split(',')))
                     user_set = set(map(str.strip, [x.lower() for x in user_answer])) if isinstance(user_answer, list) else set(map(str.strip, user_answer.lower().split(',')))
                     if correct_set == user_set:
+                        if qdata.get("type") == quiz_type:
+                            print("quiz_type ==> ",quiz_type)
+                            print("qdata.get('type') ==> ",qdata.get('type'))
+                            qdata["is_completed"] = True
+                            quiz.questions[qid] = qdata
+                            print("quiz.questions[qid] ==> ",quiz.questions[qid])
+                            print("quiz ==> ",quiz)
+                            quiz.save(update_fields=["questions"])
+                            quiz.completed_by_users.add(profile)
+                            update_score(request, profile, 10)
+                            update_streak(request, profile)
+                            Activity.objects.create(
+                                user=request.user,
+                                activity_type="Quiz Completion",
+                                description=f"Completed quiz: {quiz.title} with answer: {user_answer}",
+                            )
+                            return JsonResponse({"status": "completed"})
+                # Handle non-multiple cases as before
+                
+                elif str(user_answer).strip().lower() == str(correct_answer).strip().lower() and qdata.get("type") != 'DRAG_DROP':
+                    if qdata.get("type") == quiz_type:
+                        print("quiz_type ==> ",quiz_type)
+                        print("qdata.get('type') ==> ",qdata.get('type'))
                         qdata["is_completed"] = True
                         quiz.questions[qid] = qdata
+                        print("quiz.questions[qid] ==> ",quiz.questions[qid])
+                        print("quiz ==> ",quiz)
                         quiz.save(update_fields=["questions"])
+                        print("quiz.questions[qid] ==> ",quiz.questions[qid])
                         quiz.completed_by_users.add(profile)
                         update_score(request, profile, 10)
                         update_streak(request, profile)
@@ -989,21 +1019,6 @@ def submit_quiz(request, quiz_id):
                             description=f"Completed quiz: {quiz.title} with answer: {user_answer}",
                         )
                         return JsonResponse({"status": "completed"})
-                # Handle non-multiple cases as before
-                
-                elif str(user_answer).strip().lower() == str(correct_answer).strip().lower():
-                    qdata["is_completed"] = True
-                    quiz.questions[qid] = qdata
-                    quiz.save(update_fields=["questions"])
-                    quiz.completed_by_users.add(profile)
-                    update_score(request, profile, 10)
-                    update_streak(request, profile)
-                    Activity.objects.create(
-                        user=request.user,
-                        activity_type="Quiz Completion",
-                        description=f"Completed quiz: {quiz.title} with answer: {user_answer}",
-                    )
-                    return JsonResponse({"status": "completed"})
 
 
             return JsonResponse({"status": "incorrect"}, status=200)
@@ -1011,6 +1026,57 @@ def submit_quiz(request, quiz_id):
         except Exception as e:
             print(str(e))
             return JsonResponse({"error": str(e)}, status=400)
+        
+@csrf_exempt
+def submit_drag_and_drop_quiz(request, quiz_id):
+    if request.method != "POST":
+        return JsonResponse({"error": "Only POST allowed."}, status=405)
+
+    try:
+        data = json.loads(request.body)
+        user_answer = data.get("user_answer")  # expected as a dict of "0": "value", ...
+
+        if not user_answer or not isinstance(user_answer, dict):
+            return JsonResponse({"error": "Invalid or missing user answer"}, status=400)
+
+        quiz = get_object_or_404(Quiz, id=quiz_id)
+        profile = get_object_or_404(Profile, user=request.user)
+        questions = quiz.questions
+
+        for qid, qdata in questions.items():
+            if qdata.get("type") != "DRAG_DROP":
+                continue
+
+            correct_mapping = qdata.get("correct_mapping")
+            if not correct_mapping:
+                continue
+
+            # Normalize both dicts as strings for key-wise comparison
+            correct_items = sorted(correct_mapping.items())
+            user_items = sorted(user_answer.items())
+
+            if correct_items == user_items:
+                qdata["is_completed"] = True
+                quiz.questions[qid] = qdata
+                quiz.save(update_fields=["questions"])
+                quiz.completed_by_users.add(profile)
+
+                update_score(request, profile, qdata.get("score_on_completion", 10))
+                update_streak(request, profile)
+
+                Activity.objects.create(
+                    user=request.user,
+                    activity_type="Quiz Completion",
+                    description=f"Completed drag-and-drop quiz: {quiz.title} with answer: {user_answer}",
+                )
+
+                return JsonResponse({"status": "completed", "question_id": qid})
+
+        return JsonResponse({"status": "incorrect", "message": "No match found"}, status=200)
+
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=400)
+    
 def quiz_warmup_start(request):
     quiz = Quiz.objects.filter(course__isnull=True, section__isnull=True, lesson__isnull=True).first()  # or filter by course/lesson if needed
     if not quiz:

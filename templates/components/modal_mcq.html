@@ -70,7 +70,7 @@ document.addEventListener('DOMContentLoaded', function () {
   const correctFeedback = "Correct! Well done.";
   const incorrectFeedback = "Incorrect. Try again.";
   const quizObjectId = "{{ quiz.id }}";
-
+  const quizScore = parseInt('{{ quiz_data.score_on_completion }}');
   const form = document.getElementById(`form-mcq-${quizId}`);
   const submitBtn = document.getElementById(`submit-mcq-${quizId}`);
   const feedback = document.getElementById(`feedback-mcq-${quizId}`);
@@ -114,12 +114,15 @@ document.addEventListener('DOMContentLoaded', function () {
           'Content-Type': 'application/json',
           'X-CSRFToken': '{{ csrf_token }}'
         },
-        body: JSON.stringify({ answer: value })
+        body: JSON.stringify({ answer: value, quiz_type: "SINGLE_SELECT", quiz_score: quizScore })
       }).then(response => {
         if (response.status === 200) {
-          showRewardAnimation(10, "Points");
+          showRewardAnimation(quizScore, "Points");
           const modalInstance = bootstrap.Modal.getInstance(document.getElementById(`modal-mcq-${quizId}`));
           modalInstance.hide();
+          setTimeout(function(){ 
+                window.location.reload();
+            }, 3000); // reload page after 1 second
         }
       }).catch(console.error);
 
