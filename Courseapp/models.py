@@ -54,6 +54,7 @@ class Course(models.Model):
     reviews = models.ManyToManyField('CourseReview', related_name='courses', blank=True)
     qr_code = models.ImageField(upload_to='qr_codes/', blank=True, null=True)
     referred_by = models.ManyToManyField('Users.Profile', related_name='referred_courses', blank=True)
+    # is_deleted = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     extra_fields = models.JSONField(blank=True, null=True, default=dict)
@@ -144,6 +145,7 @@ class Section(models.Model):
     is_open = models.BooleanField(default=True)
     article = models.ForeignKey('Article', on_delete=models.SET_NULL, related_name='sections', blank=True, null=True)
     lesson = models.ManyToManyField('Lesson', related_name='sections', blank=True)
+    # is_deleted = models.BooleanField(default=False)
     extra_fields = models.JSONField(blank=True, null=True, default=dict)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -192,6 +194,7 @@ class Lesson(models.Model):
     content = models.TextField(blank=True, null=True)
     order = models.PositiveIntegerField(default=0)
     required_score = models.PositiveIntegerField(default=0)
+    # is_deleted = models.BooleanField(default=False)
     extra_fields = models.JSONField(blank=True, null=True, default=dict)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -235,6 +238,7 @@ class Quiz(models.Model):
     max_score = models.DecimalField(max_digits=5, decimal_places=2, default=Decimal('0.0'))
     passing_score = models.DecimalField(max_digits=5, decimal_places=2, default=Decimal('0.0'))
     required_score = models.PositiveIntegerField(default=0)
+    # is_deleted = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     extra_fields = models.JSONField(blank=True, null=True, default=dict)
@@ -256,9 +260,9 @@ class Quiz(models.Model):
         self.extra_fields['last_updated'] = str(self.updated_at)
         if not self.questions:
             self.questions = {  
-                "1": {"id":"1","question": "What is the capital of France?", "options": [{"id": "Paris", "text": "Paris"}, {"id": "London", "text": "London"}], "type": "MULTIPLE_SELECT", "answer": "Paris", "is_completed": False},
-                "2": {"id":"2","question": "What is 2 + 2?", "options": [{"id": "1", "text": "1"}, {"id": "2", "text": "2"}, {"id": "3", "text": "3"}, {"id": "4", "text": "4"}], "type": "SINGLE_SELECT", "answer": "4", "is_completed": False},
-                "3": {"id":"3","question": "Capital of Nepal?", "options": [], "type": "TEXT", "answer": "Kathmandu","is_completed": False},
+                "1": {"id":"1","question": "What is the capital of France?", "options": [{"id": "Paris", "text": "Paris"}, {"id": "London", "text": "London"}], "type": "MULTIPLE_SELECT", "answer": "Paris", "is_completed": False , "score_on_completion" : 10},
+                "2": {"id":"2","question": "What is 2 + 2?", "options": [{"id": "1", "text": "1"}, {"id": "2", "text": "2"}, {"id": "3", "text": "3"}, {"id": "4", "text": "4"}], "type": "SINGLE_SELECT", "answer": "4", "is_completed": False, "score_on_completion" : 10},
+                "3": {"id":"3","question": "Capital of Nepal?", "options": [], "type": "TEXT", "answer": "Kathmandu","is_completed": False, "score_on_completion" : 10},
                 "4": {
                     "id":"4",
                     "question": "Which monument is shown?",
@@ -266,7 +270,8 @@ class Quiz(models.Model):
                     "image": "media/monuments/eiffel.jpg",
                     "options": [{"id": "Taj Mahal","text": "Taj Mahal",},{"id": "Colosseum","text": "Colosseum",},{"id": "Eiffel Tower","text": "Eiffel Tower",}],
                     "answer": "Eiffel Tower",
-                    "is_completed": False
+                    "is_completed": False,
+                    "score_on_completion" : 10
                 },
                 "5": {
                     "id":"5",
@@ -279,7 +284,8 @@ class Quiz(models.Model):
                         {"id": "quick", "text": "quick"}
                     ],
                     "correct_mapping": { "0": "fox", "1": "lazy" },
-                    "is_completed": False
+                    "is_completed": False,
+                    "score_on_completion" : 10
                 }
             }
         super().save(*args, **kwargs)

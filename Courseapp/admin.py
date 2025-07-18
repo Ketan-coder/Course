@@ -119,7 +119,7 @@ class LessonAdmin(admin.ModelAdmin):
 
 @admin.register(Quiz)
 class QuizAdmin(admin.ModelAdmin):
-    list_display = ("course", "title", "created_at")
+    list_display = ("course", "section", "lesson", "title", "created_at")
     search_fields = ("course__title", "title")
     list_filter = ("course__created_at",)
     ordering = ("-created_at",)

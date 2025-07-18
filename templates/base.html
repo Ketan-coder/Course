@@ -36,32 +36,32 @@
       transition: transform 0.3s ease;
     }
     #reward-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background: rgba(0, 0, 0, 0.7);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 9999;
-    animation: fadeIn 0.3s ease;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.7);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+      animation: fadeIn 0.3s ease;
 }
 
 .reward-text {
-    font-size: 4rem;
-    color: gold;
-    text-shadow: 0 0 10px white, 0 0 20px gold;
-    animation: popUp 0.8s ease forwards;
-    font-weight: bold;
-    transform: scale(0);
+    font-size: 4rem;
+    color: gold;
+    text-shadow: 0 0 10px white, 0 0 20px gold;
+    animation: popUp 0.8s ease forwards;
+    font-weight: bold;
+    transform: scale(0);
 }
 
 @keyframes popUp {
-    0% { transform: scale(0); }
-    60% { transform: scale(1.2); }
-    100% { transform: scale(1); }
+    0% { transform: scale(0); }
+    60% { transform: scale(1.2); }
+    100% { transform: scale(1); }
 }
 
 @keyframes fadeIn {
@@ -107,8 +107,8 @@
               Partners</a></li>
 
             {% if request.session.current_user_type == 'student' %}
-            <li class="nav-item"><a class="nav-link"><i class="ph ph-fire"></i> Streak: <b>{{ request.session.streak }}</b></a></li>
-            <li class="nav-item"><a class="nav-link"><i class="ph ph-trophy"></i> Score: <b>{{ request.session.score }}</b></a></li>
+              <li class="nav-item"><a class="nav-link"><i class="ph ph-fire"></i> Streak: <b>{{ request.session.streak }}</b></a></li>
+              <li class="nav-item"><a class="nav-link"><i class="ph ph-trophy"></i> Score: <b>{{ request.session.score }}</b></a></li>
             {% endif %}
           </ul>
 
