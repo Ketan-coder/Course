@@ -10,18 +10,20 @@ class SmartInput extends HTMLElement {
         const options = this.getAttribute('data-options');
         const errorMsg = this.getAttribute('data-error') || `Invalid ${label.toLowerCase()}`;
         const fetchUrl = this.getAttribute('data-url');
-        const bindTo = this.getAttribute('data-bind');
         const value = this.getAttribute('value') || '';
 
+        const onInputFn = this.getAttribute('data-oninput');
+        const onClickFn = this.getAttribute('data-onclick');
+        const onChangeFn = this.getAttribute('data-onchange');
+
         this.innerHTML = `
-            <label class="form-label">${label}</label>
+            ${type === 'checkbox' || type === 'radio' ? '' : `<label class="form-label">${label}</label>`}
             <div class="input-container position-relative"></div>
             <div class="invalid-feedback d-none">${errorMsg}</div>
         `;
 
         const container = this.querySelector('.input-container');
         const error = this.querySelector('.invalid-feedback');
-
         let input;
 
         if (type === 'textarea') {
@@ -29,8 +31,9 @@ class SmartInput extends HTMLElement {
             input.name = name;
             input.className = 'form-control';
             input.rows = rows;
-            if (placeholder) input.placeholder = placeholder;
+            input.placeholder = placeholder;
             input.value = value;
+            container.appendChild(input);
         }
 
         else if (type === 'select') {
@@ -48,11 +51,58 @@ class SmartInput extends HTMLElement {
                 }
             }
 
-            if (fetchUrl) {
-                this.createSearchBox(container, input, fetchUrl);
-            }
+            if (fetchUrl) this.createSearchBox(container, input, fetchUrl);
 
             input.value = value;
+            container.appendChild(input);
+        }
+
+        else if (type === 'checkbox') {
+            input = document.createElement('input');
+            input.type = 'checkbox';
+            input.name = name;
+            input.checked = value === 'true' || value === '1';
+            input.className = 'form-check-input me-2';
+
+            const labelEl = document.createElement('label');
+            labelEl.className = 'form-check-label';
+            labelEl.textContent = label;
+
+            const wrapper = document.createElement('div');
+            wrapper.className = 'form-check';
+            wrapper.appendChild(input);
+            wrapper.appendChild(labelEl);
+            container.appendChild(wrapper);
+        }
+
+        else if (type === 'radio') {
+            if (!options) return;
+            try {
+                const opts = JSON.parse(options);
+                opts.forEach(opt => {
+                    const radio = document.createElement('input');
+                    radio.type = 'radio';
+                    radio.name = name;
+                    radio.value = opt.id;
+                    radio.className = 'form-check-input me-2';
+                    if (opt.id == value) radio.checked = true;
+
+                    const labelEl = document.createElement('label');
+                    labelEl.className = 'form-check-label me-3';
+                    labelEl.textContent = opt.name;
+
+                    const wrapper = document.createElement('div');
+                    wrapper.className = 'form-check form-check-inline';
+                    wrapper.appendChild(radio);
+                    wrapper.appendChild(labelEl);
+                    container.appendChild(wrapper);
+
+                    this.attachEvents(radio, error, onInputFn, onClickFn, onChangeFn);
+                });
+            } catch (e) {
+                console.warn('Invalid JSON in data-options:', options);
+            }
+            return;
         }
 
         else {
@@ -60,27 +110,16 @@ class SmartInput extends HTMLElement {
             input.type = type;
             input.name = name;
             input.className = 'form-control';
-            if (placeholder) input.placeholder = placeholder;
+            input.placeholder = placeholder;
             input.value = value;
+            container.appendChild(input);
         }
 
-        if (required) input.required = true;
-        container.appendChild(input);
+        if (input) {
+            if (required) input.required = true;
+            this.attachEvents(input, error, onInputFn, onClickFn, onChangeFn);
+        }
 
-        // Validation
-        input.addEventListener('blur', () => {
-            if (!input.checkValidity()) {
-                error.classList.remove('d-none');
-                input.classList.add('is-invalid');
-                this.classList.add('shake');
-                setTimeout(() => this.classList.remove('shake'), 500);
-            } else {
-                error.classList.add('d-none');
-                input.classList.remove('is-invalid');
-            }
-        });
-
-        // Inject styles for shake and loading
         const style = document.createElement('style');
         style.textContent = `
             .shake {
@@ -112,6 +151,36 @@ class SmartInput extends HTMLElement {
         this.appendChild(style);
     }
 
+    attachEvents(input, error, onInputFn, onClickFn, onChangeFn) {
+        // Validation
+        input.addEventListener('blur', () => {
+            if (!input.checkValidity()) {
+                error.classList.remove('d-none');
+                input.classList.add('is-invalid');
+                input.classList.add('shake');
+                setTimeout(() => input.classList.remove('shake'), 400);
+            } else {
+                error.classList.add('d-none');
+                input.classList.remove('is-invalid');
+            }
+        });
+
+        // Native + Custom Event Hooks
+        input.addEventListener('input', e => {
+            error.classList.add('d-none');
+            input.classList.remove('is-invalid');
+            if (onInputFn && window[onInputFn]) window[onInputFn](e);
+        });
+
+        input.addEventListener('click', e => {
+            if (onClickFn && window[onClickFn]) window[onClickFn](e);
+        });
+
+        input.addEventListener('change', e => {
+            if (onChangeFn && window[onChangeFn]) window[onChangeFn](e);
+        });
+    }
+
     renderOptions(select, options) {
         options.forEach(opt => {
             const option = document.createElement('option');
@@ -129,7 +198,6 @@ class SmartInput extends HTMLElement {
         const spinner = document.createElement('div');
         spinner.className = 'spinner';
         container.appendChild(spinner);
-
         container.insertBefore(inputBox, select);
 
         inputBox.addEventListener('input', () => {
@@ -152,4 +220,3 @@ class SmartInput extends HTMLElement {
 }
 
 customElements.define('smart-input', SmartInput);
-

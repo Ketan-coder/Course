@@ -89,12 +89,12 @@ def send_email(to_email, subject, title, body, anchor_link=None, anchor_text="Cl
 
 
 @check_load_time
-def generate_quiz_from_content(section_title :str, lesson_content:str, prompt: str = '') -> dict:
+def generate_quiz_from_content(section_title :str, lesson_content:str, prompt: str = '', is_generate_content_using_ai: bool = False) -> dict:
     # models = genai.list_models()
 
     # for m in models:
     #     print(m.name, m.supported_generation_methods)
-    if prompt is None or prompt.strip() == "":
+    if prompt is None or prompt.strip() == "" and is_generate_content_using_ai == False:
         prompt = f'''
 You are an expert quiz creator.
 
@@ -134,6 +134,7 @@ Here is an example of a question:
 
 Add a "is_completed": False field to all questions.
 Add a "score_on_completion" : 10 field to all questions which will be 50 at highest and 5 to lowest, Avg - 10.
+Max score a user can get from completing all the questions in this quiz is 100.
 For IMAGE_MC type, add an "image" field. And "image" field should have a url to the image from web.
 Output **only valid JSON**, with no comments or markdown.
 
@@ -152,6 +153,7 @@ Here is an example of a question you have to generate:
 
 Add a "is_completed": False field to all questions.
 Add a "score_on_completion" : 10 field to all questions which will be 50 at highest and 5 to lowest, Avg - 10.
+Max score a user can get from completing all the questions in this quiz is 100.
 For IMAGE_MC type, add an "image" field. And "image" field should have a url to the image from web.
 Output **only valid JSON**, with no comments or markdown.
 

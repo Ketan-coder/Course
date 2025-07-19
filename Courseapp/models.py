@@ -155,28 +155,28 @@ class Section(models.Model):
     
     @check_load_time
     @retry_on_failure(retries=3, delay=2)
-    def save(self, prompt='',*args, **kwargs):
+    def save(self, prompt='', is_generate_content_using_ai=False,*args, **kwargs):
         self.extra_fields['last_updated'] = str(self.updated_at)
         # Generate quiz from the first lesson's content if it exists
-        quiz_data = generate_quiz_from_content(self.title, self.lesson.first().content if self.lesson.exists() else '', prompt=prompt)
-        if quiz_data:
+        if is_generate_content_using_ai:
             related_quizes = Quiz.objects.filter(section=self)
             if not related_quizes.exists():
-                quiz = Quiz.objects.create(
-                    section=self,
-                    title=f"{self.title} Quiz",
-                    questions=quiz_data,
-                    is_inside_video=False,
-                    max_score=Decimal('100.0'),
-                    passing_score=Decimal('50.0'),
-                    required_score=5
-                )
-                print(f"Quiz created for section {self.title}: {quiz.title}")
+                quiz_data = generate_quiz_from_content(self.title, self.lesson.first().content if self.lesson.exists() else '', prompt=prompt)
+                if quiz_data:
+                        quiz = Quiz.objects.create(
+                            section=self,
+                            title=f"{self.title} Quiz",
+                            questions=quiz_data,
+                            is_inside_video=False,
+                            max_score=Decimal('100.0'),
+                            passing_score=Decimal('50.0'),
+                            required_score=5
+                        )
+                        print(f"Quiz created for section {self.title}: {quiz.title}")
+                else:
+                    print(f"No quiz data generated for section {self.title}. Please check the lesson content.")
             else:
                 print(f"Quiz already exists for section {self.title}. No new quiz created.")
-        else:
-            print(f"No quiz data generated for section {self.title}. Please check the lesson content.")
-        print(f"Quiz Data given from AI ==> {quiz_data}")
         super().save(*args, **kwargs)
 
 

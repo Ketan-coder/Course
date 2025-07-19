@@ -16,6 +16,9 @@ from django.contrib import messages
 from .utils import * 
 from django.contrib.auth.models import User
 from django.template.loader import render_to_string
+from django.http import HttpResponse
+from django.shortcuts import get_object_or_404
+from django.core.exceptions import ValidationError
 
 def course_list(request) -> HttpResponse:
     courses: BaseManager[Course] = Course.objects.all()
@@ -230,18 +233,24 @@ def course_update(request, pk) -> HttpResponseRedirect | HttpResponsePermanentRe
 @user_passes_test(lambda u: Instructor.objects.filter(profile=u.profile).exists())
 def create_quiz(request) -> HttpResponse:
     request.session["page"] = "course"
+
+    # If editing: Preload quiz for editing
+    quiz_id = request.GET.get("quiz_id") or request.POST.get("quiz_id")
+    quiz = None
+    if quiz_id:
+        quiz = get_object_or_404(Quiz, id=quiz_id)
+
     if request.method == "POST":
-        # Either update or create new quiz
-        quiz_id = request.POST.get("quiz_id")
         course_id = request.POST.get("course_id")
         section_id = request.POST.get("selected_sections")
         lesson_id = request.POST.get("lesson_id")
         title = request.POST.get("title", "Untitled Quiz")
 
-        if quiz_id:
-            quiz = get_object_or_404(Quiz, id=quiz_id)
-        else:
+        # If editing, reuse; else create new
+        if not quiz:
             quiz = Quiz.objects.create(title=title)
+        else:
+            quiz.title = title  # update title if editing
 
         if course_id:
             quiz.course = get_object_or_404(Course, id=course_id)
@@ -250,25 +259,16 @@ def create_quiz(request) -> HttpResponse:
         if lesson_id:
             quiz.lesson = get_object_or_404(Lesson, id=lesson_id)
 
-        # Build JSON structure
+        # Parse questions
         questions = {}
         i = 1
         while request.POST.get(f"question_{i}"):
             q_text = request.POST.get(f"question_{i}")
             q_type = request.POST.get(f"type_{i}")
             q_answer = request.POST.get(f"answer_{i}")
-            print(q_text, q_type, q_answer)
-            # Collect options
             options = []
-            opt_index = 0
             for opt in request.POST.getlist(f"options_{i}")[0].split(','):
                 options.append({"id": opt, "text": opt})
-                opt_index += 1
-            # while request.POST.get(f"options_{i}"):
-            #     opt = request.POST.get(f"options_{i}_{opt_index}")
-            #     options.append({"id": opt, "text": opt})
-            #     opt_index += 1
-
             questions[str(i)] = {
                 "id": str(i),
                 "question": q_text,
@@ -278,19 +278,18 @@ def create_quiz(request) -> HttpResponse:
             }
             i += 1
 
-        print(questions)
-
         quiz.questions = questions
         quiz.save()
 
         Activity.objects.create(
             user=request.user,
             activity_type="Quiz Creation",
-            description=f"Created quiz: {quiz.title} for course: {quiz.course.title if quiz.course else 'N/A'}",
+            description=f"{'Updated' if quiz_id else 'Created'} quiz: {quiz.title} for section: {quiz.section.title if quiz.section else 'N/A'}",
         )
-        messages.success(request, "Quiz created successfully.")
+        messages.success(request, f"Quiz {'updated' if quiz_id else 'created'} successfully.")
         return redirect("course_list")
-    return render(request, "course/quiz_form.html",locals())
+
+    return render(request, "course/quiz_form.html", {"quiz": quiz})
 
 
 def search_tags(request) -> JsonResponse:
@@ -591,9 +590,6 @@ def mark_lesson_complete(request, lesson_id, user_profile) -> HttpResponseRedire
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
 
-from django.http import HttpResponse
-from django.shortcuts import get_object_or_404
-from django.core.exceptions import ValidationError
 
 def create_tag(request) -> HttpResponse:
     if request.method != "POST":
@@ -692,6 +688,7 @@ def create_section(request) -> HttpResponse:
         is_open = request.POST.get("is_open", False) == "on"
         article = request.POST.get("article", "")
         content = request.POST.get("content", "")
+        is_generate_content_using_ai = request.POST.get("is_generate_quiz", False) == "on"
         prompt = request.POST.get("prompt", "")
 
         selected_lessons = request.POST.getlist("selected_lesson")
@@ -714,7 +711,7 @@ def create_section(request) -> HttpResponse:
             if article:
                 section.article = article
             
-            section.save(prompt=prompt)  # Save prompt if needed
+            section.save(prompt=prompt, is_generate_content_using_ai=is_generate_content_using_ai)  # Save prompt if needed
             return HttpResponse(
                 """<div class="alert alert-success border-0 rounded-0 d-flex align-items-center" role="alert">
                     <i class="fa-light fa-check-circle text-success-emphasis me-2"></i>

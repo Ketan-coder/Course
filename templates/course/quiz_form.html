@@ -63,9 +63,9 @@ function addQuestion(data = {}) {
     <div class="form-group">
       <label class="pb-2">Type</label>
       <select name="type_${id}" class="form-control">
-        <option value="SINGLE_SELECT">Single Select</option>
-        <option value="MULTIPLE_SELECT">Multiple Select</option>
-        <option value="TEXT">Text</option>
+        <option value="SINGLE_SELECT" ${data.type === 'SINGLE_SELECT' ? 'selected' : ''}>Single Select</option>
+        <option value="MULTIPLE_SELECT" ${data.type === 'MULTIPLE_SELECT' ? 'selected' : ''}>Multiple Select</option>
+        <option value="TEXT" ${data.type === 'TEXT' ? 'selected' : ''}>Text</option>
       </select>
     </div>
     <div class="form-group">
@@ -140,5 +140,25 @@ function removeSection(button) {
       hiddenInput.remove();
   }
 }
+// Inject existing quiz questions on page load (Edit Mode)
+document.addEventListener("DOMContentLoaded", function () {
+  const existingQuestions = {{ quiz.questions|safe|default:"{}" }};
+  Object.keys(existingQuestions).forEach((key) => {
+    const q = existingQuestions[key];
+    addQuestion({
+      question: q.question,
+      answer: q.correct_answer,
+      options: q.options.map(opt => opt.text).join(','),
+      type: q.type
+    });
+
+    // Set the select value after the element is added
+    setTimeout(() => {
+      const selectEl = document.querySelector(`select[name="type_${questionCount - 1}"]`);
+      if (selectEl) selectEl.value = q.type;
+    }, 0);
+  });
+});
+
 </script>
 {% endblock body %}
