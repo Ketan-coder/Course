@@ -54,7 +54,7 @@ class Course(models.Model):
     reviews = models.ManyToManyField('CourseReview', related_name='courses', blank=True)
     qr_code = models.ImageField(upload_to='qr_codes/', blank=True, null=True)
     referred_by = models.ManyToManyField('Users.Profile', related_name='referred_courses', blank=True)
-    # is_deleted = models.BooleanField(default=False)
+    is_deleted = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     extra_fields = models.JSONField(blank=True, null=True, default=dict)
@@ -145,7 +145,8 @@ class Section(models.Model):
     is_open = models.BooleanField(default=True)
     article = models.ForeignKey('Article', on_delete=models.SET_NULL, related_name='sections', blank=True, null=True)
     lesson = models.ManyToManyField('Lesson', related_name='sections', blank=True)
-    # is_deleted = models.BooleanField(default=False)
+    is_deleted = models.BooleanField(default=False)
+    instructor = models.ForeignKey('Users.Instructor', on_delete=models.CASCADE, related_name='sections', default=1)
     extra_fields = models.JSONField(blank=True, null=True, default=dict)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -157,6 +158,8 @@ class Section(models.Model):
     @retry_on_failure(retries=3, delay=2)
     def save(self, prompt='', is_generate_content_using_ai=False,*args, **kwargs):
         self.extra_fields['last_updated'] = str(self.updated_at)
+        if not self.instructor:
+            raise ValueError("Instructor is required")
         # Generate quiz from the first lesson's content if it exists
         if is_generate_content_using_ai:
             related_quizes = Quiz.objects.filter(section=self)
@@ -194,7 +197,8 @@ class Lesson(models.Model):
     content = models.TextField(blank=True, null=True)
     order = models.PositiveIntegerField(default=0)
     required_score = models.PositiveIntegerField(default=0)
-    # is_deleted = models.BooleanField(default=False)
+    instructor = models.ForeignKey('Users.Instructor', on_delete=models.CASCADE, related_name='lesson', default=1)
+    is_deleted = models.BooleanField(default=False)
     extra_fields = models.JSONField(blank=True, null=True, default=dict)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -210,6 +214,8 @@ class Lesson(models.Model):
     @retry_on_failure(retries=3, delay=2)
     def save(self, *args, **kwargs):
         self.extra_fields['last_updated'] = str(self.updated_at)
+        if not self.instructor:
+            raise ValueError("Instructor is required")
         if self.video and '_resized' not in self.video.name:
             resized_path = MediaHandler.optimize_video(self.video)
             if resized_path:
@@ -238,7 +244,8 @@ class Quiz(models.Model):
     max_score = models.DecimalField(max_digits=5, decimal_places=2, default=Decimal('0.0'))
     passing_score = models.DecimalField(max_digits=5, decimal_places=2, default=Decimal('0.0'))
     required_score = models.PositiveIntegerField(default=0)
-    # is_deleted = models.BooleanField(default=False)
+    instructor = models.ForeignKey('Users.Instructor', on_delete=models.CASCADE, related_name='quiz', default=1)
+    is_deleted = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     extra_fields = models.JSONField(blank=True, null=True, default=dict)
@@ -258,6 +265,8 @@ class Quiz(models.Model):
 
     def save(self, *args, **kwargs):
         self.extra_fields['last_updated'] = str(self.updated_at)
+        if not self.instructor:
+            raise ValueError("Instructor is required")
         if not self.questions:
             self.questions = {  
                 "1": {"id":"1","question": "What is the capital of France?", "options": [{"id": "Paris", "text": "Paris"}, {"id": "London", "text": "London"}], "type": "MULTIPLE_SELECT", "answer": "Paris", "is_completed": False , "score_on_completion" : 10},
@@ -318,6 +327,7 @@ class QuizSubmission(models.Model):
 
 class Tag(models.Model):
     name = models.CharField(max_length=50, unique=True)
+    description = models.TextField(blank=True, null=True, max_length=200)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     extra_fields = models.JSONField(blank=True, null=True, default=dict)
@@ -465,6 +475,7 @@ class Article(models.Model):
     title = models.CharField(max_length=200)
     content = models.TextField()
     author = models.ForeignKey('Users.Instructor', on_delete=models.CASCADE, related_name='articles')
+    is_deleted = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     extra_fields = models.JSONField(blank=True, null=True, default=dict)

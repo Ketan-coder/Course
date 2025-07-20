@@ -20,9 +20,44 @@ from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.core.exceptions import ValidationError
 
+# def course_list(request) -> HttpResponse:
+#     courses: BaseManager[Course] = Course.objects.all()
+#     request.session["page"] = "course"
+#     if request.user.is_authenticated:
+#         profile = Profile.objects.filter(user=request.user).first()
+#         student_profile = Student.objects.filter(profile=profile).first() or None
+#         instructor_profile = Instructor.objects.filter(profile=profile).first() or None
+#         if student_profile:
+#             request.session['streak'] = student_profile.streak
+#             request.session['score'] = student_profile.score
+#             request.session['current_user_type'] = 'student'
+#         elif instructor_profile:
+#             request.session['current_user_type'] = 'instructor'
+
+#     if request.method == "POST" and "search_term" in request.POST:
+#         search_term = request.POST["search_term"]
+#         courses = courses.filter(
+#             title__icontains=search_term, language__name__icontains=search_term
+#         ) # Suggested code may be subject to a license. Learn more: ~LicenseLog:1606362085.
+#     if "course_level" in request.GET:
+#         filter_by_level = request.GET["course_level"]
+#         if filter_by_level != "any":
+#             courses = courses.filter(course_level=filter_by_level)
+
+#     if "course_type" in request.GET:
+#         filter_by_type = request.GET["course_type"]
+#         if filter_by_type == "any":
+#             courses = Course.objects.all()
+#         else:
+#             courses = courses.filter(course_type=filter_by_type)
+#     return render(request, "course/course_list.html", locals())
+
+from collections import defaultdict
+
 def course_list(request) -> HttpResponse:
-    courses: BaseManager[Course] = Course.objects.all()
+    courses = Course.objects.all()
     request.session["page"] = "course"
+
     if request.user.is_authenticated:
         profile = Profile.objects.filter(user=request.user).first()
         student_profile = Student.objects.filter(profile=profile).first() or None
@@ -38,7 +73,8 @@ def course_list(request) -> HttpResponse:
         search_term = request.POST["search_term"]
         courses = courses.filter(
             title__icontains=search_term, language__name__icontains=search_term
-        ) # Suggested code may be subject to a license. Learn more: ~LicenseLog:1606362085.
+        )
+
     if "course_level" in request.GET:
         filter_by_level = request.GET["course_level"]
         if filter_by_level != "any":
@@ -46,11 +82,28 @@ def course_list(request) -> HttpResponse:
 
     if "course_type" in request.GET:
         filter_by_type = request.GET["course_type"]
-        if filter_by_type == "any":
-            courses = Course.objects.all()
-        else:
+        if filter_by_type != "any":
             courses = courses.filter(course_type=filter_by_type)
-    return render(request, "course/course_list.html", locals())
+
+    #  Group courses by tag
+    grouped_courses = defaultdict(list)
+    seen_courses = set()
+
+    for course in courses:
+        tags = course.tags.values_list('name', flat=True)
+        for tag in tags:
+            if course.id not in seen_courses:
+                grouped_courses[tag].append(course)
+                seen_courses.add(course.id)
+                break
+
+    grouped_courses = dict(grouped_courses)
+
+    print(grouped_courses)
+
+    return render(request, "course/course_list.html", {
+        "grouped_courses": grouped_courses
+    })
 
 
 # @user_passes_test(lambda u: Instructor.objects.filter(profile=u.profile).exists())
@@ -161,7 +214,6 @@ def course_create(request) -> HttpResponseRedirect | HttpResponsePermanentRedire
 
 @user_passes_test(lambda u: Instructor.objects.filter(profile=u.profile).exists())
 def course_update(request, pk) -> HttpResponseRedirect | HttpResponsePermanentRedirect | HttpResponse:
-    print("pk:", pk)
     course: Course = get_object_or_404(Course, pk=pk)
     instructors: BaseManager[Instructor] = Instructor.objects.all()
     logined_profile = Profile.objects.get(user=request.user)
@@ -169,7 +221,6 @@ def course_update(request, pk) -> HttpResponseRedirect | HttpResponsePermanentRe
     lessons = Lesson.objects.all() 
     request.session["page"] = "course"
     if request.method == "POST":
-        print("request.POST:", request.POST)
         # Manually get data from request.POST for each field
         course.title = request.POST.get("title")
         course.description = request.POST.get("description")
@@ -301,20 +352,27 @@ def search_tags(request) -> JsonResponse:
 
 
 def search_sections(request) -> JsonResponse:
-    search_term = request.GET.get("q")
-    used_sections = Course.objects.values_list('sections__id', flat=True).distinct()
-    if search_term:
-        sections= Section.objects.filter(title__icontains=search_term).exclude(id__in=used_sections).values(
-            "id", "title"
-        )
-        return JsonResponse(list(sections), safe=False)
-    return JsonResponse([], safe=False)
+    try:
+        search_term = request.GET.get("q")
+        profile = Profile.objects.filter(user=request.user).first()
+        instructor_profile = Instructor.objects.filter(profile=profile).first()
+        used_sections = Course.objects.filter(sections__isnull=False, instructor_id=instructor_profile.id).values_list('sections__id', flat=True).distinct()
+        if search_term:
+            sections= Section.objects.filter(title__icontains=search_term, instructor_id=instructor_profile.id).exclude(id__in=used_sections).values(
+                "id", "title"
+            )
+            return JsonResponse(list(sections), safe=False)
+        return JsonResponse([], safe=False)
+    except Exception as e:
+        print(f"Error searching sections: {e}")
+        return JsonResponse([], safe=False)
 
 def search_lessons(request) -> JsonResponse:
     search_term = request.GET.get("q")
-    used_lessons = Course.objects.values_list('sections__lesson__id', flat=True).distinct()
+    instructor_profile = Instructor.objects.filter(profile=request.user.profile).first()
+    used_lessons = Course.objects.filter(sections__isnull=False, sections__lesson__isnull=False, instructor_id=instructor_profile.id).values_list('sections__lesson__id', flat=True).distinct()
     if search_term:
-        lessons= Lesson.objects.filter(title__icontains=search_term).exclude(id__in=used_lessons).values(
+        lessons= Lesson.objects.filter(title__icontains=search_term, instructor_id=instructor_profile.id).exclude(id__in=used_lessons).values(
             "id", "title"
         )
         return JsonResponse(list(lessons), safe=False)
@@ -332,9 +390,10 @@ def search_faqs(request) -> JsonResponse:
 
 def search_article(request) -> JsonResponse:
     search_term = request.GET.get("q")
-    used_articles = Section.objects.values_list('article__id', flat=True).distinct()
+    instructor_profile = Instructor.objects.filter(profile=request.user.profile).first()
+    used_articles = Section.objects.filter(instructor_id=instructor_profile.id).values_list('article__id', flat=True).distinct()
     if search_term:
-        articles= Article.objects.filter(title__icontains=search_term).exclude(id__in=used_articles).values(
+        articles= Article.objects.filter(title__icontains=search_term, author_id=instructor_profile.id).exclude(id__in=used_articles).values(
             "id", "title"
         )
         return JsonResponse(list(articles), safe=False)
@@ -478,7 +537,8 @@ def video_detail_page(request,lesson_id) -> HttpResponseRedirect | HttpResponseP
     # course = get_object_or_404(Course, sections__lesson__id=lesson_id)
     course = Course.objects.filter(sections__lesson__id=lesson_id).first()
     to_search_sections = course.sections.all().values_list('id', flat=True)
-    section = get_object_or_404(Section, id__in=to_search_sections)
+    # section = get_object_or_404(Section, id__in=to_search_sections)
+    section = Section.objects.filter(id__in=to_search_sections).first()
     is_completed = lesson.completed_by_users.filter(pk=logged_in_profile.pk).exists()
     stock = Stock.objects.all()
     quizes = Quiz.objects.filter(Q(lesson=lesson) | Q(course=course) | Q(section=section)).distinct()
@@ -682,7 +742,6 @@ def create_section(request) -> HttpResponse:
         )
 
     try:
-        print("Request POST ==>" + str(request.POST))
         section_id = request.POST.get("id")
         order = request.POST.get("order", 0)
         is_open = request.POST.get("is_open", False) == "on"
@@ -945,8 +1004,6 @@ def submit_quiz(request, quiz_id):
             if not user_answer:
                 return JsonResponse({"error": "Answer is required"}, status=400)
             
-            print("request.POST ==> ",request.POST)
-            print("quiz_id ==> ",quiz_id)
 
             quiz = get_object_or_404(Quiz, id=quiz_id)
             profile = get_object_or_404(Profile, user=request.user)
@@ -970,21 +1027,13 @@ def submit_quiz(request, quiz_id):
                 #         return JsonResponse({"status": "completed"})
                 
 
-                print("user_answer ==> ",user_answer)
-                print("correct_answer ==> ",correct_answer)
-                print("quiz_type ==> ",quiz_type)
-                print("qdata.get('type') ==> ",qdata.get('type'))
                 if isinstance(correct_answer, str) and ',' in correct_answer:
                     correct_set = set(map(str.strip, correct_answer.lower().split(',')))
                     user_set = set(map(str.strip, [x.lower() for x in user_answer])) if isinstance(user_answer, list) else set(map(str.strip, user_answer.lower().split(',')))
                     if correct_set == user_set:
                         if qdata.get("type") == quiz_type:
-                            print("quiz_type ==> ",quiz_type)
-                            print("qdata.get('type') ==> ",qdata.get('type'))
                             qdata["is_completed"] = True
                             quiz.questions[qid] = qdata
-                            print("quiz.questions[qid] ==> ",quiz.questions[qid])
-                            print("quiz ==> ",quiz)
                             quiz.save(update_fields=["questions"])
                             quiz.completed_by_users.add(profile)
                             update_score(request, profile, 10)
@@ -999,14 +1048,9 @@ def submit_quiz(request, quiz_id):
                 
                 elif str(user_answer).strip().lower() == str(correct_answer).strip().lower() and qdata.get("type") != 'DRAG_DROP':
                     if qdata.get("type") == quiz_type:
-                        print("quiz_type ==> ",quiz_type)
-                        print("qdata.get('type') ==> ",qdata.get('type'))
                         qdata["is_completed"] = True
                         quiz.questions[qid] = qdata
-                        print("quiz.questions[qid] ==> ",quiz.questions[qid])
-                        print("quiz ==> ",quiz)
                         quiz.save(update_fields=["questions"])
-                        print("quiz.questions[qid] ==> ",quiz.questions[qid])
                         quiz.completed_by_users.add(profile)
                         update_score(request, profile, 10)
                         update_streak(request, profile)
@@ -1248,3 +1292,64 @@ def lesson_form(request, lesson_id=None) -> HttpResponseRedirect | HttpResponseP
         return redirect("course_list")
 
     return render(request, "course/lesson_form.html", locals())
+
+
+def delete_lesson_api(request, lesson_id):
+    """
+    API endpoint to delete a lesson.
+    """
+    if not request.user.is_authenticated:
+        return JsonResponse({"error": "You must be logged in to delete a lesson."}, status=403)
+    if lesson_id is None:
+        return JsonResponse({"error": "Lesson ID is required."}, status=400)
+    
+    lesson = get_object_or_404(Lesson, id=lesson_id)
+    # lesson.is_deleted = True
+    # lesson.save()
+    lesson.delete()
+    return JsonResponse({"success": True})
+
+def delete_article_api(request, article_id):
+    """
+    API endpoint to delete an article.
+    """
+    if not request.user.is_authenticated:
+        return JsonResponse({"error": "You must be logged in to delete an article."}, status=403)
+    if article_id is None:
+        return JsonResponse({"error": "Article ID is required."}, status=400)
+    
+    article = get_object_or_404(Article, id=article_id)
+    # article.is_deleted = True
+    # article.save()
+    article.delete()
+    return JsonResponse({"success": True})
+
+def delete_section_api(request, section_id):
+    """
+    API endpoint to delete a section.
+    """
+    if not request.user.is_authenticated:
+        return JsonResponse({"error": "You must be logged in to delete a section."}, status=403)
+    if section_id is None:
+        return JsonResponse({"error": "Section ID is required."}, status=400)
+    
+    section = get_object_or_404(Section, id=section_id)
+    section.is_deleted = True
+    section.save()
+    # section.delete()
+    return JsonResponse({"success": True})
+
+def delete_course_api(request, course_id):
+    """
+    API endpoint to delete a course.
+    """
+    if not request.user.is_authenticated:
+        return JsonResponse({"error": "You must be logged in to delete a course."}, status=403)
+    if course_id is None:
+        return JsonResponse({"error": "Course ID is required."}, status=400)
+    
+    course = get_object_or_404(Course, id=course_id)
+    course.is_deleted = True
+    course.save()
+    # course.delete()
+    return JsonResponse({"success": True})

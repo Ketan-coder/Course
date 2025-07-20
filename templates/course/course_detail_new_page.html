@@ -109,14 +109,20 @@
                 </div>
               </div>
               
-              <h2 class="font-weight-bold mt-4 mb-3">Description</h2>
-              <div class="card card-body">{% if course.description %}{{ course.description|safe|linebreaksbr }} {% else %} No description provided {% endif %}</div>
+              {% if course.description %}              
+                <h2 class="font-weight-bold mt-4 mb-3">Description</h2>
+                <div class="card card-body">{% if course.description %}{{ course.description|safe|linebreaksbr }} {% else %} No description provided {% endif %}</div>
+              {% endif %}
 
-              <h2 class="font-weight-bold mt-4 mb-3">Prerequisites</h2>
-              <div class="card card-body"> {% if course.prerequisites %}{{ course.prerequisites|safe|linebreaksbr }} {% else %}  No Prerequisites provided{% endif %}</div>
-
-              <h2 class="font-weight-bold mt-4 mb-3">Circulam</h2>
-              <div class="card card-body"> {% if course.circulam %} {{ course.circulam|safe|linebreaksbr }} {% else %} No Circulam Provided {% endif %} </div>
+              {% if course.prerequisites %}              
+                <h2 class="font-weight-bold mt-4 mb-3">Prerequisites</h2>
+                <div class="card card-body"> {% if course.prerequisites %}{{ course.prerequisites|safe|linebreaksbr }} {% else %}  No Prerequisites provided{% endif %}</div>
+              {% endif %}
+              
+              {% if course.circulam %}
+                <h2 class="font-weight-bold mt-4 mb-3">Circulam</h2>
+                <div class="card card-body"> {% if course.circulam %} {{ course.circulam|safe|linebreaksbr }} {% else %} No Circulam Provided {% endif %} </div>
+              {% endif %}
 
               <h2 class="font-weight-bold mt-4 mb-3">Instructor</h2>
               <div class="card card-body">

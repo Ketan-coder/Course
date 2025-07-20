@@ -50,4 +50,11 @@ urlpatterns: list[URLPattern] = [
     path('fetch-realtime-notes/<int:course_id>/', views.get_course_notes_htmx, name='fetch_realtime_notes'),
     path('fetch-realtime-notes/<int:course_id>/<int:section_id>/', views.get_course_notes_htmx, name='fetch_realtime_notes'),
     path('fetch-realtime-notes/<int:course_id>/<int:section_id>/<int:lesson_id>/', views.get_course_notes_htmx, name='fetch_realtime_notes'),
+
+    # delete paths
+    # path('delete_tag/<int:tag_id>/', login_required(views.delete_tag), name='delete_tag'),
+    path('delete_section/<int:section_id>/', login_required(views.delete_section_api), name='delete_section'),
+    path('delete_lesson/<int:lesson_id>/', login_required(views.delete_lesson_api), name='delete_lesson'),
+    # path('delete_faq/<int:faq_id>/', login_required(views.delete_faq), name='delete_faq'),
+    path('delete_article/<int:article_id>/', login_required(views.delete_article_api), name='delete_article'),
 ]

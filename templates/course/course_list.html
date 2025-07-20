@@ -1,8 +1,41 @@
 {% extends "base.html" %}
 {% load static %}
+{% block head %}
+    <style>
+    .horizontal-scroll {
+        overflow-x: auto;
+        padding-bottom: 10px;
+        scroll-snap-type: x mandatory;
+    }
+
+    .horizontal-scroll::-webkit-scrollbar {
+        height: 8px;
+    }
+
+    .horizontal-scroll::-webkit-scrollbar-thumb {
+        background-color: rgba(0, 0, 0, 0.2);
+        border-radius: 10px;
+    }
+
+    .horizontal-scroll .card {
+        scroll-snap-align: start;
+        transition: transform 0.3s ease;
+    }
+
+    .horizontal-scroll .card:hover {
+        transform: scale(1.05);
+    }
+
+    .scrollbar-hover:hover::-webkit-scrollbar-thumb {
+        background-color: rgba(0, 0, 0, 0.4);
+    }
+</style>
+{% endblock head %}
+
+
 
 {% block body %}
-<div class="container my-5">
+<div class="container-fluid p-3">
     <div class="mt-4 mb-4 text-start"> 
       <h1 class="fw-bold">Explore Courses</h1>
         <p class="text-muted">Browse our extensive catalog of courses designed to enhance your skills and knowledge.</p>
@@ -52,14 +85,15 @@
             More Filters
         </button>
         
-        {% if course.instructor.profile.user.id == request.user.id %}
+        {% if instructor.profile.user.id == request.user.id %}
             <a href="{% url 'course_create' %}" class="btn btn-success">Create Course</a>    
         {% endif %}
             
         
 
     </div>
-    <hr class="my-4"> <div class="row g-4">
+    <hr class="my-4"> 
+    {% comment %} <div class="row g-4">
         {% for course in courses %}
             <div class="col-12 col-sm-6 col-lg-4 col-xl-3"> {% include "course/components/course_card.html" with course=course %}
             </div>
@@ -68,7 +102,24 @@
                 <p class="text-center">No courses available.</p>
             </div>
         {% endfor %}
-    </div>
+    </div> {% endcomment %}
+
+    {% for tag_name, course_list in grouped_courses.items %}
+        <div class="content mt-2 {% if not forloop.first %}mt-5{% endif %}">
+            <h5 class="text-muted">{{ tag_name }}</h5>
+            <div class="horizontal-scroll scrollbar-hover d-flex flex-nowrap">
+                {% for course in course_list %}
+                    <div class="card me-1" style="min-width: 250px;">
+                        {% include "course/components/course_card.html" with course=course %}
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% endfor %}
+
+
+
+
 
     {% if is_paginated %}
     <div class="d-flex justify-content-center my-4">
