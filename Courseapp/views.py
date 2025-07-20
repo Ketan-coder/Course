@@ -749,6 +749,8 @@ def create_section(request) -> HttpResponse:
         content = request.POST.get("content", "")
         is_generate_content_using_ai = request.POST.get("is_generate_quiz", False) == "on"
         prompt = request.POST.get("prompt", "")
+        profile = request.user.profile
+        instructor = Instructor.objects.filter(profile=profile).first()
 
         selected_lessons = request.POST.getlist("selected_lesson")
         if selected_lessons:
@@ -769,6 +771,8 @@ def create_section(request) -> HttpResponse:
             
             if article:
                 section.article = article
+
+            section.instructor_id = instructor.id
             
             section.save(prompt=prompt, is_generate_content_using_ai=is_generate_content_using_ai)  # Save prompt if needed
             return HttpResponse(
@@ -778,7 +782,7 @@ def create_section(request) -> HttpResponse:
                 </div>""".format(title)
             )
         else:
-            section = Section.objects.create(title=title, order=order, is_open=is_open)
+            section = Section.objects.create(title=title, order=order, is_open=is_open, instructor=instructor)
             if content:
                 section.content = content
             if article:
@@ -830,6 +834,8 @@ def create_lesson(request) -> HttpResponse:
         order = request.POST.get("order", 0)
         required_score = request.POST.get("required-score", 0)
         video_url = request.POST.get("video-url", "")
+        profile = request.user.profile
+        instructor = Instructor.objects.filter(profile=profile).first()
         # section_id = request.POST.get("section_id", 1)
         # section = get_object_or_404(Section, pk=section_id)
 
@@ -845,6 +851,7 @@ def create_lesson(request) -> HttpResponse:
                 lesson.video_url = video_url
             lesson.order = order
             lesson.required_score = required_score
+            lesson.instructor = instructor
             lesson.save()
             return HttpResponse(
                 """<div class="alert alert-success border-0 rounded-0 d-flex align-items-center" role="alert">
@@ -858,6 +865,7 @@ def create_lesson(request) -> HttpResponse:
                 content=description,
                 order=order,
                 required_score=required_score,
+                instructor=instructor
             )
             if "thumbnail" in request.FILES:
                 lesson.thumbnail = request.FILES["thumbnail"]
@@ -1265,6 +1273,7 @@ def lesson_form(request, lesson_id=None) -> HttpResponseRedirect | HttpResponseP
         lesson.description = description
         lesson.order = order
         lesson.required_score = required_score
+        lesson.instructor = instructor
 
         if video_path:
             lesson.video = video_path
@@ -1302,6 +1311,12 @@ def delete_lesson_api(request, lesson_id):
         return JsonResponse({"error": "You must be logged in to delete a lesson."}, status=403)
     if lesson_id is None:
         return JsonResponse({"error": "Lesson ID is required."}, status=400)
+    profile = request.user.profile
+    author = Instructor.objects.filter(profile=profile).first()
+    if not author:
+        return JsonResponse({"error": "You must be an author to delete a lesson."}, status=403)
+    if lesson.author_id != author.id:
+        return JsonResponse({"error": "You must be the author of the lesson to delete it."}, status=403)
     
     lesson = get_object_or_404(Lesson, id=lesson_id)
     # lesson.is_deleted = True
@@ -1317,6 +1332,12 @@ def delete_article_api(request, article_id):
         return JsonResponse({"error": "You must be logged in to delete an article."}, status=403)
     if article_id is None:
         return JsonResponse({"error": "Article ID is required."}, status=400)
+    profile = request.user.profile
+    author = Instructor.objects.filter(profile=profile).first()
+    if not author:
+        return JsonResponse({"error": "You must be an author to delete an article."}, status=403)
+    if article.author_id != author.id:
+        return JsonResponse({"error": "You must be the author of the article to delete it."}, status=403)
     
     article = get_object_or_404(Article, id=article_id)
     # article.is_deleted = True
@@ -1332,6 +1353,12 @@ def delete_section_api(request, section_id):
         return JsonResponse({"error": "You must be logged in to delete a section."}, status=403)
     if section_id is None:
         return JsonResponse({"error": "Section ID is required."}, status=400)
+    profile = request.user.profile
+    instructor = Instructor.objects.filter(profile=profile).first()
+    if not instructor:
+        return JsonResponse({"error": "You must be an instructor to delete a section."}, status=403)
+    if section.instructor_id != instructor.id:
+        return JsonResponse({"error": "You must be the instructor of the section to delete it."}, status=403)
     
     section = get_object_or_404(Section, id=section_id)
     section.is_deleted = True
@@ -1347,7 +1374,12 @@ def delete_course_api(request, course_id):
         return JsonResponse({"error": "You must be logged in to delete a course."}, status=403)
     if course_id is None:
         return JsonResponse({"error": "Course ID is required."}, status=400)
-    
+    profile = request.user.profile
+    instructor = Instructor.objects.filter(profile=profile).first()
+    if not instructor:
+        return JsonResponse({"error": "You must be an instructor to delete a course."}, status=403)
+    if course.instructor_id != instructor.id:
+        return JsonResponse({"error": "You must be the instructor of the course to delete it."}, status=403)
     course = get_object_or_404(Course, id=course_id)
     course.is_deleted = True
     course.save()
