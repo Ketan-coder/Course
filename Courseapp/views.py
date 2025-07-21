@@ -1012,6 +1012,12 @@ def submit_quiz(request, quiz_id):
             if not user_answer:
                 return JsonResponse({"error": "Answer is required"}, status=400)
             
+            if not request.user.is_authenticated:
+                return JsonResponse({"error": "User is not authenticated"}, status=401)
+            
+            if Instructor.objects.filter(profile=request.user.profile).exists():
+                return JsonResponse({"error": "Instructors are not allowed to submit quizzes"}, status=403)
+            
 
             quiz = get_object_or_404(Quiz, id=quiz_id)
             profile = get_object_or_404(Profile, user=request.user)
@@ -1087,6 +1093,12 @@ def submit_drag_and_drop_quiz(request, quiz_id):
 
         if not user_answer or not isinstance(user_answer, dict):
             return JsonResponse({"error": "Invalid or missing user answer"}, status=400)
+
+        if not request.user.is_authenticated:
+            return JsonResponse({"error": "User is not authenticated"}, status=401)
+        
+        if Instructor.objects.filter(profile=request.user.profile).exists():
+            return JsonResponse({"error": "Instructors are not allowed to submit drag-and-drop quizzes"}, status=403)
 
         quiz = get_object_or_404(Quiz, id=quiz_id)
         profile = get_object_or_404(Profile, user=request.user)
