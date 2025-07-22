@@ -3,7 +3,7 @@ from django.contrib.auth.models import User
 from django.dispatch import receiver
 from .models import Course, Quiz, QuizSubmission
 
-
+from django.db import transaction
 from django.contrib.auth.models import User
 
 @receiver(post_save, sender=Quiz)
@@ -14,13 +14,18 @@ def quiz_completion(sender, instance, created, **kwargs):
         completed_count = sum(1 for qid, qdata in (instance.questions or {}).items() if qdata["is_completed"] == True)
         total_earned_points = sum(qdata["score_on_completion"] for qid, qdata in (instance.questions or {}).items() if qdata["is_completed"] == True)
         if question_count != 0 and question_count == completed_count:
-            profile = User.objects.get(id=request.user.id).profile
-            QuizSubmission.objects.create(
-                quiz_id=instance.id,
-                user=profile,
-                score=total_earned_points,
-                total=total_earned_points,
-                passed=True,
-                answers=instance.questions
-            )
+            with transaction.atomic():
+                profile = User.objects.get(id=request.user.id).profile
+                QuizSubmission.objects.create(
+                    quiz_id=instance.id,
+                    user=profile,
+                    score=total_earned_points,
+                    total=total_earned_points,
+                    passed=True,
+                    answers=instance.questions
+                )
+                for qid, qdata in (instance.questions or {}).items():
+                    qdata["is_completed"] = False
+                    instance.questions[qid] = qdata
+                instance.save()
 
