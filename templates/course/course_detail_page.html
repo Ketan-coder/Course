@@ -104,7 +104,9 @@
                           <div class="d-flex align-items-center"><i class="ph ph-play-circle me-2 text-primary fs-4"></i><span class="font-weight-semi-bold">{{ lesson.title|default:'Lesson Topic' }}</span></div>
                           <div>
                             {% if logged_in_profile.id == course.instructor.profile.id %}<a href="{% url 'lesson_form' lesson_id=lesson.id %}" class="btn btn-sm">Edit</a>{% endif %}
-                            <a href="{% url 'video_detail_page' lesson_id=lesson.id %}" class="btn btn-sm">Watch</a>
+                            {% if logged_in_profile in course.is_bought_by_users.all or course.is_open_to_all and logged_in_profile in course.is_bought_by_users.all %}
+                              <a href="{% url 'video_detail_page' lesson_id=lesson.id %}" class="btn btn-sm">Watch</a>
+                            {% endif %}
                           </div>
                         </div>
                       {% endfor %}
@@ -144,10 +146,10 @@
                 <div class="card card-body text-center text-muted">No FAQs available.</div>
               {% endfor %}
             </div>
-
             <h2 class="font-weight-bold mb-3">Reviews</h2>
             <div class="card card-body">
-              {% if request.user.is_authenticated %}
+              <!-- Show review form only if user is authenticated AND enrolled -->
+              {% if request.user.is_authenticated and logged_in_profile in course.is_bought_by_users.all %}
                 <div class="mb-4">
                   <h4 class="font-weight-bold mb-3">{% if user_review %}Update your review{% else %}Leave a Review{% endif %}</h4>
                   <form method="POST" action="{% url 'course_detail' pk=course.id %}#reviews" id="review-form">
@@ -171,10 +173,13 @@
                     <button type="submit" name="submit_review" value="1" class="btn btn-primary">{% if user_review %}Update Review{% else %}Submit Review{% endif %}</button>
                   </form>
                 </div>
+              {% elif request.user.is_authenticated %}
+                <p class="text-muted">You must enroll in this course to leave a review.</p>
               {% else %}
                 <p class="text-muted">You must <a href="{% url 'login' %}?next={{ request.path }}#reviews">log in</a> to leave a review.</p>
               {% endif %}
               
+              <!-- Show reviews to everyone -->
               {% with all_reviews=course.reviews.all %}
                 {% for review in all_reviews|slice:":3" %}
                   <div class="border-top pt-3 mt-3">
