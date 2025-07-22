@@ -19,6 +19,7 @@ from django.template.loader import render_to_string
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.core.exceptions import ValidationError
+from django.db.models import Avg
 
 # def course_list(request) -> HttpResponse:
 #     courses: BaseManager[Course] = Course.objects.all()
@@ -436,6 +437,9 @@ def course_detail(request, pk) -> HttpResponseRedirect | HttpResponsePermanentRe
     request.session["page"] = "course"
     logged_in_profile = Profile.objects.get(user=user)
     user_review = course.reviews.filter(user=logged_in_profile).first()
+    student_enrolled_count = course.is_bought_by_users.count()
+    reviews_count = course.reviews.count()
+    avg_reviews =  course.reviews.all().aggregate(Avg('rating'))['rating__avg'] or 0
     ref = request.GET.get('ref', 'outside')
 
     if ref != 'outside' and ref != None and ref != '':
@@ -455,8 +459,9 @@ def course_detail(request, pk) -> HttpResponseRedirect | HttpResponsePermanentRe
                 bonus_points = 35
                 student_profile = Student.objects.filter(profile=referrer_profile).first()
                 if student_profile:
-                    student_profile.score += bonus_points
-                    student_profile.save()
+                    # student_profile.score += bonus_points
+                    # student_profile.save()
+                    update_score(request,logged_in_profile, bonus_points)
                     # Log the bonus points activity
                     Activity.objects.create(
                         user=referrer,
@@ -513,7 +518,7 @@ def course_detail(request, pk) -> HttpResponseRedirect | HttpResponsePermanentRe
                     messages.error(request, "No lessons available in this course.")
                     return redirect("course_detail", pk=pk)
             return redirect("course_detail", pk=pk)
-    return render(request, "course/course_detail_new_page.html", locals())
+    return render(request, "course/course_detail_page.html", locals())
 
 
 def video_detail_page(request,lesson_id) -> HttpResponseRedirect | HttpResponsePermanentRedirect | HttpResponse:

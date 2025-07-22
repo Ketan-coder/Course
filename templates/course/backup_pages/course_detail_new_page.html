@@ -395,7 +395,8 @@
         const quill = new Quill('#quill-editor', {
           theme: 'snow',
           placeholder: 'Write your review...',
-          modules: { toolbar: [['bold', 'italic', 'underline'], [{ list: 'ordered' }, { list: 'bullet' }], ['link'], ['clean']] }
+          modules: { toolbar: globalToolbarOptions, 
+            history: globalHistoryForQuill }
         })
     
         const initialReviewText = `{{ user_review.review_text|safe|default:""|escapejs }}`

@@ -156,15 +156,9 @@ document.addEventListener('DOMContentLoaded', function () {
     if (bioTextArea) {
         const quill = new Quill('#editor_bio', {
             theme: 'snow',
-            modules: {
-                toolbar: [
-                    [{ 'header': [1, 2, 3, false] }],
-                    ['bold', 'italic', 'underline'],
-                    [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-                    ['link'],
-                    ['clean']
-                ]
-            }
+            placeholder: 'Write your bio here...',
+            modules: { toolbar: globalToolbarOptions, 
+                history: globalHistoryForQuill }
         });
         
         // Set initial content from the hidden textarea

@@ -63,7 +63,9 @@ document.addEventListener("DOMContentLoaded", function () {
     // Quill
     const quill = new Quill('#quill-editor', {
         theme: 'snow',
-        placeholder: 'Write lesson description...'
+        placeholder: 'Write lesson description...',
+        modules: { toolbar: globalToolbarOptions, 
+            history: globalHistoryForQuill }
     });
     const descriptionInput = document.getElementById('id_description');
     // Set Quill content if editing

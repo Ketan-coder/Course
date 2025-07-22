@@ -577,11 +577,13 @@
                             onclick="openEditSection(
                                 '{{ section.id }}', 
                                 '{{ section.title }}', 
-                                '{{ section.description }}',
+                                '{{ section.description|safe }}',
                                 '{{ section.order }}', 
                                 '{{ section.is_open }}',
                                 '{% for lesson in section.lesson.all %}{{ lesson.id }}{% if not forloop.last %},{% endif %}{% endfor %}',
-                                '{% for lesson in section.lesson.all %}{{ lesson.title }}{% if not forloop.last %}|{% endif %}{% endfor %}'
+                                '{% for lesson in section.lesson.all %}{{ lesson.title }}{% if not forloop.last %}|{% endif %}{% endfor %}',
+                                '{{ section.article.id }}',
+                                '{{ section.article.title }}'
                             )">
                         Edit
                     </button> | 
@@ -994,12 +996,20 @@ function openEditFAQ(id, question, answer) {
   }
 
 // Function to open the offcanvas for adding/editing sections
-function openEditSection(id, title, description, order, is_open, lesson_ids, lesson_titles) {
+function openEditSection(id, title, description, order, is_open, lesson_ids, lesson_titles, article_id, article_title) {
     // Set basic fields
     document.getElementById('section-id').value = id;
     document.getElementById('section-title').value = title;
     document.getElementById('section-order').value = order;
-    document.getElementById('section-description').value = description;
+    //document.getElementById('section-description').value = description;
+    // Wait for SmartQuill to render
+    setTimeout(() => {
+        const quillContainer = document.querySelector('#section-description');
+        if (quillContainer && quillContainer.editor) {
+            quillContainer.editor.root.innerHTML = description;
+            quillContainer.querySelector(`input[name="description"]`).value = description;
+        }
+    }, 100); // Wait a short time to ensure it's initialized
     //const quill = document.getElementById('section-description').querySelector('.ql-editor');
     //quill.root.innerHTML = description;
     
@@ -1046,6 +1056,10 @@ function openEditSection(id, title, description, order, is_open, lesson_ids, les
     } catch (e) {
         console.error('Error parsing lessons:', e);
     }
+
+    // Set article properly
+    const articleElement = document.getElementById('id_article');
+    articleElement.innerHTML = `<option value="${article_id}" selected>${article_title}</option>`;
   
     // Update button text
     //document.getElementById('section-submit-btn').textContent = id ? "Update Section" : "Add Section";
