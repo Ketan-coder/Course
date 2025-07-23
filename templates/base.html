@@ -38,6 +38,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.bubble.css" />
+  <script src="https://unpkg.com/@barba/core"></script>
   <style>
     @font-face {
       font-family: 'Gucina';
@@ -112,8 +113,10 @@
         <a class="navbar-brand" href="{% url 'landing_page' %}">
           {% if request.user.is_authenticated and request.user.profile.isDarkTheme %}
             <img src="{% static 'resoures/images/logo_blue.png' %}" alt="Logo" width="100" height="26" class="d-inline-block align-text-top">
+          {% elif request.user.is_authenticated and not request.user.profile.isDarkTheme %}
+          <img src="{% static 'resoures/images/logo.png' %}" alt="Logo" width="100" height="26" class="d-inline-block align-text-top">
           {% else %}
-            <img src="{% static 'resoures/images/logo.png' %}" alt="Logo" width="100" height="26" class="d-inline-block align-text-top">
+            <img src="{% static 'resoures/images/logo_blue.png' %}" alt="Logo" width="100" height="26" class="d-inline-block align-text-top">
           {% endif %}
         </a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
@@ -140,6 +143,7 @@
 
           <!-- Dark Mode / Theme Toggles -->
           <div class="d-flex gap-2 align-items-center">
+            {% if user.is_authenticated %}
             <button type='submit' class="btn btn-outline-dark btn-sm text-primary"
             onclick="confirmAndToggle('{% url 'toggle_dark_mode' %}', 'Do you want to toggle dark/light mode?')">
               {% if request.user.profile.isDarkTheme %} Light Theme {% else %} Dark Mode {% endif %} 
@@ -153,7 +157,7 @@
             <button type="button" class="btn btn-outline-primary ms-2" data-bs-toggle="modal" data-bs-target="#searchModal">
               <i class="ph-duotone ph-magnifying-glass"></i> Search
             </button>
-            {% if user.is_authenticated %}
+            
             <div class="dropdown ms-3">
               <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
                 <img src="https://placehold.co/40x40/666/fff?text=U" alt="User Avatar" class="rounded-circle" width="30" height="30" />
@@ -270,12 +274,14 @@
     
      {% endblock body %}
 
-     {% block script %}
-
-     {% endblock script %}
+     
      <script type="module" src="{% static 'resoures/js/components/counter_animation.js' %}"></script>
      <script type="module" src="{% static 'resoures/js/components/icon_button.js' %}"></script>
      <script type="module" src="{% static 'resoures/js/components/button.js' %}"></script>
+      <script type="module" src="{% static 'resoures/js/components/smart_search_input.js' %}"></script>
+     <script type="module" src="{% static 'resoures/js/components/input.js' %}"></script>
+      <script type="module" src="{% static 'resoures/js/components/rich_text_input.js' %}"></script>
+     <script type="module" src="{% static 'resoures/js/components/smart_list_tile.js' %}"></script>
      <script src="{% static 'resoures/js/script.js' %}"></script>
      <script>
       function launchConfetti(score) {
@@ -435,5 +441,8 @@
         }
       }
     </script>
+    {% block script %}
+
+     {% endblock script %}
   </body>
 </html>

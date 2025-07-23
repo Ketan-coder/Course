@@ -1,0 +1,219 @@
+{% extends "base.html" %}
+{% load static %}
+    
+
+{% block body %}
+<div class="container-fluid content-wrapper">
+  <div class="text-start my-4">
+    <h1 class="font-weight-bold display-3">Create a New Course</h1>
+    <p class="text-muted font-size-18">Follow the steps to build and publish your course.</p>
+  </div>
+
+  <div class="row g-4">
+    <!-- LEFT: Stepper -->
+    <div class="col-lg-3 mb-2">
+      <div class="card p-1">
+        <h5 class="text-primary font-weight-bold mb-15"> Foundation</h5>
+        <div class="d-flex flex-column gap-2">
+  <smart-list-tile
+    leading-icon="ph ph-identification-card-fill"
+    title="Step 1: Core course details"
+    subtitle="Set the basic information for your course"
+    active-color="primary"
+    {% if step != '1' %} background-color="#2c3e50" {% else %}{% endif %} 
+    text-color= {% if step == '1' %}"primary"{% else %} "#ecf0f1" {% endif %}
+    icon-color= {%if step == '1' %}"primary"{% else %} "#000" {% endif %}
+    {% if step == '1' %} active {% endif %}
+    {% if course %} clickable {% endif %}
+    {% if step == '1' %} trailing-icon="ph ph-caret-right" {% endif %}
+    onclick="location.href='{% if course %}{% url 'course_create_step_one' course_id=course.id %}{% endif %}'">
+  </smart-list-tile>
+
+  <smart-list-tile
+    leading-icon="ph ph-books-fill"
+    title="Step 2: Curriculum"
+    subtitle="Define course structure and syllabus"
+    active-color="primary"
+    {% if step != '2' %} background-color="#2c3e50" {% else %}{% endif %} 
+    text-color= {% if step == '2' %}"primary"{% else %} "#ecf0f1" {% endif %}
+    icon-color= {%if step == '2' %}"primary"{% else %} "#000" {% endif %}
+    {% if step == '2' %} active {% endif %}
+    {% if course %} clickable {% endif %}
+    {% if step == '2' %} trailing-icon="ph ph-caret-right" {% endif %}
+    onclick="location.href='{% if course %}{% url 'course_create_step_one' course_id=course.id %}{% endif %}'">
+  </smart-list-tile>
+
+  <smart-list-tile
+    leading-icon="ph ph-list-bullets"
+    title="Step 3: Sections & lectures"
+    subtitle="Organize your content into logical parts"
+    active-color="primary"
+    {% if step != '3' %} background-color="#2c3e50" {% else %}{% endif %} 
+    text-color= {% if step == '3' %}"primary"{% else %} "#ecf0f1" {% endif %}
+    icon-color= {%if step == '3' %}"primary"{% else %} "#000" {% endif %}
+    {% if step == '3' %} active {% endif %}
+    {% if course %} clickable {% endif %}
+    {% if step == '3' %} trailing-icon="ph ph-caret-right" {% endif %}
+    onclick="location.href='{% if course %}{% url 'course_create_step_one' course_id=course.id %}{% endif %}'">
+  </smart-list-tile>
+
+  <smart-list-tile
+    leading-icon="ph ph-gear-fill"
+    title="Step 4: Settings & Publish"
+    subtitle="Configure settings and publishing options"
+    active-color="primary"
+    {% if step != '4' %} background-color="#2c3e50" {% else %}{% endif %} 
+    text-color= {% if step == '4' %}"primary"{% else %} "#ecf0f1" {% endif %}
+    icon-color= {%if step == '4' %}"primary"{% else %} "#000" {% endif %}
+    {% if step == '4' %} active {% endif %}
+    {% if course %} clickable {% endif %}
+    {% if step == '4' %} trailing-icon="ph ph-caret-right" {% endif %}
+    onclick="location.href='{% if course %}{% url 'course_create_step_one' course_id=course.id %}{% endif %}'">
+  </smart-list-tile>
+
+  <smart-list-tile
+    leading-icon="ph ph-rocket-launch-fill"
+    title="Step 5: Finalize & go live"
+    subtitle="Finalize everything and launch your course"
+    active-color="primary"
+    {% if step != '5' %} background-color="#2c3e50" {% else %}{% endif %} 
+    text-color= {% if step == '5' %}"primary"{% else %} "#ecf0f1" {% endif %}
+    icon-color= {%if step == '5' %}"primary"{% else %} "#000" {% endif %}
+    {% if step == '5' %} active {% endif %}
+    {% if course %} clickable {% endif %}
+    {% if step == '5' %} trailing-icon="ph ph-caret-right" {% endif %}
+    onclick="location.href='{% if course %}{% url 'course_create_step_one' course_id=course.id %}{% endif %}'">
+  </smart-list-tile>
+</div>
+
+
+
+        <div class="mt-2 p-3 bg-secondary text-white rounded">
+          <strong>💡 Pro Tip</strong><br>
+          A great title and description helps your course get discovered.
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: Form -->
+    <div class="col-lg-8 col-xl-9">
+      <main>
+        <div class="card p-4 p-lg-4">
+          <form id="course-foundation-form" method="post" action="{% if course %}{% url 'course_create_step_one' course_id=course.id %}{% else %}{% url 'course_create_step_one' %}{% endif %}" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            <div class="mb-4">
+              <smart-input label="Title" name="title" id="id_title" value="{{ course.title|default_if_none:"" }}" type="text" required></smart-input>
+            </div>
+
+            <div class="mb-4">
+              <smart-quill
+                name="description"
+                label="Course Description"
+                value="{{ course.description|default_if_none:"" }}"
+                placeholder="Describe the course here...">
+                {{ course.description|safe|default_if_none:"" }}
+              </smart-quill>
+            </div>
+
+            <!-- Row for selects -->
+            <div class="row g-3 mb-4">
+              <div class="col-md-4">
+                <smart-input
+                  type="select" name="course_type" label="Course Type"
+                  value="{{ course.course_type|default:'free' }}"
+                  data-options='[{"id": "free", "name": "Free"}, {"id": "paid", "name": "Paid"}]'>
+                </smart-input>
+              </div>
+              <div class="col-md-4">
+                <smart-input
+                  type="select" name="course_level" label="Difficulty"
+                  value="{{ course.course_level|default:'all' }}"
+                  data-options='[{"id": "beginner", "name": "Beginner"}, {"id": "intermediate", "name": "Intermediate"}, {"id": "advanced", "name": "Advanced"}, {"id": "all", "name": "All"}]'>
+                </smart-input>
+              </div>
+              <div class="col-md-4">
+                <smart-input
+                  type="select" name="language" label="Language"
+                  value="{{ course.language.pk|default:'EN' }}"
+                  data-options='[{% for lang in languages %}{"id": "{{ lang.pk }}", "name": "{{ lang.name|escapejs }}"}{% if not forloop.last %},{% endif %}{% endfor %}]'>
+                </smart-input>
+              </div>
+            </div>
+
+            <!-- Price inputs -->
+            <div class="row g-3 mb-4">
+              <div class="col-md-6">
+                <label class="form-label">Price</label>
+                <div class="input-group">
+                  <span class="input-group-text">
+                    {% if course %}{{ course.instructor.profile.currency.symbol }}{% else %}{{ instructor.profile.currency.symbol }}{% endif %}
+                  </span>
+                  <input type="number" step="0.01" class="form-control" name="price" value="{{ course.price|default:'0.00' }}">
+                </div>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Discount Price</label>
+                <div class="input-group">
+                  <span class="input-group-text">
+                    {% if course %}{{ course.instructor.profile.currency.symbol }}{% else %}{{ instructor.profile.currency.symbol }}{% endif %}
+                  </span>
+                  <input type="number" step="0.01" class="form-control" name="discount_price" value="{{ course.discount_price|default:'0.00' }}">
+                </div>
+              </div>
+            </div>
+
+            <!-- Uploads -->
+            <div class="row g-4 mb-5">
+              <div class="col-md-6">
+                <label for="thumbnail-input" class="form-label">Thumbnail</label>
+                <input type="file" name="thumbnail" id="thumbnail-input" class="form-control" onchange="previewImage(event, 'thumbnail-preview')">
+                <img id="thumbnail-preview" src="{% if course.thumbnail %} {{ course.thumbnail.url|default:'' }} {% else %} {% endif %} " class="img-fluid mt-3 rounded border" style="max-height: 200px; {% if not course.thumbnail %}display:none;{% endif %}" alt="Preview">
+              </div>
+              <div class="col-md-6">
+                <label for="intro-video-input" class="form-label">Intro Video</label>
+                <input type="file" name="intro_video" id="intro-video-input" class="form-control">
+                {% if course.intro_video %}
+                <p class="form-text mt-2">Current: <a href="{{ course.intro_video.url }}" target="_blank">{{ course.intro_video.name|truncatechars:30 }}</a></p>
+                {% endif %}
+              </div>
+            </div>
+
+            <div class="text-end">
+              <button type="submit" class="btn btn-primary btn-lg">
+                Next <i class="ph ph-arrow-right ms-2"></i>
+              </button>
+            </div>
+          </form>
+        </div>
+      </main>
+    </div>
+  </div>
+</div>
+
+{% endblock body %}
+    
+{% block script %}
+<!-- Quill Rich Text Editor JS -->
+<script src="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.js"></script>
+<script>
+    // Simple function to preview the selected thumbnail image
+    function previewImage(event, previewId) {
+        const preview = document.getElementById(previewId);
+        const file = event.target.files[0];
+        const reader = new FileReader();
+
+        reader.onload = function() {
+            if (preview) {
+                preview.src = reader.result;
+                preview.style.display = 'block';
+            }
+        }
+
+        if (file) {
+            reader.readAsDataURL(file);
+        }
+    }
+</script>
+
+{% endblock script %}

@@ -136,13 +136,7 @@
                 </select>
             </div>
             
-            <div class="mb-3">
-                {% comment %} <label for="section-lessons" class="form-label">Lessons</label>
-                <select name="lessons" id="section-lessons" class="form-select" multiple>
-                    {% for lesson in lessons %}
-                        <option value="{{ lesson.id }}">{{ lesson.title }}</option>
-                    {% endfor %}
-                </select> {% endcomment %}
+            {% comment %} <div class="mb-3">
                 <label for="id_lesson" class="form-label">Lesson:</label>
                 <input type="text" id="id_lesson_search" class="form-control" placeholder="Search and add Lessons">
                 <div id="lesson_search_results" class="list-group mt-2"></div>
@@ -157,7 +151,17 @@
                 {% if form.tags.errors %}
                 <div class="invalid-feedback d-block">{{ form.tags.errors }}</div>
                 {% endif %}
-            </div>
+            </div> {% endcomment %}
+            <smart-search-input 
+                label="Lessons"
+                placeholder="Search and add Lessons"
+                search-url="/course/courses/search_lesson/"
+                input-name="selected_lesson"
+                edit-url-template="/course/lesson/add/{id}/"
+                allow-edit
+                show-badges
+                allow-remove>
+            </smart-search-input>
 
             <div class="mb-3">
                 <label for="id_article" class="form-label">Article:</label>

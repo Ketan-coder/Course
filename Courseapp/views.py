@@ -1402,3 +1402,27 @@ def delete_course_api(request, course_id):
     course.save()
     # course.delete()
     return JsonResponse({"success": True})
+
+
+
+def course_create_step_one(request, course_id=None) -> HttpResponse:
+    """Handles the first step of course creation or editing.
+    If course_id is provided, it fetches the course for editing.
+    If not, it initializes a new course creation form.
+    """
+    request.session["page"] = "course"
+    step = "1"
+    if not request.user.is_authenticated:
+        return redirect("login")
+    user = request.user
+    instructor = Instructor.objects.filter(profile__user=user).first()
+    if not instructor:
+        return HttpResponse("You must be an instructor to create a course.", status=403)
+    languages = Language.objects.all()
+    if course_id:
+        course = get_object_or_404(Course, id=course_id)
+        if course.instructor_id != instructor.id:
+            return HttpResponse("You are not authorized to edit this course.", status=403)
+    else:
+        course = None
+    return render(request, "course/creation/step_1.html", locals())

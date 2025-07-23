@@ -9,6 +9,9 @@ urlpatterns: list[URLPattern] = [
     path("course/<int:pk>/", views.course_detail, name="course_detail"),
     path('courses/new/', login_required(views.course_create), name='course_create'),
 
+    path('courses/step_one/', login_required(views.course_create_step_one), name='course_create_step_one'),
+    path('courses/step_one/<int:course_id>/', login_required(views.course_create_step_one), name='course_create_step_one'),
+
     path('courses/bookmarked/', login_required(views.bookmarked_courses), name='bookmarked_courses'),
     path('courses/<int:pk>/edit/', login_required(views.course_update), name='course_update'),
     path('courses/<int:pk>/delete/', login_required(views.course_delete), name='course_delete'),
