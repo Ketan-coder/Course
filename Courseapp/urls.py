@@ -11,6 +11,14 @@ urlpatterns: list[URLPattern] = [
 
     path('courses/step_one/', login_required(views.course_create_step_one), name='course_create_step_one'),
     path('courses/step_one/<int:course_id>/', login_required(views.course_create_step_one), name='course_create_step_one'),
+    path('courses/step_two/', login_required(views.course_create_step_two), name='course_create_step_two'),
+    path('courses/step_two/<int:course_id>/', login_required(views.course_create_step_two), name='course_create_step_two'),
+    path('courses/step_three/', login_required(views.course_create_step_three), name='course_create_step_three'),
+    path('courses/step_three/<int:course_id>/', login_required(views.course_create_step_three), name='course_create_step_three'),
+    path('courses/step_four/', login_required(views.course_create_step_four), name='course_create_step_four'),
+    path('courses/step_four/<int:course_id>/', login_required(views.course_create_step_four), name='course_create_step_four'),
+    path('courses/step_five/', login_required(views.course_create_step_five), name='course_create_step_five'),
+    path('courses/step_five/<int:course_id>/', login_required(views.course_create_step_five), name='course_create_step_five'),
 
     path('courses/bookmarked/', login_required(views.bookmarked_courses), name='bookmarked_courses'),
     path('courses/<int:pk>/edit/', login_required(views.course_update), name='course_update'),

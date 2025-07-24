@@ -17,7 +17,7 @@ class SmartInput extends HTMLElement {
         const onChangeFn = this.getAttribute('data-onchange');
 
         this.innerHTML = `
-            ${type === 'checkbox' || type === 'radio' ? '' : `<label class="form-label">${label}</label>`}
+            ${type === 'checkbox' || type === 'radio' ? '' : `<label class="form-label">${label}:${required ? '<span class="text-danger"> * </span>' : ''} </label>`}
             <div class="input-container position-relative"></div>
             <div class="invalid-feedback d-none">${errorMsg}</div>
         `;

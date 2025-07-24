@@ -1,0 +1,85 @@
+<div class="card p-1">
+  <div class="text-start ps-2">
+    <h5 class="font-weight-bold">Steps</h5>
+    {% comment %} <p class="text-muted font-size-1">Follow the steps to build and publish your course.</p> {% endcomment %}
+  </div>
+  <hr>
+  <div class="d-flex flex-column gap-2">
+    <smart-list-tile
+      leading-icon="ph ph-identification-card-fill"
+      title="Step 1: Core course details"
+      subtitle="Set the basic information for your course"
+      active-color="primary"
+      {% if step != '1' %} background-color="#2c3e50" {% else %}{% endif %} 
+      text-color= {% if step == '1' %}"primary"{% else %} "#ecf0f1" {% endif %}
+      icon-color= {%if step == '1' %}"primary"{% else %} "#000" {% endif %}
+      {% if step == '1' %} active {% endif %}
+      {% if course %} clickable {% endif %}
+      {% if step == '1' %} trailing-icon="ph ph-caret-right" {% endif %}
+      onclick="location.href='{% if course %}{% url 'course_create_step_one' course_id=course.id %}{% else %}{% url 'course_create_step_one' %}{% endif %}'">
+    </smart-list-tile>
+
+    <smart-list-tile
+      leading-icon="ph ph-books-fill"
+      title="Step 2: Curriculum"
+      subtitle="Define course structure and syllabus"
+      active-color="primary"
+      {% if step != '2' %} background-color="#2c3e50" {% else %}{% endif %} 
+      text-color= {% if step == '2' %}"primary"{% else %} "#ecf0f1" {% endif %}
+      icon-color= {%if step == '2' %}"primary"{% else %} "#000" {% endif %}
+      {% if step == '2' %} active {% endif %}
+      {% if course %} clickable {% endif %}
+      {% if step == '2' %} trailing-icon="ph ph-caret-right" {% endif %}
+      onclick="location.href='{% if course %}{% url 'course_create_step_two' course_id=course.id %} {% else %} {% url 'course_create_step_two' %}{% endif %}'">
+    </smart-list-tile>
+
+    <smart-list-tile
+      leading-icon="ph ph-list-bullets"
+      title="Step 3: Sections & lectures"
+      subtitle="Organize your content into logical parts"
+      active-color="primary"
+      {% if step != '3' %} background-color="#2c3e50" {% else %}{% endif %} 
+      text-color= {% if step == '3' %}"primary"{% else %} "#ecf0f1" {% endif %}
+      icon-color= {%if step == '3' %}"primary"{% else %} "#000" {% endif %}
+      {% if step == '3' %} active {% endif %}
+      {% if course %} clickable {% endif %}
+      {% if step == '3' %} trailing-icon="ph ph-caret-right" {% endif %}
+      onclick="location.href='{% if course %}{% url 'course_create_step_three' course_id=course.id %} {% else %} {% url 'course_create_step_three' %} {% endif %}'">
+    </smart-list-tile>
+
+    <smart-list-tile
+      leading-icon="ph-fill ph-question"
+      title="Step 4: Quiz & Article"
+      subtitle="Add quizzes and articles to your course"
+      active-color="primary"
+      {% if step != '4' %} background-color="#2c3e50" {% else %}{% endif %} 
+      text-color= {% if step == '4' %}"primary"{% else %} "#ecf0f1" {% endif %}
+      icon-color= {%if step == '4' %}"primary"{% else %} "#000" {% endif %}
+      {% if step == '4' %} active {% endif %}
+      {% if course %} clickable {% endif %}
+      {% if step == '4' %} trailing-icon="ph ph-caret-right" {% endif %}
+      onclick="location.href='{% if course %}{% url 'course_create_step_four' course_id=course.id %} {% else %} {% url 'course_create_step_four' %} {% endif %}'">
+    </smart-list-tile>
+
+    <smart-list-tile
+      leading-icon="ph ph-rocket-launch-fill"
+      title="Step 5: Finalize & go live"
+      subtitle="Finalize everything and launch your course"
+      active-color="primary"
+      {% if step != '5' %} background-color="#2c3e50" {% else %}{% endif %} 
+      text-color= {% if step == '5' %}"primary"{% else %} "#ecf0f1" {% endif %}
+      icon-color= {%if step == '5' %}"primary"{% else %} "#000" {% endif %}
+      {% if step == '5' %} active {% endif %}
+      {% if course %} clickable {% endif %}
+      {% if step == '5' %} trailing-icon="ph ph-caret-right" {% endif %}
+      onclick="location.href='{% if course %}{% url 'course_create_step_five' course_id=course.id %} {% else %} {% url 'course_create_step_five' %} {% endif %}'">
+    </smart-list-tile>
+  </div>
+
+
+
+  <div class="mt-2 p-3 bg-secondary text-white rounded">
+    <strong>💡 Pro Tip</strong><br>
+    A great title and description helps your course get discovered.
+  </div>
+</div>

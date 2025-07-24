@@ -1406,7 +1406,8 @@ def delete_course_api(request, course_id):
 
 
 def course_create_step_one(request, course_id=None) -> HttpResponse:
-    """Handles the first step of course creation or editing.
+    """
+    Handles the first step of course creation or editing.
     If course_id is provided, it fetches the course for editing.
     If not, it initializes a new course creation form.
     """
@@ -1426,3 +1427,94 @@ def course_create_step_one(request, course_id=None) -> HttpResponse:
     else:
         course = None
     return render(request, "course/creation/step_1.html", locals())
+
+
+def course_create_step_two(request, course_id=None) -> HttpResponse:
+    """
+    Handles the second step of course creation or editing.
+    If course_id is provided, it fetches the course for editing.
+    If not, it initializes a new course creation form.
+    """
+    request.session["page"] = "course"
+    step = "2"
+    if not request.user.is_authenticated:
+        return redirect("login")
+    user = request.user
+    instructor = Instructor.objects.filter(profile__user=user).first()
+    if not instructor:
+        return HttpResponse("You must be an instructor to create a course.", status=403)
+    if course_id:
+        course = get_object_or_404(Course, id=course_id)
+        if course.instructor_id != instructor.id:
+            return HttpResponse("You are not authorized to edit this course.", status=403)
+    else:
+        course = None
+    return render(request, "course/creation/step_2.html", locals())
+
+
+def course_create_step_three(request, course_id=None) -> HttpResponse:
+    """
+    Handles the third step of course creation or editing.
+    If course_id is provided, it fetches the course for editing.
+    If not, it initializes a new course creation form.
+    """
+    request.session["page"] = "course"
+    step = "3"
+    if not request.user.is_authenticated:
+        return redirect("login")
+    user = request.user
+    instructor = Instructor.objects.filter(profile__user=user).first()
+    if not instructor:
+        return HttpResponse("You must be an instructor to create a course.", status=403)
+    if course_id:
+        course = get_object_or_404(Course, id=course_id)
+        if course.instructor_id != instructor.id:
+            return HttpResponse("You are not authorized to edit this course.", status=403)
+    else:
+        course = None
+    return render(request, "course/creation/step_3.html", locals())
+
+
+def course_create_step_four(request, course_id=None) -> HttpResponse:
+    """
+    Handles the fourth step of course creation or editing.
+    If course_id is provided, it fetches the course for editing.
+    If not, it initializes a new course creation form.
+    """
+    request.session["page"] = "course"
+    step = "4"
+    if not request.user.is_authenticated:
+        return redirect("login")
+    user = request.user
+    instructor = Instructor.objects.filter(profile__user=user).first()
+    if not instructor:
+        return HttpResponse("You must be an instructor to create a course.", status=403)
+    if course_id:
+        course = get_object_or_404(Course, id=course_id)
+        if course.instructor_id != instructor.id:
+            return HttpResponse("You are not authorized to edit this course.", status=403)
+    else:
+        course = None
+    return render(request, "course/creation/step_4.html", locals())
+
+def course_create_step_five(request, course_id=None) -> HttpResponse:
+    """
+    Handles the fifth step of course creation or editing.
+    If course_id is provided, it fetches the course for editing.
+    If not, it initializes a new course creation form.
+    """
+    request.session["page"] = "course"
+    step = "5"
+    if not request.user.is_authenticated:
+        return redirect("login")
+    user = request.user
+    instructor = Instructor.objects.filter(profile__user=user).first()
+    if not instructor:
+        return HttpResponse("You must be an instructor to create a course.", status=403)
+    if course_id:
+        course = get_object_or_404(Course, id=course_id)
+        if course.instructor_id != instructor.id:
+            return HttpResponse("You are not authorized to edit this course.", status=403)
+    else:
+        course = None
+    return render(request, "course/creation/step_5.html", locals())

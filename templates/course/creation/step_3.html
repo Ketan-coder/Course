@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% load static %}
+    
+
+{% block body %}
+<div class="container-fluid content-wrapper">
+  <div class="text-start my-4">
+    <h1 class="font-weight-bold display-3">Create a New Course</h1>
+    <p class="text-muted font-size-18">Follow the steps to build and publish your course.</p>
+  </div>
+
+  <div class="row g-4">
+    <!-- LEFT: Stepper -->
+    <div class="col-lg-3 mb-2">
+      {% include 'course/components/sidebar.html' with step=step course=course %}
+    </div>
+
+    <!-- RIGHT: Form -->
+    <div class="col-lg-8 col-xl-9">
+      <main>
+        <div class="card p-4 p-lg-4">
+          <form id="course-foundation-form" method="post" action="{% if course %}{% url 'course_create_step_one' course_id=course.id %}{% else %}{% url 'course_create_step_one' %}{% endif %}" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="text-start">
+              <h1 class="font-weight-bold">Step 3: Sections & lectures</h1>
+              <p class="text-muted font-size-18">Organize your content into logical parts</p>
+            </div>
+            <hr>
+
+            {% comment %} <div class="mb-4">
+              <smart-quill
+                name="prerequisites"
+                label="Course Prerequisites"
+                value="{{ course.prerequisites|default_if_none:"" }}"
+                placeholder="Describe the course here..." required>
+              </smart-quill>
+            </div>
+
+            <div class="mb-4">
+              <smart-quill
+                name="circulam"
+                label="Course Circulam"
+                value="{{ course.circulam|default_if_none:"" }}"
+                placeholder="Describe the course here..." required>
+              </smart-quill>
+            </div> {% endcomment %}
+
+            <div class="text-end">
+              <button type="submit" class="btn btn-primary btn-lg">
+                Next <i class="ph ph-arrow-right ms-2"></i>
+              </button>
+            </div>
+          </form>
+        </div>
+      </main>
+    </div>
+  </div>
+</div>
+
+{% endblock body %}
