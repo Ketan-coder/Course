@@ -26,28 +26,70 @@
               <p class="text-muted font-size-18">Finalize everything and launch your course</p>
             </div>
             <hr>
-
-            {% comment %} <div class="mb-4">
-              <smart-quill
-                name="prerequisites"
-                label="Course Prerequisites"
-                value="{{ course.prerequisites|default_if_none:"" }}"
-                placeholder="Describe the course here..." required>
-              </smart-quill>
+            <div class="mb-4">
+              <div class="row">
+                <div class="col-md-6">
+                  <label for="id_tags" class="form-label">Search and Add Tags:</label>
+                  <input type="text" id="id_tags_search" class="form-control" placeholder="Search and add tags">
+                  <div id="tags_search_results" class="list-group mt-2"></div>
+                  <div id="selected_tags" class="mt-2">
+                      {% for tag in course.tags.all %}
+                      <span class="badge bg-secondary mr-1 selected-tag" data-tag-id="{{ tag.id }}">
+                          {{ tag.name }} | <button type="button" class="btn btn-sm btn-outline-light" onclick="openEditTag('{{ tag.id }}', '{{ tag.name }}')">Edit</button> | <button type="button" class="btn btn-sm btn-outline-light ml-1 p-0 border-0" aria-label="Remove" onclick="removeTag(this)">&times;</button>
+                      </span>
+                      <input type="hidden" name="selected_tags" value="{{ tag.id }}">
+                      {% endfor %}
+                  </div>
+                  {% if form.tags.errors %}
+                  <div class="invalid-feedback d-block">{{ form.tags.errors }}</div>
+                  {% endif %}
+                </div>
+                <div class="col-md-6">
+                  <label for="id_faqs" class="form-label">Search and Add Frequently Asked Questions:</label>
+                  <input type="text" id="id_faqs_search" class="form-control" placeholder="Search and add FAQs">
+                  <div id="faqs_search_results" class="list-group mt-2"></div>
+                  <div id="selected_faqs" class="mt-2">
+                      {% for faq in course.faqs.all %}
+                      <span class="badge bg-secondary mr-1 selected-faq" data-faq-id="{{ faq.id }}">
+                          {{ faq.question }} | <button type="button" class="btn btn-sm btn-outline-light" onclick="openEditFAQ('{{ faq.id }}', '{{ faq.question }}', '{{ faq.answer }}')">Edit</button> | <button type="button" class="btn btn-sm btn-outline-light ml-1 p-0 border-0" aria-label="Remove" onclick="removeFaq(this)">&times;</button>
+                      </span>
+                      <input type="hidden" name="selected_faqs" value="{{ faq.id }}">
+                      {% endfor %}
+                  </div>
+                  {% if form.faqs.errors %}
+                  <div class="invalid-feedback d-block">{{ form.faqs.errors }}</div>
+                  {% endif %}
+                </div>
+              </div>
             </div>
 
             <div class="mb-4">
-              <smart-quill
-                name="circulam"
-                label="Course Circulam"
-                value="{{ course.circulam|default_if_none:"" }}"
-                placeholder="Describe the course here..." required>
-              </smart-quill>
-            </div> {% endcomment %}
+              <div class="row">
+                <div class="col-md-6">
+                   <smart-input
+                    label="Publish Course?"
+                    name="is_published"
+                    type="switch"
+                    selected-value="{% if course %}{{ course.is_published|default_if_none:"false" }}{% endif %}"
+                    is-big>
+                  </smart-input>
+                </div>
+                <div class="col-md-6">
+                   <smart-input
+                    label="Open to All?"
+                    name="is_open_to_all"
+                    type="switch"
+                    selected-value="{% if course %}{{ course.is_open_to_all|default_if_none:"false" }}{% endif %}"
+                    is-big>
+                  </smart-input>
+                </div>
+              </div>
+             
+            </div>
 
             <div class="text-end">
               <button type="submit" class="btn btn-primary btn-lg">
-                Next <i class="ph ph-arrow-right ms-2"></i>
+                Save
               </button>
             </div>
           </form>
@@ -58,3 +100,121 @@
 </div>
 
 {% endblock body %}
+
+{% block script %}
+<script>
+  // JavaScript for tag search (example)
+    document.getElementById('id_tags_search').addEventListener('input', function () {
+        const searchTerm = this.value;
+        const resultsDiv = document.getElementById('tags_search_results');
+
+        if (searchTerm.length > 1) { // Minimum characters to trigger search
+            fetch(`/course/courses/search_tags/?q=${searchTerm}`) // Replace with your actual URL
+                .then(response => response.json())
+                .then(data => {
+                    resultsDiv.innerHTML = ''; // Clear previous results
+                    data.forEach(tag => {
+                        const tagElement = document.createElement('a');
+                        tagElement.href = '#';
+                        tagElement.classList.add('list-group-item', 'list-group-item-action');
+                        tagElement.textContent = tag.name;
+                        tagElement.dataset.tagId = tag.id;
+                        tagElement.addEventListener('click', function (e) {
+                            e.preventDefault();
+                            // Add the selected tag to the selected_tags div
+                            const selectedTagsDiv = document.getElementById('selected_tags');
+                            // Check if tag is already added
+                            if (!selectedTagsDiv.querySelector(`span[data-tag-id="${tag.id}"]`)) {
+                                const selectedTagElement = document.createElement('span');
+                                selectedTagElement.classList.add('badge', 'bg-secondary', 'mr-1', 'selected-tag');
+                                selectedTagElement.dataset.tagId = tag.id; selectedTagElement.classList.add('d-inline-flex', 'align-items-center'); // Add flex and align items
+                                selectedTagElement.innerHTML = `${tag.name} <button type="button" class="close ml-1" aria-label="Remove" onclick="removeTag(this)">&times;</button>`;
+
+                                // Add a hidden input to send the ID
+                                const hiddenInput = document.createElement('input');
+                                hiddenInput.type = 'hidden';
+                                hiddenInput.name = 'selected_tags'; // Use the same name for all selected tags
+                                hiddenInput.value = tag.id;
+
+                                selectedTagsDiv.appendChild(selectedTagElement);
+                                selectedTagsDiv.appendChild(hiddenInput);
+                            }
+
+                            // Clear the search input and results
+                            document.getElementById('id_tags_search').value = '';
+                            resultsDiv.innerHTML = '';
+                        });
+                        resultsDiv.appendChild(tagElement);
+                    });
+                });
+        } else {
+            resultsDiv.innerHTML = ''; // Clear results if search term is too short
+        }
+    });
+
+    function removeTag(button) {
+        const selectedTagElement = button.closest('.selected-tag');
+        const tagId = selectedTagElement.dataset.tagId;
+        selectedTagElement.remove();
+        // Remove the corresponding hidden input
+        const hiddenInput = document.querySelector(`input[name="selected_tags"][value="${tagId}"]`);
+        if (hiddenInput) {
+            hiddenInput.remove();
+        }
+    }
+
+    // JavaScript for FAQ search (example)
+    document.getElementById('id_faqs_search').addEventListener('input', function () {
+        const searchTerm = this.value;
+        const resultsDiv = document.getElementById('faqs_search_results');
+
+        if (searchTerm.length > 1) {
+            fetch(`/course/courses/search_faqs/?q=${searchTerm}`) // Replace with your actual URL
+                .then(response => response.json())
+                .then(data => {
+                    resultsDiv.innerHTML = '';
+                    data.forEach(faq => {
+                        const faqElement = document.createElement('a');
+                        faqElement.href = '#';
+                        faqElement.classList.add('list-group-item', 'list-group-item-action');
+                        faqElement.textContent = faq.question;
+                        faqElement.dataset.faqId = faq.id;
+                        faqElement.addEventListener('click', function (e) {
+                            e.preventDefault();
+                            const selectedFaqsDiv = document.getElementById('selected_faqs');
+                            if (!selectedFaqsDiv.querySelector(`span[data-faq-id="${faq.id}"]`)) {
+                                const selectedFaqElement = document.createElement('span');
+                                selectedFaqElement.classList.add('badge', 'bg-secondary', 'mr-1', 'selected-faq');
+                                selectedFaqElement.dataset.faqId = faq.id; selectedFaqElement.classList.add('d-inline-flex', 'align-items-center'); // Add flex and align items
+                                selectedFaqElement.innerHTML = `${faq.question} <button type="button" class="close ml-1" aria-label="Remove" onclick="removeFaq(this)">&times;</button>`;
+
+                                const hiddenInput = document.createElement('input');
+                                hiddenInput.type = 'hidden';
+                                hiddenInput.name = 'selected_faqs';
+                                hiddenInput.value = faq.id;
+
+                                selectedFaqsDiv.appendChild(selectedFaqElement);
+                                selectedFaqsDiv.appendChild(hiddenInput);
+                            }
+                            document.getElementById('id_faqs_search').value = '';
+                            resultsDiv.innerHTML = '';
+                        });
+                        resultsDiv.appendChild(faqElement);
+                    });
+                });
+        } else {
+            resultsDiv.innerHTML = '';
+        }
+    });
+
+    function removeFaq(button) {
+        const selectedFaqElement = button.closest('.selected-faq');
+        const faqId = selectedFaqElement.dataset.faqId;
+        selectedFaqElement.remove();
+        const hiddenInput = document.querySelector(`input[name="selected_faqs"][value="${faqId}"]`);
+        if (hiddenInput) {
+            hiddenInput.remove();
+        }
+    }
+</script>
+{% endblock script %}

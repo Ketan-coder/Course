@@ -1518,3 +1518,7 @@ def course_create_step_five(request, course_id=None) -> HttpResponse:
     else:
         course = None
     return render(request, "course/creation/step_5.html", locals())
+
+def get_quiz_questions(request, quiz_id):
+    quiz = Quiz.objects.get(id=quiz_id)
+    return JsonResponse(quiz.questions, safe=False)

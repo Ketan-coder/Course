@@ -12,12 +12,19 @@ class SmartInput extends HTMLElement {
         const fetchUrl = this.getAttribute('data-url');
         const value = this.getAttribute('value') || '';
 
+        // Switch-specific attributes
+        const isBig = this.hasAttribute('is-big');
+        const isMedium = this.hasAttribute('is-medium');
+        const isSmall = this.hasAttribute('is-small');
+        const selectedValue = this.getAttribute('selected-value') || '';
+        const switchId = this.getAttribute('id') || `switch-${Math.random().toString(36).substr(2, 9)}`;
+
         const onInputFn = this.getAttribute('data-oninput');
         const onClickFn = this.getAttribute('data-onclick');
         const onChangeFn = this.getAttribute('data-onchange');
 
         this.innerHTML = `
-            ${type === 'checkbox' || type === 'radio' ? '' : `<label class="form-label">${label}:${required ? '<span class="text-danger"> * </span>' : ''} </label>`}
+            ${type === 'checkbox' || type === 'radio' || type === 'switch' ? '' : `<label class="form-label">${label}:${required ? '<span class="text-danger"> * </span>' : ''} </label>`}
             <div class="input-container position-relative"></div>
             <div class="invalid-feedback d-none">${errorMsg}</div>
         `;
@@ -70,6 +77,46 @@ class SmartInput extends HTMLElement {
 
             const wrapper = document.createElement('div');
             wrapper.className = 'form-check';
+            wrapper.appendChild(input);
+            wrapper.appendChild(labelEl);
+            container.appendChild(wrapper);
+        }
+
+        else if (type === 'switch') {
+            input = document.createElement('input');
+            input.type = 'checkbox';
+            input.name = name;
+            input.id = switchId;
+            input.setAttribute('role', 'switch');
+            input.value = selectedValue;
+            
+            // Set checked state based on value or selected-value
+            input.checked = value === 'true' || value === '1' || selectedValue === 'true' || selectedValue === '1';
+            
+            // Build class names for switch input
+            let inputClasses = ['form-check-input'];
+            if (isBig) inputClasses.push('form-check-input-lg');
+            else if (isSmall) inputClasses.push('form-check-input-sm');
+            // Medium is default, no additional class needed
+            
+            input.className = inputClasses.join(' ');
+
+            const labelEl = document.createElement('label');
+            labelEl.className = 'form-check-label';
+            labelEl.setAttribute('for', switchId);
+            labelEl.textContent = label;
+            labelEl.style.marginLeft = '10px';
+            if (required) input.required = true;
+            if (isBig) labelEl.style.fontSize = '1.25rem';
+            if (isMedium) labelEl.style.fontSize = '1rem';
+            if (isSmall) labelEl.style.fontSize = '0.875rem';
+
+            const wrapper = document.createElement('div');
+            let wrapperClasses = ['form-check', 'form-switch'];
+            if (isBig) wrapperClasses.push('form-switch-lg');
+            else if (isSmall) wrapperClasses.push('form-switch-sm');
+            
+            wrapper.className = wrapperClasses.join(' ');
             wrapper.appendChild(input);
             wrapper.appendChild(labelEl);
             container.appendChild(wrapper);
@@ -146,6 +193,16 @@ class SmartInput extends HTMLElement {
             @keyframes spin {
                 0% { transform: rotate(0deg); }
                 100% { transform: rotate(360deg); }
+            }
+            
+            /* Additional switch size styling if needed */
+            .form-switch-lg .form-check-input-lg {
+                width: 3em;
+                height: 1.75em;
+            }
+            .form-switch-sm .form-check-input-sm {
+                width: 1.75em;
+                height: 1em;
             }
         `;
         this.appendChild(style);

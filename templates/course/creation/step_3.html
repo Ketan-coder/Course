@@ -23,10 +23,13 @@
         </div>
 
         <!-- Main Content -->
-        <div class="col-lg-9">
+        <div class="col-lg-8 col-xl-9">
             <main>
                 <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h2 class="content-title">Course Content</h2>
+                    <div class="text-start">
+                    <h1 class="font-weight-bold">Step 3: Sections & Lessons</h1>
+                    <p class="text-muted font-size-18">Organize your content into logical parts</p>
+                </div>
                     <button class="btn btn-primary" type="button" data-bs-toggle="modal" data-bs-target="#section-modal">
                         <i class="ph ph-plus me-2"></i>
                         Add Section
@@ -76,11 +79,14 @@
                     {% empty %}
                     <div class="card">
                         <div class="content text-center p-5">
-                            <h4 class="font-weight-bold">Your curriculum is empty</h4>
+                            <h4 class="font-weight-bold">Your section list is empty</h4>
                             <p class="text-muted">Start by adding your first section to organize your course content.</p>
                             <button class="btn btn-primary" type="button" data-bs-toggle="modal" data-bs-target="#section-modal">
                                 <i class="ph ph-plus me-2"></i>
                                 Add Your First Section
+                            </button>
+                            <button class="btn btn-link mt-2 add-lesson-btn" type="button" data-bs-toggle="modal" data-bs-target="#lesson-modal" data-section-id="{{ section.id }}">
+                                <i class="ph ph-plus"></i> Add Lesson
                             </button>
                         </div>
                     </div>
@@ -89,7 +95,7 @@
 
                 <div class="text-end mt-4">
                     <a href="{% if course %} {% url 'course_create_step_four' course_id=course.id %}{% endif %}" class="btn btn-primary btn-lg">
-                        Next: Settings & Publish
+                        Next
                         <i class="ph ph-arrow-right ms-2"></i>
                     </a>
                 </div>
@@ -100,14 +106,14 @@
 
 <!-- Section Modal -->
 <div class="modal" id="section-modal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-dialog modal-dialog-centered modal-xl" role="document">
         <div class="modal-content">
             <form id="section-form" onsubmit="saveSection(event)">
                 <div class="modal-header">
                     <h5 class="modal-title" id="section-modal-title">Add New Section</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body">
+                <div class="modal-body p-4">
                     <input type="hidden" name="section_id" id="section-id-input">
                     <div class="mb-3">
                         <smart-input label="Section Title" name="title" id="section-title-input" required></smart-input>
@@ -115,10 +121,41 @@
                     <div class="mb-3">
                         <smart-quill name="description" id="section-description-quill" label="Description (Optional)"></smart-quill>
                     </div>
+                    <div class="mb-3 p-2">
+                        <smart-input label="Is Open?" name="is_open" id="section-is_open-input" type="switch" selected-value="true" ></smart-input>
+                    </div>
+
+                    <hr>
+
+                    <div class="mb-3 p-2">
+                        <smart-input label="Generate Quiz using Ai?" name="is_generate_quiz" id="id_is_generate_quiz" type="switch" data-onchange="handleChange"></smart-input>
+                    </div>
+
+                    <div class="form-group mt-2 mb-3 d-none" id="promptText">
+                        <smart-quill
+                            name="prompt"
+                            label="Prompt for Generating Quiz"
+                            placeholder="Write your awesome content here..."
+                        ></smart-quill>
+                    </div>
+
+                    <div class="form-text">This prompt will be used to generate quiz questions for this section.</div>
+
+                    <div id="section_select"></div>
+                       
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="submit" class="btn btn-primary">Save Section</button>
+                    <custom-button
+                        label="Save Section"
+                        form-id="section-form"
+                        post="{% url 'create_section' %}"
+                        method="POST"
+                        showspinner="true"
+                        buttontype="success"
+                        class="my-3"
+                        target="#section_select"
+                    ></custom-button>
                 </div>
             </form>
         </div>
@@ -127,7 +164,7 @@
 
 <!-- Lesson Modal with Uppy -->
 <div class="modal" id="lesson-modal" tabindex="-1">
-    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+    <div class="modal-dialog modal-dialog-centered modal-xl" role="document">
         <div class="modal-content">
             <form id="lesson-form" onsubmit="saveLesson(event)">
                 <div class="modal-header">
@@ -143,10 +180,12 @@
                         <smart-input label="Lesson Title" name="title" id="lesson-title-input" required></smart-input>
                     </div>
 
+                    <div class="mb-3">
+                        <smart-quill name="content" id="lesson-content-quill" label="Lesson Notes / Description"></smart-quill>
+                    </div>
+
                     <div class="mb-4">
-                        <label class="form-label">Video Upload</label>
-                        <div id="lesson-video-uploader"></div>
-                        <div class="form-text">Upload a video file for this lesson.</div>
+                         <smart-input label="Video URL (e.g., YouTube, Vimeo)" name="video_url" id="lesson-video-url-input" placeholder="https://..."></smart-input>
                     </div>
 
                     <div class="text-center my-3">
@@ -154,16 +193,26 @@
                     </div>
 
                     <div class="mb-4">
-                         <smart-input label="Video URL (e.g., YouTube, Vimeo)" name="video_url" id="lesson-video-url-input" placeholder="https://..."></smart-input>
+                        <label class="form-label">Video Upload</label>
+                        <div id="lesson-video-uploader"></div>
+                        <div class="form-text">Upload a video file for this lesson.</div>
                     </div>
 
-                    <div class="mb-3">
-                        <smart-quill name="content" id="lesson-content-quill" label="Lesson Notes / Description"></smart-quill>
-                    </div>
+                    <div id="lesson_select"></div>
+
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="submit" class="btn btn-primary">Save Lesson</button>
+                    <custom-button
+                        label="Save Lesson"
+                        form-id="lesson-form"
+                        post="{% url 'create_lesson' %}"
+                        method="POST"
+                        showspinner="true"
+                        buttontype="success"
+                        class="my-3"
+                        target="#lesson_select"
+                    ></custom-button>
                 </div>
             </form>
         </div>
@@ -199,8 +248,9 @@ document.addEventListener("DOMContentLoaded", function () {
         inline: true,
         target: '#lesson-video-uploader',
         proudlyDisplayPoweredByUppy: false,
-        height: 300,
-        theme: 'light', // or 'dark'
+        height: 100,
+        width: '100%',
+        theme: 'dark', // or 'dark'
         note: 'Video files only, up to 1 GB'
     }).use(Uppy.XHRUpload, {
         endpoint: "{% url 'upload_video' %}", // IMPORTANT: Create this URL in Django
@@ -306,6 +356,10 @@ function submitLessonForm() {
     // AJAX logic to save the lesson form data would go here
     // On success, hide modal and update UI
     location.reload(); // Simple reload for now
+}
+function handleChange(event) {
+    const quillEditorElement = document.getElementById('promptText');
+    quillEditorElement.classList.toggle('d-none'); // Assuming you have a CSS class named 'hidden'
 }
 </script>
 {% endblock script %}
