@@ -471,7 +471,7 @@ class CourseNotes(models.Model):
         ordering: list[str] = ['-created_at']
 
     def __str__(self) -> str:
-        return f"{self.user.profile.user.first_name} left a note on {self.course.title} - {self.section.title} - {self.lesson.title} - {self.note_text[:20]}"
+        return f"{self.user.profile.user.first_name} left a note on {self.section.title} - {self.note_text[:20]}"
     
 class Article(models.Model):
     title = models.CharField(max_length=200)
