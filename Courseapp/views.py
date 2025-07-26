@@ -968,7 +968,136 @@ def create_faq(request) -> HttpResponse:
             </div>""".format(str(e)),
             status=500
         )
+    
+def create_article_ajax(request) -> HttpResponse:
+    if request.method != "POST":
+        return HttpResponse(
+            """<div class="alert alert-danger border-0 rounded-0 d-flex align-items-center" role="alert">
+                <i class="fa-light fa-exclamation-circle text-danger-emphasis me-2"></i>
+                <div>Invalid request method.</div>
+            </div>""",
+            status=405
+        )
 
+    title = request.POST.get("title")
+    if not title:
+        return HttpResponse(
+            """<div class="alert alert-danger border-0 rounded-0 d-flex align-items-center" role="alert">
+                <i class="fa-light fa-exclamation-circle text-danger-emphasis me-2"></i>
+                <div>Title is required.</div>
+            </div>""",
+            status=400
+        )
+    try:
+        article_id = request.POST.get("article_id")
+        content = request.POST.get("content", "")
+        section_id = request.POST.get("section_id")
+        if section_id:
+            section = get_object_or_404(Section, id=section_id)
+        else:
+            section = None
+        author = Instructor.objects.filter(profile=request.user.profile).first()
+
+        if article_id:
+            article = get_object_or_404(Article, id=article_id)
+            article.title = title
+            article.content = content
+            article.author = author
+            article.save()
+            if section:
+                section.article = article
+                section.save()
+            return HttpResponse(
+                """<div class="alert alert-success border-0 rounded-0 d-flex align-items-center" role="alert">
+                    <i class="fa-light fa-check-circle text-success-emphasis me-2"></i>
+                    <div>Article <strong>{}</strong> updated successfully.</div>
+                </div>""".format(title)
+            )
+        else:
+            article = Article.objects.create(title=title, content=content, author=author)
+            if section:
+                section.article = article
+                section.save()
+            return HttpResponse(
+                """<div class="alert alert-success border-0 rounded-0 d-flex align-items-center" role="alert">
+                    <i class="fa-light fa-check-circle text-success-emphasis me-2"></i>
+                    <div>Article <strong>{}</strong> created successfully.</div>
+                </div>""".format(title),
+                status=201
+            )
+    except Exception as e:
+        print(e)
+        return HttpResponse(
+            """<div class="alert alert-danger border-0 rounded-0 d-flex align-items-center" role="alert">
+                <i class="fa-light fa-exclamation-circle text-danger-emphasis me-2"></i>
+                <div>Error: {}</div>
+            </div>""".format(str(e)),
+            status=500
+        )
+    
+def create_quiz_ajax(request):
+    if request.method != "POST":
+        return JsonResponse({'success': False, 'error': 'Invalid request method'}, status=405)
+
+    try:
+        # Extract basic quiz fields
+        quiz_id = request.POST.get("quiz_id")
+        title = request.POST.get("title", "")
+        course_id = request.POST.get("course_id")
+        section_id = request.POST.get("section_id")
+        lesson_id = request.POST.get("lesson_id")
+        questions_json = request.POST.get("questions_json", "[]")
+
+        # Parse the JSON string into a list of dicts
+        questions = json.loads(questions_json)
+
+        # Build quiz.question JSON-like object with keys: 1, 2, 3...
+        formatted_questions = {}
+        for index, q in enumerate(questions, start=1):
+            raw_options = q.get("options", [])
+            print(f"Raw options: {raw_options}")
+            
+            # Generate option objects with ids: a, b, c, ...
+            option_objs = [
+                {"id": chr(97 + i), "text": option}
+                for i, option in enumerate(raw_options)
+            ] if raw_options else []
+
+            print(f"Formatted options: {option_objs}")
+
+            formatted_questions[str(index)] = {
+                "id": str(index),
+                "question": q["question"],
+                "type": q["type"],
+                "options": option_objs,
+                "answer": ",".join(q["answer"]) if isinstance(q["answer"], list) else q["answer"],
+                "is_completed": False,
+                "score_on_completion": q.get("score_on_completion", 10)
+            }
+
+
+        if quiz_id:
+            quiz = get_object_or_404(Quiz, id=quiz_id)
+            quiz.title = title
+            quiz.questions = formatted_questions
+        else:
+            quiz = Quiz.objects.create(title=title, questions=formatted_questions)
+
+        # Optional: Link related objects
+        if course_id:
+            quiz.course = get_object_or_404(Course, id=course_id)
+        if section_id:
+            quiz.section = get_object_or_404(Section, id=section_id)
+        if lesson_id:
+            quiz.lesson = get_object_or_404(Lesson, id=lesson_id)
+
+        quiz.save()
+        return JsonResponse({'success': True, 'message': 'Quiz saved successfully.'}, status=200)
+
+    except Exception as e:
+        print(e)
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+    
 def create_course_notes(request) -> HttpResponse:
     try:
         if request.method == "POST":
@@ -1057,6 +1186,41 @@ def get_section_details(request, section_id):
         return JsonResponse(data)
     except Section.DoesNotExist:
         return JsonResponse({"error": "Section not found"}, status=404)
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
+    
+def get_quiz_details(request, quiz_id):
+    try:
+        quiz = get_object_or_404(Quiz, id=quiz_id)
+        data = {
+            "id": quiz.id,
+            "title": quiz.title,
+            "questions": quiz.questions,
+            "course_id": quiz.course.id if quiz.course else None,
+            "section_id": quiz.section.id if quiz.section else None,
+            "lesson_id": quiz.lesson.id if quiz.lesson else None,
+        }
+        return JsonResponse(data)
+    except Quiz.DoesNotExist:
+        return JsonResponse({"error": "Quiz not found"}, status=404)
+    except Exception as e:
+        print(str(e))
+        return JsonResponse({"error": str(e)}, status=500)
+    
+def get_article_details(request, article_id):
+    try:
+        article = get_object_or_404(Article, id=article_id)
+        data = {
+            "id": article.id,
+            "title": article.title,
+            "content": article.content,
+            "author": article.author.profile.user.username if article.author else None,
+            "created_at": article.created_at.isoformat(),
+            "updated_at": article.updated_at.isoformat(),
+        }
+        return JsonResponse(data)
+    except Article.DoesNotExist:
+        return JsonResponse({"error": "Article not found"}, status=404)
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
     
@@ -1528,6 +1692,50 @@ def delete_course_api(request, course_id):
     # course.delete()
     return JsonResponse({"success": True})
 
+def delete_quiz_api(request, quiz_id):
+    """
+    API endpoint to delete a quiz.
+    """
+    if not request.user.is_authenticated:
+        return JsonResponse({"error": "You must be logged in to delete a quiz."}, status=403)
+    if quiz_id is None:
+        return JsonResponse({"error": "Quiz ID is required."}, status=400)
+    profile = request.user.profile
+    instructor = Instructor.objects.filter(profile=profile).first()
+    if not instructor:
+        return JsonResponse({"error": "You must be an instructor to delete a quiz."}, status=403)
+    quiz = get_object_or_404(Quiz, id=quiz_id)
+    if not quiz:
+        return JsonResponse({"error": "Quiz not found."}, status=404)
+    
+    # quiz.is_deleted = True
+    # quiz.save()
+    quiz.delete()
+    return JsonResponse({"success": True})
+
+def delete_article_api(request, article_id):
+    """
+    API endpoint to delete an article.
+    """
+    if not request.user.is_authenticated:
+        return JsonResponse({"error": "You must be logged in to delete an article."}, status=403)
+    if article_id is None:
+        return JsonResponse({"error": "Article ID is required."}, status=400)
+    profile = request.user.profile
+    instructor = Instructor.objects.filter(profile=profile).first()
+    if not instructor:
+        return JsonResponse({"error": "You must be an instructor to delete an article."}, status=403)
+    article = get_object_or_404(Article, id=article_id)
+    if not article:
+        return JsonResponse({"error": "Article not found."}, status=404)
+    if article.author_id != instructor.id:
+        return JsonResponse({"error": "You must be the author of the article to delete it."}, status=403)
+    
+    # article.is_deleted = True
+    # article.save()
+    article.delete()
+    return JsonResponse({"success": True})
+
 
 
 def course_create_step_one(request, course_id=None) -> HttpResponse:
@@ -1621,11 +1829,11 @@ def course_create_step_one(request, course_id=None) -> HttpResponse:
                     course.intro_video = video
                 course.save()
                 # Log activity
-                Activity.objects.create(
-                    user=user,
-                    activity_type="Course Creation",
-                    description=f"Created course: {course.title}"
-                )
+                # Activity.objects.create(
+                #     user=user,
+                #     activity_type="Course Creation",
+                #     description=f"Created course: {course.title}"
+                # )
                 step_one_done = True
             if step_one_done:
                 request.session['step_one_done'] = True 
@@ -1670,11 +1878,11 @@ def course_create_step_two(request, course_id=None) -> HttpResponse:
                 course.circulam = circulam
                 course.save()
                 # Log activity
-                Activity.objects.create(
-                    user=user,
-                    activity_type="Course Update",
-                    description=f"Updated course sections for: {course.title}"
-                )
+                # Activity.objects.create(
+                #     user=user,
+                #     activity_type="Course Update",
+                #     description=f"Updated course sections for: {course.title}"
+                # )
                 step_two_done = True
                 request.session['step_two_done'] = step_two_done
             else:
@@ -1693,6 +1901,7 @@ def course_create_step_three(request, course_id=None) -> HttpResponse:
     """
     request.session["page"] = "course"
     step = "3"
+    step_three_done = False
     if not request.user.is_authenticated:
         return redirect("login")
     user = request.user
@@ -1705,6 +1914,25 @@ def course_create_step_three(request, course_id=None) -> HttpResponse:
             return HttpResponse("You are not authorized to edit this course.", status=403)
     else:
         course = None
+    if request.method == "POST":
+        print("Creating or updating course sections..." + str(request.POST))
+        try:
+            if course_id:
+                course = get_object_or_404(Course, id=course_id)
+                course.save()
+                # Log activity
+                # Activity.objects.create(
+                #     user=user,
+                #     activity_type="Course Update",
+                #     description=f"Updated course sections for: {course.title}"
+                # )
+                step_three_done = True
+                request.session['step_three_done'] = step_three_done
+                return redirect("course_create_step_four", course_id=course.id)
+            else:
+                return HttpResponse("Course ID is required to create a section.", status=400)
+        except Exception as e:
+            return HttpResponse(f"Error creating section: {str(e)}", status=500)
     return render(request, "course/creation/step_3.html", locals())
 
 
@@ -1716,10 +1944,15 @@ def course_create_step_four(request, course_id=None) -> HttpResponse:
     """
     request.session["page"] = "course"
     step = "4"
+    step_four_done = False
     if not request.user.is_authenticated:
         return redirect("login")
     user = request.user
     instructor = Instructor.objects.filter(profile__user=user).first()
+    section_ids = Course.objects.filter(id=course_id).values_list('sections__id', flat=True) if course_id else []
+    quizzes = Quiz.objects.filter(section__id__in=section_ids) if course_id else Quiz.objects.none()
+    article_ids = Section.objects.filter(id__in=section_ids).values_list('article__id', flat=True) if course_id else []
+    articles = Article.objects.filter(id__in=article_ids) if course_id else Article.objects.none()
     if not instructor:
         return HttpResponse("You must be an instructor to create a course.", status=403)
     if course_id:
@@ -1728,6 +1961,25 @@ def course_create_step_four(request, course_id=None) -> HttpResponse:
             return HttpResponse("You are not authorized to edit this course.", status=403)
     else:
         course = None
+    if request.method == "POST":
+        print("Creating or updating course sections..." + str(request.POST))
+        try:
+            if course_id:
+                course = get_object_or_404(Course, id=course_id)
+                course.save()
+                # Log activity
+                # Activity.objects.create(
+                #     user=user,
+                #     activity_type="Course Update",
+                #     description=f"Updated course sections for: {course.title}"
+                # )
+                step_four_done = True
+                request.session['step_four_done'] = step_four_done
+                return redirect("course_create_step_five", course_id=course.id)
+            else:
+                return HttpResponse("Course ID is required to create a section.", status=400)
+        except Exception as e:
+            return HttpResponse(f"Error creating section: {str(e)}", status=500)
     return render(request, "course/creation/step_4.html", locals())
 
 def course_create_step_five(request, course_id=None) -> HttpResponse:
@@ -1750,6 +2002,43 @@ def course_create_step_five(request, course_id=None) -> HttpResponse:
             return HttpResponse("You are not authorized to edit this course.", status=403)
     else:
         course = None
+    if request.method == "POST":
+        try:
+            # Handle ManyToMany fields (example for tags)
+            selected_tag_ids = request.POST.getlist("selected_tags")
+
+            # handle faq selection
+            selected_faq_ids = request.POST.getlist("selected_faqs")
+            
+            if course_id:
+                course = get_object_or_404(Course, id=course_id)
+                if selected_tag_ids:
+                    tags = Tag.objects.filter(id__in=selected_tag_ids)
+                    course.tags.set(tags)
+                if selected_faq_ids:
+                    faqs = FAQ.objects.filter(id__in=selected_faq_ids)
+                    course.faqs.set(faqs)
+                course.is_published = 'is_published' in request.POST
+                course.is_open_to_all = 'is_open_to_all' in request.POST
+
+                course.save()
+                # Log activity
+                Activity.objects.create(
+                    user=user,
+                    activity_type="Course Update",
+                    description=f"Updated course sections for: {course.title}"
+                )
+                messages.success(request, "Course created successfully!")
+                request.session['step_one_done'] = False
+                request.session['step_two_done'] = False
+                request.session['step_three_done'] = False
+                request.session['step_four_done'] = False
+                request.session['step_five_done'] = False
+                return redirect("course_list")
+            else:
+                return HttpResponse("Course ID is required to create a section.", status=400)
+        except Exception as e:
+            return HttpResponse(f"Error creating section: {str(e)}", status=500)
     return render(request, "course/creation/step_5.html", locals())
 
 def get_quiz_questions(request, quiz_id):

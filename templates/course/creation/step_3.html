@@ -406,13 +406,13 @@ function handleChange(event) {
 
 {% block body %}
 <div class="container-fluid content-wrapper">
-    <div class="text-start my-4">
+    <div class="text-start my-4 ps-3">
         <h1 class="font-weight-bold display-3">Create a New Course</h1>
         <p class="text-muted font-size-18">Follow the steps to build and publish your course.</p>
     </div>
 
 
-    <div class="row g-4">
+    <div class="row g-4 container-fluid">
         <!-- Left Sidebar -->
         <div class="col-lg-3 mb-2">
             {% include 'course/components/sidebar.html' with step=step course=course %}
@@ -509,10 +509,12 @@ function handleChange(event) {
                 </div>
 
                 <div class="text-end mt-4">
-                    <a href="{% url 'course_create_step_four' course_id=course.id %}" class="btn btn-primary btn-lg">
-                        Next: Settings & Publish
-                        <i class="ph ph-arrow-right ms-2"></i>
-                    </a>
+                    <form method="post" action="{% url 'course_create_step_three' course_id=course.id %}" class="d-inline">
+                        {% csrf_token %}
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        Next <i class="ph ph-arrow-right ms-2"></i>
+                    </button>
+                    </form>
                 </div>
             </main>
         </div>
@@ -520,7 +522,7 @@ function handleChange(event) {
 </div>
 
 <!-- Section Modal -->
-<div class="modal" id="section-modal" tabindex="-1">
+<div class="modal fade" id="section-modal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered modal-xl" role="document">
         <div class="modal-content">
             <form id="section-form" onsubmit="saveSection(event)">
@@ -567,7 +569,7 @@ function handleChange(event) {
 </div>
 
 <!-- Lesson Modal with Uppy -->
-<div class="modal" id="lesson-modal" tabindex="-1">
+<div class="modal fade" id="lesson-modal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered modal-xl" role="document">
         <div class="modal-content">
             <form id="lesson-form" onsubmit="handleLessonSubmit(event)">

@@ -425,7 +425,7 @@ class SmartListTile extends HTMLElement {
         this.innerHTML = `
             <div class="smart-list-tile-inner ${activeClass} ${disabledClass} ${borderClass}">
                 <div class="list-tile-leading">
-                    <i class="${leadingIcon}"></i>
+                    <i class="${leadingIcon}" style="${leadingIcon.includes('check') ? 'font-size: 2em; font-weight: bold' : ''}"></i>
                 </div>
                 <div class="list-tile-content">
                     <h4 class="list-tile-title">${title}</h4>

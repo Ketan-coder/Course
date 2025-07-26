@@ -4,12 +4,12 @@
 
 {% block body %}
 <div class="container-fluid content-wrapper">
-  <div class="text-start my-4">
+  <div class="text-start my-4 ps-3">
     <h1 class="font-weight-bold display-3">Create a New Course</h1>
     <p class="text-muted font-size-18">Follow the steps to build and publish your course.</p>
   </div>
 
-  <div class="row g-4">
+  <div class="row g-4 container-fluid">
     <!-- LEFT: Stepper -->
     <div class="col-lg-3 mb-2">
       {% include 'course/components/sidebar.html' with step=step course=course %}
@@ -19,7 +19,7 @@
     <div class="col-lg-8 col-xl-9">
       <main>
         <div class="card p-4 p-lg-4">
-          <form id="course-foundation-form" method="post" action="{% if course %}{% url 'course_create_step_one' course_id=course.id %}{% else %}{% url 'course_create_step_one' %}{% endif %}" enctype="multipart/form-data">
+          <form id="course-foundation-form" method="post" action="{% if course %}{% url 'course_create_step_five' course_id=course.id %}{% else %}{% url 'course_create_step_one' %}{% endif %}" enctype="multipart/form-data">
             {% csrf_token %}
             <div class="text-start">
               <h1 class="font-weight-bold">Step 5: Finalize & go live</h1>
@@ -35,7 +35,7 @@
                   <div id="selected_tags" class="mt-2">
                       {% for tag in course.tags.all %}
                       <span class="badge bg-secondary mr-1 selected-tag" data-tag-id="{{ tag.id }}">
-                          {{ tag.name }} | <button type="button" class="btn btn-sm btn-outline-light" onclick="openEditTag('{{ tag.id }}', '{{ tag.name }}')">Edit</button> | <button type="button" class="btn btn-sm btn-outline-light ml-1 p-0 border-0" aria-label="Remove" onclick="removeTag(this)">&times;</button>
+                          {{ tag.name }} | <button type="button" class="btn btn-sm btn-outline-light ml-1 p-0 border-0" aria-label="Remove" onclick="removeTag(this)">&times;</button>
                       </span>
                       <input type="hidden" name="selected_tags" value="{{ tag.id }}">
                       {% endfor %}
@@ -51,7 +51,7 @@
                   <div id="selected_faqs" class="mt-2">
                       {% for faq in course.faqs.all %}
                       <span class="badge bg-secondary mr-1 selected-faq" data-faq-id="{{ faq.id }}">
-                          {{ faq.question }} | <button type="button" class="btn btn-sm btn-outline-light" onclick="openEditFAQ('{{ faq.id }}', '{{ faq.question }}', '{{ faq.answer }}')">Edit</button> | <button type="button" class="btn btn-sm btn-outline-light ml-1 p-0 border-0" aria-label="Remove" onclick="removeFaq(this)">&times;</button>
+                          {{ faq.question }} | <button type="button" class="btn btn-sm btn-outline-light ml-1 p-0 border-0" aria-label="Remove" onclick="removeFaq(this)">&times;</button>
                       </span>
                       <input type="hidden" name="selected_faqs" value="{{ faq.id }}">
                       {% endfor %}
@@ -62,24 +62,24 @@
                 </div>
               </div>
             </div>
-
+            <hr>
             <div class="mb-4">
               <div class="row">
                 <div class="col-md-6">
                    <smart-input
-                    label="Publish Course?"
+                    label="Share it with the world?"
                     name="is_published"
                     type="switch"
-                    selected-value="{% if course %}{{ course.is_published|default_if_none:"false" }}{% endif %}"
+                    selected-value="{% if course.is_published %}true{% else %}false{% endif %}"
                     is-big>
                   </smart-input>
                 </div>
                 <div class="col-md-6">
                    <smart-input
-                    label="Open to All?"
+                    label="Publicly Free?"
                     name="is_open_to_all"
                     type="switch"
-                    selected-value="{% if course %}{{ course.is_open_to_all|default_if_none:"false" }}{% endif %}"
+                    selected-value="{% if course.is_published %}true{% else %}false{% endif %}"
                     is-big>
                   </smart-input>
                 </div>
@@ -89,7 +89,7 @@
 
             <div class="text-end">
               <button type="submit" class="btn btn-primary btn-lg">
-                Save
+               Finish & Publish <i class="ph ph-rocket-launch ms-2"></i>
               </button>
             </div>
           </form>
