@@ -154,6 +154,9 @@ class Section(models.Model):
     def __str__(self):
         return self.title
     
+    class Meta:
+        ordering: list[str] = ['order']
+    
     @check_load_time
     @retry_on_failure(retries=3, delay=2)
     def save(self, prompt='', is_generate_content_using_ai=False,*args, **kwargs):
@@ -202,7 +205,6 @@ class Lesson(models.Model):
     extra_fields = models.JSONField(blank=True, null=True, default=dict)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    
 
     class Meta:
         ordering: list[str] = ['order']

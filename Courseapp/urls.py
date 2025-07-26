@@ -59,6 +59,16 @@ urlpatterns: list[URLPattern] = [
     path('lesson/add/', login_required(views.lesson_form), name='lesson_form'),
     path('lesson/<int:lesson_id>/', login_required(views.lesson_form), name='lesson_form'),
 
+    path('fetch/lesson/<int:lesson_id>/', login_required(views.fetch_lesson_api), name='get_lesson_details'),
+
+    path('fetch/section/<int:section_id>/', login_required(views.get_section_details), name='get_section_details'),
+    # path('fetch/course/<int:course_id>/', login_required(views.fetch_course_api), name='fetch_course_api'),
+    # path('fetch/course-notes/<int:course_id>/', login_required(views.fetch_course_notes_api), name='fetch_course_notes_api'),
+
+
+    path('update-section-order/', login_required(views.update_section_order), name='update_section_order'),
+    path('update-lesson-order/', login_required(views.update_lesson_order), name='update_lesson_order'),
+
     path('fetch-realtime-notes/<int:course_id>/', views.get_course_notes_htmx, name='fetch_realtime_notes'),
     path('fetch-realtime-notes/<int:course_id>/<int:section_id>/', views.get_course_notes_htmx, name='fetch_realtime_notes'),
     path('fetch-realtime-notes/<int:course_id>/<int:section_id>/<int:lesson_id>/', views.get_course_notes_htmx, name='fetch_realtime_notes'),

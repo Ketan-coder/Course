@@ -118,7 +118,7 @@ class SmartQuill extends HTMLElement {
         });
 
         // Add custom styles
-        this.addStyles();
+        // this.addStyles();
     }
 
     attributeChangedCallback(name, oldValue, newValue) {

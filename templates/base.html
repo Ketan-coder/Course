@@ -38,7 +38,9 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.bubble.css" />
-  <script src="https://unpkg.com/@barba/core"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@barba/core"></script>
+  <script src="https://unpkg.com/gsap@latest/dist/gsap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
   <style>
     @font-face {
       font-family: 'Gucina';
@@ -270,9 +272,14 @@
     </div>
     <!-- Main content -->
     
-    {% block body %}
-    
-     {% endblock body %}
+
+    <body data-barba="wrapper">
+      <div data-barba="container" data-barba-namespace="{% block namespace %}default{% endblock %}">
+        {% block body %}
+        <!-- Your page content -->
+        {% endblock %}
+      </div>
+    </body>
 
      
      <script type="module" src="{% static 'resoures/js/components/counter_animation.js' %}"></script>
@@ -283,6 +290,45 @@
       <script type="module" src="{% static 'resoures/js/components/rich_text_input.js' %}"></script>
      <script type="module" src="{% static 'resoures/js/components/smart_list_tile.js' %}"></script>
      <script src="{% static 'resoures/js/script.js' %}"></script>
+      <script src="{% static 'resoures/js/anime.js' %}"></script>
+     <script type="module">
+        import barba from 'https://cdn.skypack.dev/@barba/core';
+
+        barba.init({
+          transitions: [
+            {
+              name: 'fade-transition',
+              once({ next }) {
+                fadeIn(next.container);
+              },
+              leave({ current }) {
+                return fadeOut(current.container);
+              },
+              enter({ next }) {
+                fadeIn(next.container);
+                window.scrollTo({ top: 0, behavior: 'smooth' })
+              }
+            }
+          ]
+        });
+
+        function fadeOut(container) {
+          return new Promise(resolve => {
+            container.style.transition = 'opacity 0.5s ease';
+            container.style.opacity = 0;
+            setTimeout(resolve, 500);
+          });
+        }
+
+        function fadeIn(container) {
+          container.style.opacity = 0;
+          container.style.transition = 'opacity 0.5s ease';
+          setTimeout(() => {
+            container.style.opacity = 1;
+          }, 10);
+        }
+      </script>
+
      <script>
       function launchConfetti(score) {
           const duration = 2 * 1000;

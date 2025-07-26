@@ -167,6 +167,9 @@ class SmartInput extends HTMLElement {
             this.attachEvents(input, error, onInputFn, onClickFn, onChangeFn);
         }
 
+        // Store reference to the main input for easy access
+        this.inputElement = input;
+
         const style = document.createElement('style');
         style.textContent = `
             .shake {
@@ -206,6 +209,97 @@ class SmartInput extends HTMLElement {
             }
         `;
         this.appendChild(style);
+    }
+
+    // Add getter and setter for value property
+    get value() {
+        const type = this.getAttribute('type') || 'text';
+        if (type === 'checkbox' || type === 'switch') {
+            return this.inputElement ? this.inputElement.checked : false;
+        } else if (type === 'radio') {
+            const radios = this.querySelectorAll('input[type="radio"]');
+            for (let radio of radios) {
+                if (radio.checked) return radio.value;
+            }
+            return '';
+        }
+        return this.inputElement ? this.inputElement.value : '';
+    }
+
+    set value(val) {
+        const type = this.getAttribute('type') || 'text';
+        if (type === 'checkbox' || type === 'switch') {
+            if (this.inputElement) {
+                this.inputElement.checked = val === 'true' || val === '1' || val === true;
+            }
+        } else if (type === 'radio') {
+            const radios = this.querySelectorAll('input[type="radio"]');
+            radios.forEach(radio => {
+                radio.checked = radio.value == val;
+            });
+        } else if (this.inputElement) {
+            this.inputElement.value = val;
+        }
+        // Update the attribute directly without triggering setAttribute override
+        super.setAttribute('value', val);
+    }
+
+    // Override setAttribute to handle value updates
+    setAttribute(name, value) {
+        super.setAttribute(name, value);
+        if (name === 'value' && this.inputElement) {
+            // Update the actual input value when value attribute changes
+            // Call the internal update method to avoid circular calls
+            this._updateInputValue(value);
+        }
+    }
+
+    // Internal method to update input value without triggering attribute update
+    _updateInputValue(val) {
+        const type = this.getAttribute('type') || 'text';
+        if (type === 'checkbox' || type === 'switch') {
+            if (this.inputElement) {
+                this.inputElement.checked = val === 'true' || val === '1' || val === true;
+            }
+        } else if (type === 'radio') {
+            const radios = this.querySelectorAll('input[type="radio"]');
+            radios.forEach(radio => {
+                radio.checked = radio.value == val;
+            });
+        } else if (this.inputElement) {
+            this.inputElement.value = val;
+        }
+    }
+
+    // Method to get the actual input element
+    getInputElement() {
+        return this.inputElement;
+    }
+
+    // Method to focus the input
+    focus() {
+        if (this.inputElement) {
+            this.inputElement.focus();
+        }
+    }
+
+    // Method to validate the input
+    validate() {
+        if (this.inputElement) {
+            const error = this.querySelector('.invalid-feedback');
+            if (!this.inputElement.checkValidity()) {
+                error.classList.remove('d-none');
+                this.inputElement.classList.add('is-invalid');
+                this.inputElement.classList.add('shake');
+                setTimeout(() => this.inputElement.classList.remove('shake'), 400);
+                return false;
+            } else {
+                error.classList.add('d-none');
+                this.inputElement.classList.remove('is-invalid');
+                return true;
+            }
+        }
+        return true;
     }
 
     attachEvents(input, error, onInputFn, onClickFn, onChangeFn) {

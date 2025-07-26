@@ -747,13 +747,14 @@ def create_section(request) -> HttpResponse:
         )
 
     try:
-        section_id = request.POST.get("id")
+        section_id = request.POST.get("section_id", None)
         order = request.POST.get("order", 0)
         is_open = request.POST.get("is_open", False) == "on"
         article = request.POST.get("article", "")
         content = request.POST.get("content", "")
         is_generate_content_using_ai = request.POST.get("is_generate_quiz", False) == "on"
         prompt = request.POST.get("prompt", "")
+        course_id = request.POST.get("course_id")
         profile = request.user.profile
         instructor = Instructor.objects.filter(profile=profile).first()
 
@@ -780,6 +781,10 @@ def create_section(request) -> HttpResponse:
             section.instructor_id = instructor.id
             
             section.save(prompt=prompt, is_generate_content_using_ai=is_generate_content_using_ai)  # Save prompt if needed
+            # if course_id:
+            #     course = get_object_or_404(Course, id=course_id)
+            #     course.sections.add(section)
+            #     course.save()
             return HttpResponse(
                 """<div class="alert alert-success border-0 rounded-0 d-flex align-items-center" role="alert">
                     <i class="fa-light fa-check-circle text-success-emphasis me-2"></i>
@@ -794,7 +799,11 @@ def create_section(request) -> HttpResponse:
                 section.article = article
             if selected_lessons:
                 section.lesson.set(selected_lessons)  # Update lessons
-            section.save(prompt=prompt)
+            section.save(prompt=prompt, is_generate_content_using_ai=is_generate_content_using_ai)
+            if course_id:
+                course = get_object_or_404(Course, id=course_id)
+                course.sections.add(section)
+                course.save()
             return HttpResponse(
                 """<div class="alert alert-success border-0 rounded-0 d-flex align-items-center" role="alert">
                     <i class="fa-light fa-check-circle text-success-emphasis me-2"></i>
@@ -834,15 +843,16 @@ def create_lesson(request) -> HttpResponse:
         )
 
     try:
-        lesson_id = request.POST.get("id")
+        lesson_id = request.POST.get("lesson_id", None)
         description = request.POST.get("description", "")
         order = request.POST.get("order", 0)
         required_score = request.POST.get("required-score", 0)
-        video_url = request.POST.get("video-url", "")
+        video_url = request.POST.get("video_url", "")
+        video_path = request.POST.get("video_path", "")
         profile = request.user.profile
         instructor = Instructor.objects.filter(profile=profile).first()
-        # section_id = request.POST.get("section_id", 1)
-        # section = get_object_or_404(Section, pk=section_id)
+        section_id = request.POST.get("section_id", 1)
+        section = get_object_or_404(Section, pk=section_id)
 
         if lesson_id:
             lesson = get_object_or_404(Lesson, id=lesson_id)
@@ -853,11 +863,18 @@ def create_lesson(request) -> HttpResponse:
             if "video" in request.FILES:
                 lesson.video = request.FILES["video"]
             else:
-                lesson.video_url = video_url
+                if video_path:
+                    lesson.video = video_path
+                    lesson.video_url = ""  # Clear URL if uploading file
+                elif video_url:
+                    lesson.video_url = video_url
             lesson.order = order
             lesson.required_score = required_score
             lesson.instructor = instructor
             lesson.save()
+            # if section:
+            #     section.lesson.add(lesson)
+            #     section.save()
             return HttpResponse(
                 """<div class="alert alert-success border-0 rounded-0 d-flex align-items-center" role="alert">
                     <i class="fa-light fa-check-circle text-success-emphasis me-2"></i>
@@ -879,6 +896,9 @@ def create_lesson(request) -> HttpResponse:
             else:
                 lesson.video_url = video_url
             lesson.save()
+            if section:
+                section.lesson.add(lesson)
+                section.save()
             return HttpResponse(
                 """<div class="alert alert-success border-0 rounded-0 d-flex align-items-center" role="alert">
                     <i class="fa-light fa-check-circle text-success-emphasis me-2"></i>
@@ -1003,7 +1023,104 @@ def get_course_notes_htmx(request, course_id, section_id=None, lesson_id=None):
         )
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=400)
+    
+def fetch_lesson_api(request, lesson_id):
+    try:
+        lesson = get_object_or_404(Lesson, id=lesson_id)
+        data = {
+            "id": lesson.id,
+            "title": lesson.title,
+            "content": lesson.content,
+            "video_url": lesson.video_url,
+            "thumbnail": lesson.thumbnail.url if lesson.thumbnail else None,
+            "required_score": lesson.required_score,
+            "order": lesson.order,
+        }
+        return JsonResponse(data)
+    except Lesson.DoesNotExist:
+        return JsonResponse({"error": "Lesson not found"}, status=404)
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
+    
+def get_section_details(request, section_id):
+    try:
+        section = get_object_or_404(Section, id=section_id)
+        data = {
+            "id": section.id,
+            "title": section.title,
+            "content": section.content,
+            "is_open": section.is_open,
+            "order": section.order,
+            "article": section.article.title if section.article else None,
+            "lessons": list(section.lesson.values("id", "title", "content", "video_url", "thumbnail", "required_score", "order")),
+        }
+        return JsonResponse(data)
+    except Section.DoesNotExist:
+        return JsonResponse({"error": "Section not found"}, status=404)
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
+    
+def update_section_order(request):
+    if request.method != "POST":
+        return JsonResponse({"error": "Invalid request method."}, status=405)
 
+    try:
+        data = json.loads(request.body)
+        section_id = data.get("section_id")
+        new_order = data.get("new_order")
+
+        if not section_id or new_order is None:
+            return JsonResponse({"error": "Section ID and new order are required."}, status=400)
+
+        section = get_object_or_404(Section, id=section_id, is_deleted=False)
+        section.order = int(new_order)
+        section.save()
+
+        return JsonResponse({"message": "Section order updated successfully."})
+    except json.JSONDecodeError:
+        return JsonResponse({"error": "Invalid JSON data."}, status=400)
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
+
+def update_lesson_order(request):
+    if request.method != "POST":
+        return JsonResponse({"error": "Invalid request method."}, status=405)
+
+    try:
+        data = json.loads(request.body)
+        lesson_id = data.get("lesson_id")
+        new_order = data.get("new_order")
+        section_id = data.get("section_id")
+
+        if not lesson_id or new_order is None or not section_id:
+            return JsonResponse({"error": "Lesson ID, section ID, and new order are required."}, status=400)
+
+        lesson = get_object_or_404(Lesson, id=lesson_id, is_deleted=False)
+        target_section = get_object_or_404(Section, id=section_id, is_deleted=False)
+
+        # Update lesson's order
+        lesson.order = int(new_order)
+
+        # Update ManyToMany relationship: add to target section, remove from others
+        lesson.sections.clear()  # Remove from all current sections
+        lesson.sections.add(target_section)  # Add to the target section
+
+        # Update extra_fields with last_updated timestamp
+        lesson.extra_fields['last_updated'] = str(lesson.updated_at)
+        lesson.save()
+
+        # Optionally, normalize order for other lessons in the target section
+        for index, l in enumerate(target_section.lesson.filter(is_deleted=False).order_by('order'), start=0):
+            if l.id != lesson.id:  # Skip the lesson we just moved
+                l.order = index + (1 if index >= new_order else 0)
+                l.extra_fields['last_updated'] = str(l.updated_at)
+                l.save()
+
+        return JsonResponse({"message": "Lesson order and section updated successfully."})
+    except json.JSONDecodeError:
+        return JsonResponse({"error": "Invalid JSON data."}, status=400)
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
 @csrf_exempt
 @login_required
 def submit_quiz(request, quiz_id):
@@ -1332,7 +1449,10 @@ def delete_lesson_api(request, lesson_id):
     author = Instructor.objects.filter(profile=profile).first()
     if not author:
         return JsonResponse({"error": "You must be an author to delete a lesson."}, status=403)
-    if lesson.author_id != author.id:
+    lesson = get_object_or_404(Lesson, id=lesson_id)
+    if not lesson:
+        return JsonResponse({"error": "Lesson not found."}, status=404)
+    if lesson.instructor_id != author.id:
         return JsonResponse({"error": "You must be the author of the lesson to delete it."}, status=403)
     
     lesson = get_object_or_404(Lesson, id=lesson_id)
@@ -1353,6 +1473,9 @@ def delete_article_api(request, article_id):
     author = Instructor.objects.filter(profile=profile).first()
     if not author:
         return JsonResponse({"error": "You must be an author to delete an article."}, status=403)
+    article = get_object_or_404(Article, id=article_id)
+    if not article:
+        return JsonResponse({"error": "Article not found."}, status=404)
     if article.author_id != author.id:
         return JsonResponse({"error": "You must be the author of the article to delete it."}, status=403)
     
@@ -1374,13 +1497,15 @@ def delete_section_api(request, section_id):
     instructor = Instructor.objects.filter(profile=profile).first()
     if not instructor:
         return JsonResponse({"error": "You must be an instructor to delete a section."}, status=403)
+    section = get_object_or_404(Section, id=section_id)
+    if not section:
+        return JsonResponse({"error": "Section not found."}, status=404)
     if section.instructor_id != instructor.id:
         return JsonResponse({"error": "You must be the instructor of the section to delete it."}, status=403)
     
-    section = get_object_or_404(Section, id=section_id)
-    section.is_deleted = True
-    section.save()
-    # section.delete()
+    # section.is_deleted = True
+    # section.save()
+    section.delete()
     return JsonResponse({"success": True})
 
 def delete_course_api(request, course_id):
@@ -1413,6 +1538,7 @@ def course_create_step_one(request, course_id=None) -> HttpResponse:
     """
     request.session["page"] = "course"
     step = "1"
+    step_one_done = False
     if not request.user.is_authenticated:
         return redirect("login")
     user = request.user
@@ -1426,6 +1552,86 @@ def course_create_step_one(request, course_id=None) -> HttpResponse:
             return HttpResponse("You are not authorized to edit this course.", status=403)
     else:
         course = None
+
+    if request.method == "POST":
+        print("Creating or updating course..." + str(request.POST))
+        title = request.POST.get("title", "").strip()
+        description = request.POST.get("description", "").strip()
+        course_type = request.POST.get("course_type", "").strip()
+        course_level = request.POST.get("course_level", "").strip()
+        price = request.POST.get("price", "").strip()
+        discount_price = request.POST.get("discount_price", "").strip()
+        if not course_level or course_level.upper() not in ["BEGINNER", "INTERMEDIATE", "ADVANCED", "ALL"]:
+            return HttpResponse("Invalid difficulty level.", status=400)
+        if not course_type:
+            return HttpResponse("Course type is required.", status=400)
+        if course_type.upper() not in ["FREE", "PAID"]:
+            return HttpResponse("Invalid course type.", status=400)
+        if course_type.upper() == "PAID":
+            price = request.POST.get("price", "").strip()
+            if not price or not price.isdigit():
+                return HttpResponse("Price must be a valid number.", status=400)
+            price = int(price)
+        language_id = request.POST.get("language")
+        if not title or not description or not language_id:
+            return HttpResponse("Name, description, and language are required.", status=400)
+        
+        if request.FILES.get("thumbnail"):
+            thumbnail = request.FILES["thumbnail"]
+        if request.FILES.get("intro_video"):
+            video = request.FILES["intro_video"]
+
+        try:
+            language = get_object_or_404(Language, id=language_id)
+            if course_id:
+                course.title = title
+                course.description = description
+                course.language = language
+                course.instructor = instructor
+                course.course_type = course_type
+                course.course_level = course_level
+                course.price = price
+                course.discount_price = discount_price
+                if thumbnail:
+                    course.thumbnail = thumbnail
+                if video:
+                    course.intro_video = video
+                course.save()
+                # Log activity
+                Activity.objects.create(
+                    user=user,
+                    activity_type="Course Update",
+                    description=f"Updated course: {course.title}"
+                )
+                step_one_done = True
+            else:
+                course = Course.objects.create(
+                    title=title,
+                    description=description,
+                    instructor=instructor,
+                    language=language,
+                    course_type=course_type,
+                    course_level=course_level,
+                    price=price,
+                    discount_price=discount_price
+                )
+                if thumbnail:
+                    course.thumbnail = thumbnail
+                if video:
+                    course.intro_video = video
+                course.save()
+                # Log activity
+                Activity.objects.create(
+                    user=user,
+                    activity_type="Course Creation",
+                    description=f"Created course: {course.title}"
+                )
+                step_one_done = True
+            if step_one_done:
+                request.session['step_one_done'] = True 
+            return redirect("course_create_step_two", course_id=course.id)
+        except Exception as e:
+            return HttpResponse(f"Error creating course: {str(e)}", status=500)
     return render(request, "course/creation/step_1.html", locals())
 
 
@@ -1437,6 +1643,7 @@ def course_create_step_two(request, course_id=None) -> HttpResponse:
     """
     request.session["page"] = "course"
     step = "2"
+    step_two_done = False
     if not request.user.is_authenticated:
         return redirect("login")
     user = request.user
@@ -1449,6 +1656,32 @@ def course_create_step_two(request, course_id=None) -> HttpResponse:
             return HttpResponse("You are not authorized to edit this course.", status=403)
     else:
         course = None
+    if request.method == "POST":
+        print("Creating or updating course sections..." + str(request.POST))
+        prerequisites = request.POST.get("prerequisites", "").strip()
+        circulam = request.POST.get("circulam", "").strip()
+        if not circulam and not prerequisites:
+            return HttpResponse("Prerequisites or circulam is required.", status=400)
+        
+        try:
+            if course_id:
+                course = get_object_or_404(Course, id=course_id)
+                course.prerequisites = prerequisites
+                course.circulam = circulam
+                course.save()
+                # Log activity
+                Activity.objects.create(
+                    user=user,
+                    activity_type="Course Update",
+                    description=f"Updated course sections for: {course.title}"
+                )
+                step_two_done = True
+                request.session['step_two_done'] = step_two_done
+            else:
+                return HttpResponse("Course ID is required to create a section.", status=400)
+            return redirect("course_create_step_three", course_id=course.id)
+        except Exception as e:
+            return HttpResponse(f"Error creating section: {str(e)}", status=500)
     return render(request, "course/creation/step_2.html", locals())
 
 
