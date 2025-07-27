@@ -747,6 +747,7 @@ def create_section(request) -> HttpResponse:
         )
 
     try:
+        print(request.POST)
         section_id = request.POST.get("section_id", None)
         order = request.POST.get("order", 0)
         is_open = request.POST.get("is_open", False) == "on"
@@ -780,7 +781,7 @@ def create_section(request) -> HttpResponse:
 
             section.instructor_id = instructor.id
             
-            section.save(prompt=prompt, is_generate_content_using_ai=is_generate_content_using_ai)  # Save prompt if needed
+            section.save(prompt=prompt, is_generate_content_using_ai= True if 'is_generate_quiz' in request.POST else False)  # Save prompt if needed
             # if course_id:
             #     course = get_object_or_404(Course, id=course_id)
             #     course.sections.add(section)
@@ -799,7 +800,7 @@ def create_section(request) -> HttpResponse:
                 section.article = article
             if selected_lessons:
                 section.lesson.set(selected_lessons)  # Update lessons
-            section.save(prompt=prompt, is_generate_content_using_ai=is_generate_content_using_ai)
+            section.save(prompt=prompt, is_generate_content_using_ai=True if 'is_generate_quiz' in request.POST else False)
             if course_id:
                 course = get_object_or_404(Course, id=course_id)
                 course.sections.add(section)
@@ -1161,6 +1162,7 @@ def fetch_lesson_api(request, lesson_id):
             "title": lesson.title,
             "content": lesson.content,
             "video_url": lesson.video_url,
+            "video_path": lesson.video.url if lesson.video else None,
             "thumbnail": lesson.thumbnail.url if lesson.thumbnail else None,
             "required_score": lesson.required_score,
             "order": lesson.order,
@@ -1908,7 +1910,7 @@ def course_create_step_three(request, course_id=None) -> HttpResponse:
     instructor = Instructor.objects.filter(profile__user=user).first()
     if not instructor:
         return HttpResponse("You must be an instructor to create a course.", status=403)
-    if course_id:
+    if course_id and course_id != "":
         course = get_object_or_404(Course, id=course_id)
         if course.instructor_id != instructor.id:
             return HttpResponse("You are not authorized to edit this course.", status=403)
@@ -1917,7 +1919,7 @@ def course_create_step_three(request, course_id=None) -> HttpResponse:
     if request.method == "POST":
         print("Creating or updating course sections..." + str(request.POST))
         try:
-            if course_id:
+            if course_id and course_id != "":
                 course = get_object_or_404(Course, id=course_id)
                 course.save()
                 # Log activity

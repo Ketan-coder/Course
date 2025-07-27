@@ -25,7 +25,7 @@
 {% block body %}
 <div class="container-fluid content-wrapper">
     <div class="text-start my-4 ps-3">
-        <h1 class="font-weight-bold display-3">Create a New Course</h1>
+        <h1 class="font-weight-bold display-3">{% if course %}Edit Course{% else %}Create a New Course{% endif %}</h1>
         <p class="text-muted font-size-18">Follow the steps to build and publish your course.</p>
     </div>
 
@@ -402,6 +402,20 @@ function saveQuiz(event) {
     event.preventDefault();
     const form = event.target;
     const formData = new FormData(form);
+    const button = form.querySelector('button[type="submit"]');
+    const spinner = document.createElement('div');
+    spinner.classList.add('spinner-border', 'text-primary', 'mx-2');
+    spinner.setAttribute('role', 'status');
+    const spinnerText = document.createElement('span');
+    spinnerText.classList.add('visually-hidden');
+    spinnerText.textContent = 'Saving...';
+    spinner.appendChild(spinnerText);
+    button.parentNode.insertBefore(spinner, button);
+    button.style.display = 'none';
+
+    setTimeout(() => {
+        spinnerText.textContent = 'Generating content...';
+    }, 1000);
     
     // Manually collect questions data
     const questions = [];
@@ -427,7 +441,14 @@ function saveQuiz(event) {
     fetch("{% url 'create_quiz_ajax' %}", { method: 'POST', body: formData })
         .then(res => res.json())
         .then(data => {
-            if (data.success) location.reload();
+            if (data.success) {
+                button.style.display = 'initial';
+                spinner.remove();
+                // Close modal and reload page
+                const modal = bootstrap.Modal.getInstance(document.getElementById('quiz-modal'));
+                modal.hide();
+                location.reload();
+            }
             else alert('Error saving quiz.');
         });
 }
@@ -436,12 +457,28 @@ function saveArticle(event) {
     event.preventDefault();
     const form = event.target;
     const formData = new FormData(form);
+    const button = form.querySelector('button[type="submit"]');
+    const spinner = document.createElement('div');
+    spinner.classList.add('spinner-border', 'text-primary', 'mx-2');
+    spinner.setAttribute('role', 'status');
+    const spinnerText = document.createElement('span');
+    spinnerText.classList.add('visually-hidden');
+    spinnerText.textContent = 'Saving...';
+    spinner.appendChild(spinnerText);
+    button.parentNode.insertBefore(spinner, button);
+    button.style.display = 'none';
+
+    setTimeout(() => {
+        spinnerText.textContent = 'Generating content...';
+    }, 1000);
     
     // IMPORTANT: Create this endpoint in Django
     fetch("{% url 'create_article_ajax' %}", { method: 'POST', body: formData })
         .then(res => res.text())
         .then(data => {
             if (data.includes('success')) {
+                button.style.display = 'initial';
+                spinner.remove();
                 // Close modal and reload page
                 const modal = bootstrap.Modal.getInstance(document.getElementById('article-modal'));
                 modal.hide();

@@ -407,7 +407,7 @@ function handleChange(event) {
 {% block body %}
 <div class="container-fluid content-wrapper">
     <div class="text-start my-4 ps-3">
-        <h1 class="font-weight-bold display-3">Create a New Course</h1>
+        <h1 class="font-weight-bold display-3">{% if course %}Edit Course{% else %}Create a New Course{% endif %}</h1>
         <p class="text-muted font-size-18">Follow the steps to build and publish your course.</p>
     </div>
 
@@ -449,7 +449,7 @@ function handleChange(event) {
                                     class="btn btn-sm"
                                     post="{% url 'delete_section' section_id=section.id %}"
                                     method="POST"
-                                    showspinner="true"
+                                    showspinner
                                     buttontype="danger"
                                     form-id="section_delete_form_{{ section.id }}"
                                     target="#section_select"
@@ -477,7 +477,7 @@ function handleChange(event) {
                                                 post="{% url 'delete_lesson' lesson_id=lesson.id %}"
                                                 method="POST"
                                                 form-id="lesson_delete_form_{{ lesson.id }}"
-                                                showspinner="true"
+                                                showspinner
                                                 buttontype="danger"
                                                 target="#lesson_select"
                                                 ask-before-action
@@ -590,6 +590,10 @@ function handleChange(event) {
                     <div class="mb-3">
                         <smart-quill name="content" id="lesson-content-quill" label="Lesson Notes / Description"></smart-quill>
                     </div>
+
+                    <div class="mb-4">
+                        <input type="file" name="thumbnail" id="thumbnail-input" class="form-control" accept="image/*">
+                    </div>
                     
                     <div class="mb-4">
                          <smart-input label="Video URL (e.g., YouTube, Vimeo)" name="video_url" id="lesson-video-url-input" placeholder="https://..."></smart-input>
@@ -604,7 +608,7 @@ function handleChange(event) {
                         <div id="lesson-video-uploader"></div>
                         <div class="form-text">Upload a video file for this lesson.</div>
                     </div>
-
+                        <small>Current video: <a href="" id="current-video-link" target="_blank">View</a></small>
 
 
                 </div>
@@ -755,9 +759,14 @@ document.querySelectorAll(".sortable-lessons").forEach(list => {
             fetch(`{% url 'get_lesson_details' 999 %}`.replace('999', lessonId))
                 .then(res => res.json())
                 .then(data => {
+                    console.log(data);
                     document.getElementById('lesson-title-input').setAttribute('value', data.title);
                     document.getElementById('lesson-video-url-input').setAttribute('value', data.video_url);
                     document.querySelector('#lesson-content-quill').editor.root.innerHTML = data.content;
+
+                    document.getElementById('video-path-input').value = data.video_path || '';
+                    document.getElementById('current-video-link').setAttribute('href', data.video_path || '#');
+                    document.getE
                     console.log('Lesson data:', data);
                 });
         } else { // Adding new
@@ -773,14 +782,30 @@ async function saveSection(event) {
     event.preventDefault();
     const form = event.target;
     const formData = new FormData(form);
-    console.log(formData);
+    const button = form.querySelector('button[type="submit"]');
+    const spinner = document.createElement('div');
+    spinner.classList.add('spinner-border', 'text-primary', 'mx-2');
+    spinner.setAttribute('role', 'status');
+    const spinnerText = document.createElement('span');
+    spinnerText.classList.add('visually-hidden');
+    spinnerText.textContent = 'Saving...';
+    spinner.appendChild(spinnerText);
+    button.parentNode.insertBefore(spinner, button);
+    button.style.display = 'none';
+
+    setTimeout(() => {
+        spinnerText.textContent = 'Generating content...';
+    }, 1000);
+
     // IMPORTANT: Create this endpoint to handle section creation/updates
-    const url = "{% url 'create_section' %}"; 
-    
+    const url = "{% url 'create_section' %}";
+
     fetch(url, { method: 'POST', body: formData })
         .then(res => res.text())
         .then(data => {
-            if(data.includes('success')) {
+            if (data.includes('success')) {
+                button.style.display = 'initial';
+                spinner.remove();
                 const modal = bootstrap.Modal.getInstance(document.getElementById('section-modal'));
                 modal.hide();
                 alert(`Section ${data.title} has been saved.`);
@@ -813,6 +838,20 @@ async function handleLessonSubmit(event) {
 function submitLessonForm() {
     const form = document.getElementById('lesson-form');
     const formData = new FormData(form);
+    const button = form.querySelector('button[type="submit"]');
+    const spinner = document.createElement('div');
+    spinner.classList.add('spinner-border', 'text-primary', 'mx-2');
+    spinner.setAttribute('role', 'status');
+    const spinnerText = document.createElement('span');
+    spinnerText.classList.add('visually-hidden');
+    spinnerText.textContent = 'Saving...';
+    spinner.appendChild(spinnerText);
+    button.parentNode.insertBefore(spinner, button);
+    button.style.display = 'none';
+
+    setTimeout(() => {
+        spinnerText.textContent = 'Generating content...';
+    }, 1000);
     // IMPORTANT: Create this endpoint to handle lesson creation/updates
     const url = "{% url 'create_lesson' %}";
 
@@ -820,6 +859,8 @@ function submitLessonForm() {
         .then(res => res.text())
         .then(data => {
             if (data.includes('success')) {
+                button.style.display = 'initial';
+                spinner.remove();
                 const modal = bootstrap.Modal.getInstance(document.getElementById('lesson-modal'));
                 modal.hide();
                 alert(`Lesson has being added.`);

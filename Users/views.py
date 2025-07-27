@@ -220,10 +220,9 @@ def login_form(request):
 
 def logout_form(request):
     context = {"title": "Logout"}
-    Activity.objects.create(user=request.user, activity_type="Logout", description=f"Logged out user: {request.user.username}")
     logout(request)
-    return render(request, "user/logout.html", context)
-
+    # return render(request, "user/logout.html", context)
+    return redirect("home")
 
 def registeration_form(request):
     if request.method == "POST":

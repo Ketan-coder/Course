@@ -40,7 +40,7 @@
               <form method="post" action="." class="d-inline-block">
                 {% csrf_token %}
                 {% if course.instructor.profile.user.id == request.user.id %}
-                  <a href="{% url 'course_update' pk=course.id %}" class="btn btn-primary btn-lg">Edit Course</a>
+                  <a href="{% url 'course_create_step_one' course_id=course.id %}" class="btn btn-primary btn-lg">Edit Course</a>
                 {% else %}
                   {% if logged_in_profile in course.is_bought_by_users.all or course.is_open_to_all and logged_in_profile in course.is_bought_by_users.all %}
                     <button class="btn btn-light btn-lg" name="continue_now" value="1">Continue Course</button>
