@@ -139,7 +139,7 @@ def send_email_using_resend(to_email, subject, title, body, anchor_link=None, an
         # Loop through recipients
         # for email in to_email:
         params: resend.Emails.SendParams = {
-            "from": settings.DEFAULT_FROM_EMAIL,  # Must match verified sender
+            "from": settings.TRANSACTIONAL_EMAIL,  # Must match verified sender
             "to": to_email,
             "subject": str(subject),
             "html": html_content,

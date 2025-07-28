@@ -14,14 +14,14 @@ def create_profile(sender, instance, created, **kwargs):
         profile = Profile.objects.create(user=instance, email_confirmation_token=uuid.uuid4())
         wallet = Wallet.objects.create(user=profile, balance=10000)
         stock_portfolio = StockPortfolio.objects.create(user=profile)
-        # send_email_using_resend(
-        #     to_email=instance.email,
-        #     subject="Confirm Your Email",
-        #     title="Confirm Email",
-        #     body=f"Hi {instance.username}, click the button below to verify your email.",
-        #     anchor_link=f"https://{settings.SITE_URL}/accounts/confirm/{profile.email_confirmation_token}/",            
-        #     anchor_text="Confirm Email"
-        # )
+        send_email_using_resend(
+            to_email=instance.email,
+            subject="Confirm Your Email",
+            title="Confirm Email",
+            body=f"Hi {instance.username}, click the button below to verify your email.",
+            anchor_link=f"https://{settings.SITE_URL}/accounts/confirm/{profile.email_confirmation_token}/",            
+            anchor_text="Confirm Email"
+        )
 
 @receiver(post_save, sender=User)
 def save_profile(sender, instance, **kwargs):
