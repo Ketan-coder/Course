@@ -128,3 +128,4 @@ zopfli==0.2.3
 zstandard==0.23.0
 gunicorn==21.2.0
 google-generativeai
+resend==2.11.0

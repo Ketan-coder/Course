@@ -16,9 +16,12 @@ import google.generativeai as genai
 import os
 import json
 import re
+import resend
+from django.conf import settings
 
 # Configure API Key
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+resend.api_key = os.getenv("RESEND_API_KEY")
 
 model = genai.GenerativeModel("models/gemini-1.5-flash-latest")
 
@@ -87,6 +90,66 @@ def send_email(to_email, subject, title, body, anchor_link=None, anchor_text="Cl
         raise e
 
 
+@check_load_time
+def send_email_using_resend(to_email, subject, title, body, anchor_link=None, anchor_text="Click Here"):
+    """
+    Sends an email using Resend API with HTML content and optional anchor link.
+    
+    :param to_email: Recipient email (str or list)
+    :param subject: Email subject
+    :param title: Email title shown inside body
+    :param body: Body text
+    :param anchor_link: (Optional) Link to be included
+    :param anchor_text: (Optional) Link text
+    """
+    try:
+        # Ensure to_email is a list
+        if isinstance(to_email, str):
+            to_email = [to_email]
+
+        # Anchor HTML if link is provided
+        anchor_html = f'''
+        <p>
+            <a href="{anchor_link}" 
+               style="padding: 10px; background-color: #0076d1; color: white; text-decoration: none;">
+                {anchor_text}
+            </a>
+        </p>''' if anchor_link else ""
+
+        # HTML content
+        html_content = f'''
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1">
+            <title>{title}</title>
+        </head>
+        <body style="font-family: 'Poppins', Arial, sans-serif; background: #ffffff; padding: 20px;">
+            <h2 style="color: #0076d1;">{title}</h2>
+            <p>{body}</p>
+            {anchor_html}
+            <p>If you did not request this, please ignore this email.</p>
+        </body>
+        </html>
+        '''
+
+        # Plain text fallback
+        text_content = f"{title}\n\n{body}\n\n{anchor_link if anchor_link else ''}"
+
+        # Loop through recipients
+        # for email in to_email:
+        params: resend.Emails.SendParams = {
+            "from": settings.DEFAULT_FROM_EMAIL,  # Must match verified sender
+            "to": to_email,
+            "subject": str(subject),
+            "html": html_content,
+        }
+        print(params)
+        resend.Emails.send(params)
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise e
 
 @check_load_time
 def generate_quiz_from_content(section_title :str, lesson_content:str, prompt: str = '', is_generate_content_using_ai: bool = False) -> dict:

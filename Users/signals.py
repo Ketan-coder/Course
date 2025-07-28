@@ -1,11 +1,12 @@
 from django.db.models.signals import post_save, pre_delete
 from django.contrib.auth.models import User
 from django.dispatch import receiver
-# from CourseApp.utils import send_email
+from utils.utils import send_email_using_resend
 import uuid
 from .models import Instructor, Profile, Student
 import datetime
 from Stock.models import Wallet, StockPortfolio
+from django.conf import settings
 
 @receiver(post_save, sender=User)
 def create_profile(sender, instance, created, **kwargs):
@@ -13,12 +14,12 @@ def create_profile(sender, instance, created, **kwargs):
         profile = Profile.objects.create(user=instance, email_confirmation_token=uuid.uuid4())
         wallet = Wallet.objects.create(user=profile, balance=10000)
         stock_portfolio = StockPortfolio.objects.create(user=profile)
-        # send_email(
+        # send_email_using_resend(
         #     to_email=instance.email,
         #     subject="Confirm Your Email",
         #     title="Confirm Email",
         #     body=f"Hi {instance.username}, click the button below to verify your email.",
-        #     anchor_link=f"https://sajangiri.pythonanywhere.com/accounts/confirm/{profile.email_confirmation_token}/",            
+        #     anchor_link=f"https://{settings.SITE_URL}/accounts/confirm/{profile.email_confirmation_token}/",            
         #     anchor_text="Confirm Email"
         # )
 

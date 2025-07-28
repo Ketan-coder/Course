@@ -18,7 +18,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
 from django.views.generic import ListView
 # from Notes.models import Activity
-from utils.utils import send_email
+from utils.utils import send_email_using_resend
 from utils.models import Activity, Currency, PhoneNoPrefix
 
 from Course import settings as project_settings
@@ -131,7 +131,7 @@ def updateUser(request):
 
         if project_settings.DEBUG is False:
             try:
-                send_email(
+                send_email_using_resend(
                     to_email=user.email,
                     subject="Profile Update Alert",
                     title="Profile Update Alert Notification",
@@ -168,7 +168,7 @@ def login_form(request):
             if project_settings.DEBUG is False:
                 try:
                     print("user.email", user.email)
-                    send_email(
+                    send_email_using_resend(
                         to_email=user.email,
                         subject="Login Alert",
                         title="Login Alert Notification",
@@ -274,7 +274,7 @@ def register_view(request):
         confirmation_link = f"{settings.SITE_URL}/accounts/confirm-email/{profile.email_confirmation_token}/"
         if project_settings.DEBUG is False:
             try:
-                send_email(
+                send_email_using_resend(
                     to_email=user.email,
                     subject="Confirm Your sajan Account",
                     title="Complete Your Registration",
@@ -475,7 +475,7 @@ def update_email_request(request):
         confirmation_link = f"{settings.SITE_URL}/confirm-new-email/{profile.email_confirmation_token}/{new_email}/"
         if project_settings.DEBUG is False:
             try:
-                send_email(
+                send_email_using_resend(
                     to_email=new_email,
                     subject="Confirm Your New Email",
                     title="Confirm Your New Email",
