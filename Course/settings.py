@@ -238,7 +238,7 @@ CHANNEL_LAYERS = {
         },
     }
 
-SITE_URL = "https://calsie.com.au"
+SITE_URL = "calsie.com.au"
 
 # Media files settings
 MEDIA_URL = '/media/'

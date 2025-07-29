@@ -102,7 +102,7 @@ class Wallet(models.Model):
     extra_fields = models.JSONField(blank=True, null=True, default=dict)
 
     def __str__(self):
-        return f"{self.user.username}'s Wallet"
+        return f"{self.user.user.username}'s Wallet"
 
 class StockPortfolio(models.Model):
     user = models.ForeignKey("Users.Profile", on_delete=models.CASCADE, related_name='stock_portfolio', null=True, blank=True)
@@ -114,7 +114,7 @@ class StockPortfolio(models.Model):
     def __str__(self):
         """Returns a string representation of the StockPortfolio instance, 
         showing the associated user's username and indicating it's their stock portfolio."""
-        return f"{self.user.username}'s Stock Portfolio"
+        return f"{self.user.user.username}'s Stock Portfolio"
 
 class StockHolding(models.Model):
     portfolio = models.ForeignKey(StockPortfolio, on_delete=models.CASCADE, related_name='holdings', null=True, blank=True)
@@ -133,7 +133,7 @@ class StockHolding(models.Model):
     #     unique_together = ('portfolio', 'stock')
 
     def __str__(self):
-        return f"{self.portfolio.user.username}'s Holding of {self.stock.symbol}"
+        return f"{self.portfolio.user.user.username}'s Holding of {self.stock.symbol}"
 
     def save(self, *args, **kwargs):
         # First, save the holding to include it in related queries

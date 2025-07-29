@@ -266,12 +266,25 @@ def register_view(request):
         user.is_active = False  # User is inactive until email confirmation
         user.save()
 
-        profile = Profile.objects.get(user=user)
-        profile.email_confirmation_token = uuid.uuid4()
-        profile.save()
+        # profile, created = Profile.objects.get_or_create(user=user)
+
+        # token = uuid.uuid4()
+
+        # profile.email_confirmation_token = token
+        # profile.save()
+        profile, created = Profile.objects.get_or_create(user=user)
+
+        if created or not profile.email_confirmation_token:
+            token = uuid.uuid4()
+            profile.email_confirmation_token = token
+            profile.save()
+        else:
+            token = profile.email_confirmation_token
+        print(f"Profile created: {profile}, User: {user} email: {user.email} with email confirmation token: {profile.email_confirmation_token}")
 
         #  Step 4: Send Confirmation Email
-        confirmation_link = f"{settings.SITE_URL}/accounts/confirm-email/{profile.email_confirmation_token}/"
+        confirmation_link = f"{settings.SITE_URL}/accounts/confirm/{profile.email_confirmation_token}/"
+        print(f"Confirmation link: {confirmation_link}")
         if project_settings.DEBUG is False:
             try:
                 send_email_using_resend(
@@ -387,17 +400,17 @@ def profile_setup_view(request):
             date_of_birth = None
 
         # Validate image file if uploaded
-        profile_pic_path = None
-        if profile_pic_file and MediaHandler.is_image(profile_pic_file.name):
-            resized_path = MediaHandler.resize_image(profile_pic_file)
-            if resized_path:
-                profile_pic_path = resized_path
-            else:
-                messages.error(request, "Failed to process the image.")
-                return render(request, "user/profile_setup.html", {"title": "Complete Profile"})
-        elif profile_pic_file:
-            messages.error(request, "Uploaded file is not a valid image.")
-            return render(request, "user/profile_setup.html", {"title": "Complete Profile"})
+        # profile_pic_path = None
+        # if profile_pic_file and MediaHandler.is_image(profile_pic_file.name):
+        #     resized_path = MediaHandler.resize_image(profile_pic_file)
+        #     if resized_path:
+        #         profile_pic_path = resized_path
+        #     else:
+        #         messages.error(request, "Failed to process the image.")
+        #         return render(request, "user/profile_setup.html", {"title": "Complete Profile"})
+        # elif profile_pic_file:
+        #     messages.error(request, "Uploaded file is not a valid image.")
+        #     return render(request, "user/profile_setup.html", {"title": "Complete Profile"})
 
         # If any errors occurred, stop here
         if messages.get_messages(request):
@@ -418,8 +431,8 @@ def profile_setup_view(request):
             "date_of_birth": date_of_birth,
         }
 
-        if profile_pic_path:
-            profile_data["image"] = profile_pic_path
+        # if profile_pic_path:
+        #     profile_data["image"] = profile_pic_path
 
         Profile.objects.update_or_create(user=user, defaults=profile_data)
 

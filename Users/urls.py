@@ -15,7 +15,7 @@ urlpatterns = [
     path("signup/", views.register_view, name="signup"),
     path("check-username/", views.check_username, name="check_username"),
     path(
-        "confirm-email/<str:token>/",
+        "confirm/<str:token>/",
         views.email_confirmation_view,
         name="email_confirmation",
     ),
@@ -28,7 +28,7 @@ urlpatterns = [
     path("setup-profile/", views.profile_setup_view, name="profile_setup"),
     path(
         "email-confirmation-pending/",
-        TemplateView.as_view(template_name="email_pending.html"),
+        TemplateView.as_view(template_name="user/email_pending.html"),
         name="email_confirmation_pending",
     ),
     path("password-reset/", CustomPasswordResetView.as_view(), name="password_reset"),
