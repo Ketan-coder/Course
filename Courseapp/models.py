@@ -166,7 +166,7 @@ class Section(models.Model):
         # Generate quiz from the first lesson's content if it exists
         if is_generate_content_using_ai:
             related_quizes = Quiz.objects.filter(section=self)
-            if  related_quizes.exists():
+            if not related_quizes.exists():
                 quiz_data = generate_quiz_from_content(self.title, self.lesson.first().content if self.lesson.exists() else '', prompt=prompt)
                 if quiz_data:
                         quiz = Quiz.objects.create(

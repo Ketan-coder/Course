@@ -58,8 +58,16 @@
                             </div>
                         </div>
                         <div class="mb-3">
-                            <label for="dob" class="form-label">Date of Birth</label>
-                            <input type="date" id="dob" name="date_of_birth" value="{{ profile.date_of_birth|date:'Y-m-d' }}" class="form-control">
+                            {% comment %} <label for="dob" class="form-label">Date of Birth</label>
+                            <input type="date" id="dob" name="date_of_birth" value="{{ profile.date_of_birth|date:'Y-m-d' }}" class="form-control"> {% endcomment %}
+                            <smart-input 
+                                type="datepicker" 
+                                name="date_of_birth" 
+                                label="Date of Birth" 
+                                max-date="01-01-2010"
+                                value="{{ profile.date_of_birth|date:'d-m-Y' }}"
+                                required>
+                            </smart-input>
                         </div>
 
                         <!-- Account Information Section -->

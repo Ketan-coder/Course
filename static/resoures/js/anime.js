@@ -1,13 +1,13 @@
-document.querySelectorAll('.btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    anime({
-      targets: btn,
-      scale: [1, 1.05, 1],
-      duration: 300,
-      easing: 'easeOutQuad'
-    });
-  });
-});
+// document.querySelectorAll('.btn').forEach(btn => {
+//   btn.addEventListener('click', () => {
+//     anime({
+//       targets: btn,
+//       scale: [1, 1.05, 1],
+//       duration: 300,
+//       easing: 'easeOutQuad'
+//     });
+//   });
+// });
 
 anime({
   targets: '.sidebar',
@@ -89,26 +89,6 @@ document.querySelectorAll('.nav-link').forEach(link => {
       scale: [1, 1.1, 1],
       duration: 300,
       easing: 'easeOutQuad'
-    });
-  });
-});
-document.querySelectorAll(".btn").forEach((btn) => {
-  btn.addEventListener("mouseenter", () => {
-    anime({
-      targets: btn,
-      scale: 1.05,
-      boxShadow: "0px 0px 15px rgba(0, 200, 255, 0.4)",
-      duration: 300,
-      easing: "easeInOutQuad"
-    });
-  });
-  btn.addEventListener("mouseleave", () => {
-    anime({
-      targets: btn,
-      scale: 1,
-      boxShadow: "0px 0px 0px rgba(0,0,0,0)",
-      duration: 300,
-      easing: "easeInOutQuad"
     });
   });
 });

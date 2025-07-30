@@ -367,6 +367,7 @@ def email_confirmation_view(request, token):
 
 @login_required
 def profile_setup_view(request):
+    phone_no_prefixes = PhoneNoPrefix.objects.all().order_by('-created_at')
     if not request.user.is_authenticated:
         return redirect("login")
 
@@ -392,10 +393,10 @@ def profile_setup_view(request):
             messages.error(request, "Phone number prefix must contain only digits.")
         elif date_of_birth_raw:
             try:
-                date_of_birth = datetime.strptime(date_of_birth_raw, "%Y-%m-%d").date()
+                date_of_birth = datetime.strptime(date_of_birth_raw, "%d-%m-%Y").date()
             except ValueError:
-                messages.error(request, "Invalid date format. Use YYYY-MM-DD.")
-                return render(request, "user/profile_setup.html", {"title": "Complete Profile"})
+                messages.error(request, "Invalid date format. Use DD-MM-YYYY.")
+                return render(request, "user/profile_setup_new.html", {"title": "Complete Profile"})
         else:
             date_of_birth = None
 
@@ -414,7 +415,7 @@ def profile_setup_view(request):
 
         # If any errors occurred, stop here
         if messages.get_messages(request):
-            return render(request, "user/profile_setup.html", {"title": "Complete Profile"})
+            return render(request, "user/profile_setup_new.html", {"title": "Complete Profile"})
 
         # Save user data
         user = request.user
@@ -422,6 +423,8 @@ def profile_setup_view(request):
         user.first_name = first_name
         user.last_name = last_name
         user.save()
+
+        phone_no_prefix = get_object_or_404(PhoneNoPrefix, pk=phone_no_prefix)
 
         profile_data = {
             "bio": bio,
@@ -445,7 +448,7 @@ def profile_setup_view(request):
         messages.success(request, "Profile updated successfully.")
         return redirect("home")
 
-    return render(request, "user/profile_setup.html", {"title": "Complete Profile"})
+    return render(request, "user/profile_setup_new.html", {"title": "Complete Profile", "phone_no_prefixes": phone_no_prefixes})
 
 
 def check_username(request):

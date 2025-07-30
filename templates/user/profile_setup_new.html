@@ -1,0 +1,331 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+    Complete Your Profile
+{% endblock title %}
+
+{% block head %}
+<style>
+    /* Custom styles for the profile setup wizard */
+    .profile-setup-wrapper {
+        max-width: 900px;
+        margin: 2rem auto;
+    }
+
+    /* The main card container */
+    .profile-setup-card {
+        background-color: var(--hm-content-bg-color);
+        border-radius: var(--hm-border-radius-lg);
+        overflow: hidden;
+        border: 1px solid var(--hm-border-color);
+    }
+
+    /* Sidebar with the stepper navigation */
+    .stepper-sidebar {
+        background-color: var(--hm-body-bg-color);
+        padding: 1.5rem;
+        /* The border is now handled by a responsive class in the HTML */
+    }
+    
+    /* Ensure smart-list-tile fits well in the sidebar */
+    .stepper-sidebar smart-list-tile {
+        margin-bottom: 0.5rem;
+    }
+
+    .form-content {
+        padding: 2.5rem;
+    }
+
+    .form-step {
+        display: none;
+    }
+
+    .form-step.active {
+        display: block;
+    }
+
+    /* Profile Picture Uploader */
+    .profile-picture-uploader {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+    .picture-preview {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        background-color: var(--hm-body-bg-color);
+        border: 2px dashed var(--hm-border-color);
+        margin: 0 auto 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        background-size: cover;
+        background-position: center;
+        position: relative;
+    }
+    .picture-preview .ph {
+        font-size: 2.5rem;
+        color: var(--hm-text-muted-color);
+        transition: all 0.2s ease;
+    }
+    .picture-preview:hover .ph {
+        transform: scale(1.1);
+        color: var(--hm-primary-color);
+    }
+    .picture-preview input[type="file"] {
+        display: none;
+    }
+
+    .form-navigation {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 2rem;
+    }
+</style>
+{% endblock head %}
+
+{% block body %}
+<div class="container-fluid p-5">
+    <div class="text-start mb-4 mt-2">
+        <h1 class="font-weight-bold">Welcome! Let's set up your profile.</h1>
+        <p class="text-muted font-size-18">This will only take a minute.</p>
+    </div>
+    
+    <!-- Welcome Card -->
+    <div class="card bg-primary-subtle border-primary-subtle mb-4 p-3">
+        <div class="content ps-2 pt-2">
+            <h4 class="content-title">
+                <i class="ph ph-sparkle text-primary me-2"></i>
+                A Complete Profile Stands Out
+            </h4>
+            <p class="text-muted">
+                Users with a complete profile, including a photo and bio, are more likely to connect with others and get the most out of our platform.
+            </p>
+        </div>
+    </div>
+
+
+    <div class="card profile-setup-card">
+        <div class="row g-0">
+            <!-- Left Column: Stepper (stacks on mobile) -->
+            <aside class="col-lg-4 stepper-sidebar border-end-lg">
+                <div class="stepper-nav">
+                    <smart-list-tile
+                        id="step-tile-1"
+                        leading-icon="ph ph-user"
+                        title="Personal Info"
+                        subtitle="Your name and photo"
+                        active
+                        clickable
+                        border-radius="var(--hm-border-radius)"
+                        trailing-icon="ph ph-caret-right"
+                        onclick="goToStep(1)">
+                    </smart-list-tile>
+                    <smart-list-tile
+                        id="step-tile-2"
+                        leading-icon="ph ph-phone"
+                        title="Contact Details"
+                        text-color="#6c757d"
+                        icon-color="#6c757d"
+                        subtitle="How we can reach you"
+                        clickable
+                        border-radius="var(--hm-border-radius)"
+                        trailing-icon="ph ph-caret-right"
+                        onclick="goToStep(2)">
+                    </smart-list-tile>
+                    <smart-list-tile
+                        id="step-tile-3"
+                        leading-icon="ph ph-identification-card"
+                        title="About You"
+                        subtitle="Tell us a bit more"
+                        text-color="#6c757d"
+                        icon-color="#6c757d"
+                        clickable
+                        border-radius="var(--hm-border-radius)"
+                        trailing-icon="ph ph-caret-right"
+                        onclick="goToStep(3)">
+                    </smart-list-tile>
+                </div>
+            </aside>
+
+            <!-- Right Column: Form (stacks on mobile) -->
+            <main class="col-lg-8 form-content">
+                <form id="profile-setup-form" action="{% url 'profile_setup' %}" method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+
+                    <!-- Step 1: Personal Info -->
+                    <div class="form-step active" data-step="1">
+                        <h4 class="font-weight-bold mb-4">Personal Information</h4>
+                        
+                        <div class="profile-picture-uploader">
+                            <label for="profile-picture-input" class="picture-preview" id="picture-preview-container">
+                                <i class="ph ph-camera-plus"></i>
+                                <input type="file" name="profile_picture" id="profile-picture-input" accept="image/*" required>
+                            </label>
+                            <label for="profile-picture-input" class="btn btn-sm btn-secondary">Upload a Photo</label>
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <smart-input label="First Name" name="first_name" type="text" required></smart-input>
+                            </div>
+                            <div class="col-md-6">
+                                <smart-input label="Last Name" name="last_name" type="text" required></smart-input>
+                            </div>
+                        </div>
+                        <div class="form-group mt-3">
+                            <label>Username</label>
+                            <input type="text" name="username" class="form-control"
+                                   hx-get="{% url 'check_username' %}" 
+                                   hx-trigger="keyup changed delay:200ms"
+                                   hx-target="#username-check"
+                                   hx-indicator="#username-spinner"
+                                   required>
+                            <div id="username-spinner" class="htmx-indicator spinner-border spinner-border-sm mt-2" role="status"></div>
+                            <div id="username-check" class="mt-2 font-size-12"></div>
+                        </div>
+
+                        <div class="form-navigation">
+                            <span></span> <!-- Spacer -->
+                            <button type="button" class="btn btn-primary" onclick="goToStep(2)">Next Step <i class="ph ph-arrow-right ms-2"></i></button>
+                        </div>
+                    </div>
+
+                    <!-- Step 2: Contact Details -->
+                    <div class="form-step" data-step="2">
+                        <h4 class="font-weight-bold mb-4">Contact Details</h4>
+                        
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <smart-input
+                                    type="select" name="phone_no_prefix" label="Country Code" required
+                                    data-options='[{% for prefix in phone_no_prefixes %}{"id": "{{ prefix.pk }}", "name": "{{ prefix.phone_no_prefix }}"}{% if not forloop.last %},{% endif %}{% endfor %}]'>
+                                </smart-input>
+                            </div>
+                            <div class="col-md-8">
+                                <smart-input label="Phone Number" name="phone_no" type="tel" required></smart-input>
+                            </div>
+                        </div>
+                        
+                        <div class="form-navigation">
+                            <button type="button" class="btn btn-secondary" onclick="goToStep(1)"><i class="ph ph-arrow-left me-2"></i> Previous</button>
+                            <button type="button" class="btn btn-primary" onclick="goToStep(3)">Next Step <i class="ph ph-arrow-right ms-2"></i></button>
+                        </div>
+                    </div>
+
+                    <!-- Step 3: About You -->
+                    <div class="form-step" data-step="3">
+                        <h4 class="font-weight-bold mb-4">About You</h4>
+                        
+                        <div class="form-group mb-3">
+                            <smart-input 
+                                type="datepicker" 
+                                name="date_of_birth" 
+                                label="Date of Birth" 
+                                max-date="01-01-2010"
+                                required>
+                            </smart-input>
+                        </div>
+                        
+                        <div class="form-group">
+                            <smart-quill
+                                name="bio"
+                                label="Profile Bio"
+                                placeholder="Tell us a little about yourself...">
+                            </smart-quill>
+                        </div>
+                        
+                        <div class="form-navigation">
+                            <button type="button" class="btn btn-secondary" onclick="goToStep(2)"><i class="ph ph-arrow-left me-2"></i> Previous</button>
+                            <button type="submit" class="btn btn-success btn-lg">Complete Profile <i class="ph ph-check-circle ms-2"></i></button>
+                        </div>
+                    </div>
+                </form>
+            </main>
+        </div>
+    </div>
+</div>
+{% endblock body %}
+
+{% block script %}
+<script>
+    let currentStep = 1;
+
+    function updateStepperUI(targetStep) {
+        const stepTiles = document.querySelectorAll('smart-list-tile');
+
+        stepTiles.forEach((tile, index) => {
+            const stepNum = index + 1;
+            
+            if (stepNum < targetStep) {
+                // Completed Step
+                tile.active = false;
+                tile.leadingIcon = "ph ph-check-circle";
+                // FIX: Use text-white for checkmark visibility on success background
+                tile.setColors(
+                    'var(--hm-success-text-color)', 
+                    'var(--hm-success-bg-color)', 
+                    'var(--hm-success-text-color)'
+                );
+            } else if (stepNum === targetStep) {
+                // Active Step
+                tile.active = true;
+                tile.leadingIcon = `ph ph-${tile.id.split('-')[2]}`; // Reset to original icon
+                tile.setColors('', '', ''); // Reset to default active colors
+            } else {
+                // Future Step
+                tile.active = false;
+                tile.leadingIcon = `ph ph-${tile.id.split('-')[2]}`; // Reset to original icon
+                tile.setColors('', '', ''); // Reset to default colors
+            }
+        });
+    }
+
+    function goToStep(step) {
+        // Prevent navigating to a future step if current form is invalid
+        const currentFormStep = document.querySelector(`.form-step[data-step="${currentStep}"]`);
+        let isStepValid = true;
+        currentFormStep.querySelectorAll('[required]').forEach(input => {
+            if (!input.value) {
+                // A simple check. For smart-input, you might need a more robust validation method.
+                isStepValid = false;
+            }
+        });
+
+        if (step > currentStep && !isStepValid) {
+            alert('Please fill out all required fields before proceeding.');
+            return;
+        }
+
+        // Hide current form step
+        document.querySelector(`.form-step[data-step="${currentStep}"]`).classList.remove('active');
+        
+        // Show new form step
+        document.querySelector(`.form-step[data-step="${step}"]`).classList.add('active');
+        
+        currentStep = step;
+        updateStepperUI(currentStep);
+    }
+
+    // Profile picture preview
+    const picInput = document.getElementById('profile-picture-input');
+    const picPreviewContainer = document.getElementById('picture-preview-container');
+
+    picInput.addEventListener('change', function(event) {
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                picPreviewContainer.style.backgroundImage = `url('${e.target.result}')`;
+                picPreviewContainer.innerHTML = ''; // Remove the camera icon
+            }
+            reader.readAsDataURL(file);
+        }
+    });
+
+    // Initial UI setup
+    updateStepperUI(1);
+</script>
+{% endblock script %}

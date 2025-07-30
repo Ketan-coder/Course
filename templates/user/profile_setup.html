@@ -13,7 +13,7 @@
                     <h5 class="card-title">{{ title }}</h5>
                 </div>
                 <div class="card-body">
-                    <form action="{% url 'profile_setup' %}" method="post">
+                    <form action="{% url 'profile_setup' %}" method="post" enctype="multipart/form-data">
                         {% csrf_token %}
                         {% if messages %}
                             {% for message in messages %}
@@ -35,16 +35,51 @@
                         </div>
 
                         <div class="form-group">
-                            <label>First Name</label>
-                            <input type="text" name="first_name" class="form-control">
+                            <smart-input 
+                                type="file" 
+                                name="profile_picture" 
+                                label="Profile Picture" 
+                                allowed-types="images"
+                                max-size="5"
+                                required>
+                            </smart-input>
+                        </div>
+
+                        <div class="form-group">
+                            <smart-input label="First Name" name="first_name" id="id_first_name" type="text" required></smart-input>
                         </div>
                         <div class="form-group">
-                            <label>Last Name</label>
-                            <input type="text" name="last_name" class="form-control">
+                            <smart-input label="Last Name" name="last_name" id="id_last_name" type="text" required></smart-input>
+                        </div>
+
+                        <div class="form-group">
+                            <smart-input label="Last Name" name="last_name" id="id_last_name" type="text" required></smart-input>
                         </div>
                         <div class="form-group">
-                            <label>Bio</label>
-                            <textarea name="bio" class="form-control"></textarea>
+                            <smart-input 
+                                type="datepicker" 
+                                name="date_of_birth" 
+                                label="Date of Birth" 
+                                max-date="01-01-2025"
+                                required>
+                            </smart-input>
+                        </div>
+                        <div class="form-group">
+                            <smart-input
+                            type="select" name="phone_no_prefix" label="Phone No Prefix" required
+                            data-options='[{% for prefix in phone_no_prefixes %}{"id": "{{ prefix.pk }}", "name": "{{ prefix.name|escapejs }}"}{% if not forloop.last %},{% endif %}{% endfor %}]'>
+                            </smart-input>
+                        </div>
+                        <div class="form-group">
+                            <smart-input label="Phone Number" name="phone_no" id="id_phone_no" type="tel" required></smart-input>
+                        </div>
+                        <div class="form-group">
+                            <smart-quill
+                                name="bio"
+                                id="id_bio"
+                                label="Profile Bio"
+                                placeholder="Hey I am learning on Calsie the most advanced Course Ai Learning Platform"
+                            ></smart-quill>
                         </div>
                         <button type="submit" class="btn btn-primary mt-3">Complete Profile</button>
                     </form>

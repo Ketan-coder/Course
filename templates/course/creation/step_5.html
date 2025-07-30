@@ -1,6 +1,5 @@
 {% extends "base.html" %}
 {% load static %}
-    
 
 {% block body %}
 <div class="container-fluid content-wrapper">
@@ -29,7 +28,7 @@
             <div class="mb-4">
               <div class="row">
                 <div class="col-md-6">
-                  <label for="id_tags" class="form-label">Search and Add Tags:</label>
+                  <label for="id_tags_search" class="form-label">Search and Add Tags <span class="text-danger">*</span></label>
                   <input type="text" id="id_tags_search" class="form-control" placeholder="Search and add tags">
                   <div id="tags_search_results" class="list-group mt-2"></div>
                   <div id="selected_tags" class="mt-2">
@@ -40,12 +39,13 @@
                       <input type="hidden" name="selected_tags" value="{{ tag.id }}">
                       {% endfor %}
                   </div>
+                  <div id="tags_error" class="invalid-feedback d-block" style="display: none;">At least one tag is required.</div>
                   {% if form.tags.errors %}
                   <div class="invalid-feedback d-block">{{ form.tags.errors }}</div>
                   {% endif %}
                 </div>
                 <div class="col-md-6">
-                  <label for="id_faqs" class="form-label">Search and Add Frequently Asked Questions:</label>
+                  <label for="id_faqs_search" class="form-label">Search and Add Frequently Asked Questions <span class="text-danger">*</span></label>
                   <input type="text" id="id_faqs_search" class="form-control" placeholder="Search and add FAQs">
                   <div id="faqs_search_results" class="list-group mt-2"></div>
                   <div id="selected_faqs" class="mt-2">
@@ -56,6 +56,7 @@
                       <input type="hidden" name="selected_faqs" value="{{ faq.id }}">
                       {% endfor %}
                   </div>
+                  <div id="faqs_error" class="invalid-feedback d-block" style="display: none;">At least one FAQ is required.</div>
                   {% if form.faqs.errors %}
                   <div class="invalid-feedback d-block">{{ form.faqs.errors }}</div>
                   {% endif %}
@@ -79,12 +80,11 @@
                     label="Publicly Free?"
                     name="is_open_to_all"
                     type="switch"
-                    selected-value="{% if course.is_published %}true{% else %}false{% endif %}"
+                    selected-value="{% if course.is_open_to_all %}true{% else %}false{% endif %}"
                     is-big>
                   </smart-input>
                 </div>
               </div>
-             
             </div>
 
             <div class="text-end">
@@ -98,123 +98,147 @@
     </div>
   </div>
 </div>
-
 {% endblock body %}
 
 {% block script %}
 <script>
-  // JavaScript for tag search (example)
-    document.getElementById('id_tags_search').addEventListener('input', function () {
-        const searchTerm = this.value;
-        const resultsDiv = document.getElementById('tags_search_results');
+  // Form validation and submission
+  document.getElementById('course-foundation-form').addEventListener('submit', function (event) {
+    const selectedTags = document.querySelectorAll('#selected_tags input[name="selected_tags"]');
+    const selectedFaqs = document.querySelectorAll('#selected_faqs input[name="selected_faqs"]');
+    const tagsError = document.getElementById('tags_error');
+    const faqsError = document.getElementById('faqs_error');
+    let isValid = true;
 
-        if (searchTerm.length > 1) { // Minimum characters to trigger search
-            fetch(`/course/courses/search_tags/?q=${searchTerm}`) // Replace with your actual URL
-                .then(response => response.json())
-                .then(data => {
-                    resultsDiv.innerHTML = ''; // Clear previous results
-                    data.forEach(tag => {
-                        const tagElement = document.createElement('a');
-                        tagElement.href = '#';
-                        tagElement.classList.add('list-group-item', 'list-group-item-action');
-                        tagElement.textContent = tag.name;
-                        tagElement.dataset.tagId = tag.id;
-                        tagElement.addEventListener('click', function (e) {
-                            e.preventDefault();
-                            // Add the selected tag to the selected_tags div
-                            const selectedTagsDiv = document.getElementById('selected_tags');
-                            // Check if tag is already added
-                            if (!selectedTagsDiv.querySelector(`span[data-tag-id="${tag.id}"]`)) {
-                                const selectedTagElement = document.createElement('span');
-                                selectedTagElement.classList.add('badge', 'bg-secondary', 'mr-1', 'selected-tag');
-                                selectedTagElement.dataset.tagId = tag.id; selectedTagElement.classList.add('d-inline-flex', 'align-items-center'); // Add flex and align items
-                                selectedTagElement.innerHTML = `${tag.name} <button type="button" class="close ml-1" aria-label="Remove" onclick="removeTag(this)">&times;</button>`;
-
-                                // Add a hidden input to send the ID
-                                const hiddenInput = document.createElement('input');
-                                hiddenInput.type = 'hidden';
-                                hiddenInput.name = 'selected_tags'; // Use the same name for all selected tags
-                                hiddenInput.value = tag.id;
-
-                                selectedTagsDiv.appendChild(selectedTagElement);
-                                selectedTagsDiv.appendChild(hiddenInput);
-                            }
-
-                            // Clear the search input and results
-                            document.getElementById('id_tags_search').value = '';
-                            resultsDiv.innerHTML = '';
-                        });
-                        resultsDiv.appendChild(tagElement);
-                    });
-                });
-        } else {
-            resultsDiv.innerHTML = ''; // Clear results if search term is too short
-        }
-    });
-
-    function removeTag(button) {
-        const selectedTagElement = button.closest('.selected-tag');
-        const tagId = selectedTagElement.dataset.tagId;
-        selectedTagElement.remove();
-        // Remove the corresponding hidden input
-        const hiddenInput = document.querySelector(`input[name="selected_tags"][value="${tagId}"]`);
-        if (hiddenInput) {
-            hiddenInput.remove();
-        }
+    // Validate tags
+    if (selectedTags.length === 0) {
+      tagsError.style.display = 'block';
+      isValid = false;
+    } else {
+      tagsError.style.display = 'none';
     }
 
-    // JavaScript for FAQ search (example)
-    document.getElementById('id_faqs_search').addEventListener('input', function () {
-        const searchTerm = this.value;
-        const resultsDiv = document.getElementById('faqs_search_results');
-
-        if (searchTerm.length > 1) {
-            fetch(`/course/courses/search_faqs/?q=${searchTerm}`) // Replace with your actual URL
-                .then(response => response.json())
-                .then(data => {
-                    resultsDiv.innerHTML = '';
-                    data.forEach(faq => {
-                        const faqElement = document.createElement('a');
-                        faqElement.href = '#';
-                        faqElement.classList.add('list-group-item', 'list-group-item-action');
-                        faqElement.textContent = faq.question;
-                        faqElement.dataset.faqId = faq.id;
-                        faqElement.addEventListener('click', function (e) {
-                            e.preventDefault();
-                            const selectedFaqsDiv = document.getElementById('selected_faqs');
-                            if (!selectedFaqsDiv.querySelector(`span[data-faq-id="${faq.id}"]`)) {
-                                const selectedFaqElement = document.createElement('span');
-                                selectedFaqElement.classList.add('badge', 'bg-secondary', 'mr-1', 'selected-faq');
-                                selectedFaqElement.dataset.faqId = faq.id; selectedFaqElement.classList.add('d-inline-flex', 'align-items-center'); // Add flex and align items
-                                selectedFaqElement.innerHTML = `${faq.question} <button type="button" class="close ml-1" aria-label="Remove" onclick="removeFaq(this)">&times;</button>`;
-
-                                const hiddenInput = document.createElement('input');
-                                hiddenInput.type = 'hidden';
-                                hiddenInput.name = 'selected_faqs';
-                                hiddenInput.value = faq.id;
-
-                                selectedFaqsDiv.appendChild(selectedFaqElement);
-                                selectedFaqsDiv.appendChild(hiddenInput);
-                            }
-                            document.getElementById('id_faqs_search').value = '';
-                            resultsDiv.innerHTML = '';
-                        });
-                        resultsDiv.appendChild(faqElement);
-                    });
-                });
-        } else {
-            resultsDiv.innerHTML = '';
-        }
-    });
-
-    function removeFaq(button) {
-        const selectedFaqElement = button.closest('.selected-faq');
-        const faqId = selectedFaqElement.dataset.faqId;
-        selectedFaqElement.remove();
-        const hiddenInput = document.querySelector(`input[name="selected_faqs"][value="${faqId}"]`);
-        if (hiddenInput) {
-            hiddenInput.remove();
-        }
+    // Validate FAQs
+    if (selectedFaqs.length === 0) {
+      faqsError.style.display = 'block';
+      isValid = false;
+    } else {
+      faqsError.style.display = 'none';
     }
+
+    if (!isValid) {
+      event.preventDefault(); // Prevent form submission
+    }
+  });
+
+  // Tag search
+  document.getElementById('id_tags_search').addEventListener('input', function () {
+    const searchTerm = this.value;
+    const resultsDiv = document.getElementById('tags_search_results');
+
+    if (searchTerm.length > 1) {
+      fetch(`/course/courses/search_tags/?q=${searchTerm}`)
+        .then(response => response.json())
+        .then(data => {
+          resultsDiv.innerHTML = '';
+          data.forEach(tag => {
+            const tagElement = document.createElement('a');
+            tagElement.href = '#';
+            tagElement.classList.add('list-group-item', 'list-group-item-action');
+            tagElement.textContent = tag.name;
+            tagElement.dataset.tagId = tag.id;
+            tagElement.addEventListener('click', function (e) {
+              e.preventDefault();
+              const selectedTagsDiv = document.getElementById('selected_tags');
+              if (!selectedTagsDiv.querySelector(`span[data-tag-id="${tag.id}"]`)) {
+                const selectedTagElement = document.createElement('span');
+                selectedTagElement.classList.add('badge', 'bg-secondary', 'mr-1', 'selected-tag', 'd-inline-flex', 'align-items-center');
+                selectedTagElement.dataset.tagId = tag.id;
+                selectedTagElement.innerHTML = `${tag.name} <button type="button" class="close ml-1" aria-label="Remove" onclick="removeTag(this)">&times;</button>`;
+
+                const hiddenInput = document.createElement('input');
+                hiddenInput.type = 'hidden';
+                hiddenInput.name = 'selected_tags';
+                hiddenInput.value = tag.id;
+
+                selectedTagsDiv.appendChild(selectedTagElement);
+                selectedTagsDiv.appendChild(hiddenInput);
+                document.getElementById('tags_error').style.display = 'none'; // Hide error when tag is added
+              }
+              document.getElementById('id_tags_search').value = '';
+              resultsDiv.innerHTML = '';
+            });
+            resultsDiv.appendChild(tagElement);
+          });
+        });
+    } else {
+      resultsDiv.innerHTML = '';
+    }
+  });
+
+  function removeTag(button) {
+    const selectedTagElement = button.closest('.selected-tag');
+    const tagId = selectedTagElement.dataset.tagId;
+    selectedTagElement.remove();
+    const hiddenInput = document.querySelector(`input[name="selected_tags"][value="${tagId}"]`);
+    if (hiddenInput) {
+      hiddenInput.remove();
+    }
+  }
+
+  // FAQ search
+  document.getElementById('id_faqs_search').addEventListener('input', function () {
+    const searchTerm = this.value;
+    const resultsDiv = document.getElementById('faqs_search_results');
+
+    if (searchTerm.length > 1) {
+      fetch(`/course/courses/search_faqs/?q=${searchTerm}`)
+        .then(response => response.json())
+        .then(data => {
+          resultsDiv.innerHTML = '';
+          data.forEach(faq => {
+            const faqElement = document.createElement('a');
+            faqElement.href = '#';
+            faqElement.classList.add('list-group-item', 'list-group-item-action');
+            faqElement.textContent = faq.question;
+            faqElement.dataset.faqId = faq.id;
+            faqElement.addEventListener('click', function (e) {
+              e.preventDefault();
+              const selectedFaqsDiv = document.getElementById('selected_faqs');
+              if (!selectedFaqsDiv.querySelector(`span[data-faq-id="${faq.id}"]`)) {
+                const selectedFaqElement = document.createElement('span');
+                selectedFaqElement.classList.add('badge', 'bg-secondary', 'mr-1', 'selected-faq', 'd-inline-flex', 'align-items-center');
+                selectedFaqElement.dataset.faqId = faq.id;
+                selectedFaqElement.innerHTML = `${faq.question} <button type="button" class="close ml-1" aria-label="Remove" onclick="removeFaq(this)">&times;</button>`;
+
+                const hiddenInput = document.createElement('input');
+                hiddenInput.type = 'hidden';
+                hiddenInput.name = 'selected_faqs';
+                hiddenInput.value = faq.id;
+
+                selectedFaqsDiv.appendChild(selectedFaqElement);
+                selectedFaqsDiv.appendChild(hiddenInput);
+                document.getElementById('faqs_error').style.display = 'none'; // Hide error when FAQ is added
+              }
+              document.getElementById('id_faqs_search').value = '';
+              resultsDiv.innerHTML = '';
+            });
+            resultsDiv.appendChild(faqElement);
+          });
+        });
+    } else {
+      resultsDiv.innerHTML = '';
+    }
+  });
+
+  function removeFaq(button) {
+    const selectedFaqElement = button.closest('.selected-faq');
+    const faqId = selectedFaqElement.dataset.faqId;
+    selectedFaqElement.remove();
+    const hiddenInput = document.querySelector(`input[name="selected_faqs"][value="${faqId}"]`);
+    if (hiddenInput) {
+      hiddenInput.remove();
+    }
+  }
 </script>
 {% endblock script %}

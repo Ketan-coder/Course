@@ -508,16 +508,20 @@ def course_detail(request, pk) -> HttpResponseRedirect | HttpResponsePermanentRe
             else:
                 return render(request, "course/course_detail.html", {"course": course, "error": "You must have a student profile to enroll."})
         elif 'continue_now' in request.POST:
-            # Redirect to the first lesson of the course
-            first_section = course.sections.filter(lesson__isnull=False).exclude(lesson__completed_by_users=logged_in_profile).first()
-            if first_section:
-                first_lesson = first_section.lesson.first()
-                if first_lesson:
-                    return redirect("video_detail_page", lesson_id=first_lesson.id)
-                else:
-                    messages.error(request, "No lessons available in this course.")
-                    return redirect("course_detail", pk=pk)
-            return redirect("course_detail", pk=pk)
+            # Get the first uncompleted lesson in the course, respecting section order
+            first_uncompleted_lesson = None
+            for section in course.sections.filter(lesson__isnull=False).order_by('order'):
+                # Filter lessons in this section that the user hasn't completed
+                uncompleted_lesson = section.lesson.exclude(completed_by_users=logged_in_profile).order_by('order').first()
+                if uncompleted_lesson:
+                    first_uncompleted_lesson = uncompleted_lesson
+                    break
+            
+            if first_uncompleted_lesson:
+                return redirect("video_detail_page", lesson_id=first_uncompleted_lesson.id)
+            else:
+                messages.error(request, "All lessons are completed or no lessons are available in this course.")
+                return redirect("course_detail", pk=pk)
     return render(request, "course/course_detail_page.html", locals())
 
 
