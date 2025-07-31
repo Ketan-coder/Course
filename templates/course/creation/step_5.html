@@ -4,7 +4,7 @@
 {% block body %}
 <div class="container-fluid content-wrapper">
   <div class="text-start my-4 ps-3">
-    <h1 class="font-weight-bold display-3">{% if course %}Edit Course{% else %}Create a New Course{% endif %}</h1>
+    <h1 class="font-weight-bold display-3" style="font-family: 'Gucina';">{% if course %}Edit Course{% else %}Create a New Course{% endif %}</h1>
     <p class="text-muted font-size-18">Follow the steps to build and publish your course.</p>
   </div>
 
@@ -28,8 +28,8 @@
             <div class="mb-4">
               <div class="row">
                 <div class="col-md-6">
-                  <label for="id_tags_search" class="form-label">Search and Add Tags <span class="text-danger">*</span></label>
-                  <input type="text" id="id_tags_search" class="form-control" placeholder="Search and add tags">
+                  <label for="id_tags_search" class="form-label">Search and Add Categories <span class="text-danger">*</span></label>
+                  <input type="text" id="id_tags_search" class="form-control" placeholder="Search and add Categories">
                   <div id="tags_search_results" class="list-group mt-2"></div>
                   <div id="selected_tags" class="mt-2">
                       {% for tag in course.tags.all %}
@@ -39,7 +39,7 @@
                       <input type="hidden" name="selected_tags" value="{{ tag.id }}">
                       {% endfor %}
                   </div>
-                  <div id="tags_error" class="invalid-feedback d-block" style="display: none;">At least one tag is required.</div>
+                  <div id="tags_error" class="invalid-feedback d-block" style="display: none;">At least one Category is required.</div>
                   {% if form.tags.errors %}
                   <div class="invalid-feedback d-block">{{ form.tags.errors }}</div>
                   {% endif %}

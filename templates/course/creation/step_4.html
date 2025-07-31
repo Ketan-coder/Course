@@ -25,7 +25,7 @@
 {% block body %}
 <div class="container-fluid content-wrapper">
     <div class="text-start my-4 ps-3">
-        <h1 class="font-weight-bold display-3">{% if course %}Edit Course{% else %}Create a New Course{% endif %}</h1>
+        <h1 class="font-weight-bold display-3" style="font-family: 'Gucina';">{% if course %}Edit Course{% else %}Create a New Course{% endif %}</h1>
         <p class="text-muted font-size-18">Follow the steps to build and publish your course.</p>
     </div>
 
@@ -193,7 +193,7 @@
                     {% endfor %}
                 </div>
 
-                    <div class="text-end">
+                    <div class="text-end pt-4">
                         <form method="post" action="{% if course %}{% url 'course_create_step_four' course_id=course.id %} {% else %} {% url 'course_create_step_one' %} {% endif %} " class="d-inline">
                         {% csrf_token %}
                     <button type="submit" class="btn btn-primary btn-lg">
@@ -203,6 +203,7 @@
                     </div>
                 </div>
             </main>
+            <div class="pt-4"></div>
         </div>
     </div>
 </div>
