@@ -1869,6 +1869,15 @@ def course_create_step_two(request, course_id=None) -> HttpResponse:
         return redirect("login")
     user = request.user
     instructor = Instructor.objects.filter(profile__user=user).first()
+    # default_objectives = [
+    #     "Understand the basic concepts of the course",
+    #     "Apply learned skills in practical scenarios",
+    #     "Analyze and evaluate course materials",
+    #     "Create projects or assignments based on course content",
+    #     "Collaborate with peers on course-related tasks",
+    #     "Demonstrate mastery of key concepts through assessments",
+    #     "Reflect on learning outcomes and areas for improvement"
+    # ]
     if not instructor:
         return HttpResponse("You must be an instructor to create a course.", status=403)
     if course_id:
@@ -1881,6 +1890,7 @@ def course_create_step_two(request, course_id=None) -> HttpResponse:
         print("Creating or updating course sections..." + str(request.POST))
         prerequisites = request.POST.get("prerequisites", "").strip()
         circulam = request.POST.get("circulam", "").strip()
+        objectives_json = request.POST.get('learning_objectives', '[]')
         if not circulam and not prerequisites:
             return HttpResponse("Prerequisites or circulam is required.", status=400)
         
@@ -1890,14 +1900,22 @@ def course_create_step_two(request, course_id=None) -> HttpResponse:
                 course.prerequisites = prerequisites
                 course.circulam = circulam
                 course.save()
-                # Log activity
-                # Activity.objects.create(
-                #     user=user,
-                #     activity_type="Course Update",
-                #     description=f"Updated course sections for: {course.title}"
-                # )
-                step_two_done = True
-                request.session['step_two_done'] = step_two_done
+                
+                try:
+                    objectives = json.loads(objectives_json)
+                    if not isinstance(objectives, list) or len(objectives) > 8:
+                        messages.error(request, "Invalid learning objectives format or too many objectives.")
+                        return render(request, 'course/step_2.html', {'course': course, 'step': 2})
+                    course.learning_objectives = objectives
+                    course.save()
+                    step_two_done = True
+                    request.session['step_two_done'] = step_two_done
+                    return redirect('course_create_step_three', course_id=course.id)
+                except json.JSONDecodeError:
+                    request.session['step_two_done'] = step_two_done
+                    messages.error(request, "Invalid learning objectives format.")
+                    return render(request, 'course/step_2.html', {'course': course, 'step': 2})
+                
             else:
                 return HttpResponse("Course ID is required to create a section.", status=400)
             return redirect("course_create_step_three", course_id=course.id)

@@ -35,6 +35,7 @@ class Course(models.Model):
         choices=[('beginner', 'Beginner'), ('intermediate', 'Intermediate'), ('advanced', 'Advanced'), ('all', 'All')],
         default='beginner'
     )
+    learning_objectives = models.JSONField(default=list, blank=True, null=True)
     language = models.ForeignKey(Language, on_delete=models.CASCADE, related_name='courses', blank=True, null=True)
     instructor = models.ForeignKey('Users.Instructor', on_delete=models.CASCADE, related_name='courses') # Circular import fixed by using string
     thumbnail = models.ImageField(upload_to='course_thumbnails', blank=True, null=True)

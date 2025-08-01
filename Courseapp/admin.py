@@ -69,6 +69,7 @@ class CourseAdmin(admin.ModelAdmin):
                 )  # Added tags here for basic display
             },
         ),
+        ('Learning Objectives', {'fields': ('learning_objectives',)}),
         ("Media", {"fields": ("thumbnail", "intro_video")}),
         ("Extra Fields", {"fields": ("extra_fields",)}),
         (
