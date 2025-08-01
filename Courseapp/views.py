@@ -442,6 +442,13 @@ def course_detail(request, pk) -> HttpResponseRedirect | HttpResponsePermanentRe
     avg_reviews =  course.reviews.all().aggregate(Avg('rating'))['rating__avg'] or 0
     ref = request.GET.get('ref', 'outside')
 
+    if course:
+        instructor_related_courses = Course.objects.filter(instructor=course.instructor, is_published=True, is_deleted=False)
+        course_list = Course.objects.all()
+    else:
+        instructor_related_courses = Course.objects.none()
+        course_list = Course.objects.all()
+
     if ref != 'outside' and ref != None and ref != '':
         referrer = User.objects.filter(username=ref).first()
         if referrer:
@@ -506,7 +513,7 @@ def course_detail(request, pk) -> HttpResponseRedirect | HttpResponsePermanentRe
                 messages.success(request, f"You have successfully enrolled in {course.title}.")
                 return redirect("course_detail", pk=pk)
             else:
-                return render(request, "course/course_detail.html", {"course": course, "error": "You must have a student profile to enroll."})
+                return render(request, "course/course_detail_page.html", {"course": course, "error": "You must have a student profile to enroll."})
         elif 'continue_now' in request.POST:
             # Get the first uncompleted lesson in the course, respecting section order
             first_uncompleted_lesson = None

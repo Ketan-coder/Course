@@ -166,9 +166,10 @@
                       <input type="hidden" name="rating" id="review_rating" value="{{ user_review.rating|default:0 }}" />
                     </div>
                     <div class="mb-3">
-                      <label class="form-label">Your Review</label>
-                      <div id="quill-editor" style="height: 150px;"></div>
-                      <textarea class="form-control d-none" id="review_text" name="review_text" rows="3">{{ user_review.review_text|safe }}</textarea>
+                      {% comment %} <label class="form-label">Your Review</label> {% endcomment %}
+                      {% comment %} <div id="quill-editor" style="height: 150px;"></div>
+                      <textarea class="form-control d-none" id="review_text" name="review_text" rows="3">{{ user_review.review_text|safe }}</textarea> {% endcomment %}
+                      <smart-quill name="review_text" id="review_text-quill" label="Review" value="{{ user_review.review_text|safe }}">{{ user_review.review_text|safe }}</smart-quill>
                     </div>
                     <button type="submit" name="submit_review" value="1" class="btn btn-primary">{% if user_review %}Update Review{% else %}Submit Review{% endif %}</button>
                   </form>
@@ -232,6 +233,32 @@
           </div>
         </div>
       </div>
+    </div>
+
+    <div class="container-fluid my-4 p-2">
+      <h2 class="font-weight-bold mt-4 mb-3">More Courses from this <b class="text-decoration-underline">{{ course.instructor.profile.user.username }}</b></h2>
+      <div class="horizontal-scroll scrollbar-hover d-flex flex-nowrap">
+        {% for course in instructor_related_courses %}
+            <div class="card m-2" style="min-width: 250px;">
+                {% include "course/components/course_card.html" with course=course %}
+            </div>
+            {% empty %}
+            <p> No Courses Found.</p>
+        {% endfor %}
+        </div>
+    </div>
+
+    <div class="container-fluid my-4 p-2">
+      <h2 class="font-weight-bold mt-4 mb-3">More Courses to Browse</h2>
+      <div class="horizontal-scroll scrollbar-hover d-flex flex-nowrap">
+        {% for course in course_list %}
+            <div class="card m-1" style="min-width: 250px;">
+                {% include "course/components/course_card.html" with course=course %}
+            </div>
+            {% empty %}
+            <p> No Courses Found.</p>
+        {% endfor %}
+        </div>
     </div>
   </div>
 

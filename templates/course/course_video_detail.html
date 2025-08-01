@@ -64,6 +64,11 @@
                         <li class="nav-item" role="presentation">
                             <button class="nav-link active" id="description-tab" data-bs-toggle="tab" data-bs-target="#description-tab-pane" type="button" role="tab" aria-controls="description-tab-pane" aria-selected="true">Description</button>
                         </li>
+                        {% if section.article %}
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="article-tab" data-bs-toggle="tab" data-bs-target="#article-tab-pane" type="button" role="tab" aria-controls="article-tab-pane" aria-selected="false">Article</button>
+                        </li>
+                        {% endif %}
                         <li class="nav-item" role="presentation">
                             <button class="nav-link" id="stocks-tab" data-bs-toggle="tab" data-bs-target="#stocks-tab-pane" type="button" role="tab" aria-controls="stocks-tab-pane" aria-selected="false">Related Stocks</button>
                         </li>
@@ -82,6 +87,18 @@
                                 </div>
                             </div>
                         </div>
+
+                        {% if section.article %}
+                        <!-- Article Tab -->
+                        <div class="tab-pane fade" id="article-tab-pane" role="tabpanel" aria-labelledby="article-tab" tabindex="0">
+                            <div class="card shadow-sm mb-20">
+                                <div class="card-body">
+                                    <h2 class="h5 fw-bold mb-3">{{ section.article.title }}</h2>
+                                    <p>{{ section.article.content|safe|default:"No article content available." }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
 
                         <!-- Related Stocks Tab -->
                         <div class="tab-pane fade" id="stocks-tab-pane" role="tabpanel" aria-labelledby="stocks-tab" tabindex="0">
@@ -107,12 +124,101 @@
                             <div class="card shadow-sm">
                                 <div class="card-body">
                                     <h2 class="h5 fw-bold mb-3">Test Your Knowledge</h2>
-                                    <div class="alert alert-success">
+                                    {% comment %} <div class="alert alert-success">
                                         <h4 class="alert-heading">Ready for a Quiz?</h4>
                                         <p>This is where your quiz component goes.</p>
                                         <hr>
                                         <button class="btn btn-success">Start Quiz</button>
-                                    </div>
+                                    </div> {% endcomment %}
+                                    <!-- Quiz Buttons -->
+                                    {% for l in section.lesson.all %}
+                                        {% if forloop.counter == 1 %}
+                                        {% if logged_in_profile in l.completed_by_users.all %}
+                                        {% for quiz in quizes %}
+                                            {% if quiz.section.id == section.id and forloop.counter == 1 %}
+                                                <br>
+                                                <h4> Quizzes for this Section:</h4>
+                                                {% for questions in questions_list %}
+
+                                                    {% if questions.type == "SINGLE_SELECT" %}
+                                                    {% if not i|has_completed_all_lessons:logged_in_profile %}
+                                                        <span class="d-inline-block" tabindex="999" data-bs-toggle="popover" data-bs-placement="top" data-bs-content="Finish all lessons first" data-bs-trigger="hover focus">
+                                                        <button type="button" class="btn btn-primary" disabled>Finish The Section</button>
+                                                        </span>
+                                                    {% elif questions.is_completed %}
+                                                        <button type="button" class="btn btn-success" disabled>Completed</button>
+                                                    {% else %}
+                                                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modal-mcq-{{ questions.id }}">
+                                                        Open MCQ Quiz
+                                                        </button>
+                                                    {% endif %}
+
+                                                    {% elif questions.type == "IMAGE_MC" %}
+                                                    {% if not i|has_completed_all_lessons:logged_in_profile %}
+                                                        <span class="d-inline-block" tabindex="999" data-bs-toggle="popover" data-bs-placement="top" data-bs-content="Finish all lessons first" data-bs-trigger="hover focus">
+                                                        <button type="button" class="btn btn-primary" disabled>Finish The Section</button>
+                                                        </span>
+                                                    {% elif questions.is_completed %}
+                                                        <button type="button" class="btn btn-success" disabled>Completed</button>
+                                                    {% else %}
+                                                        <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#modal-imcq-{{ questions.id }}">
+                                                        Open Image MCQ Quiz
+                                                        </button>
+                                                    {% endif %}
+
+                                                    {% elif questions.type == "TEXT" %}
+                                                    {% if not i|has_completed_all_lessons:logged_in_profile %}
+                                                        <span class="d-inline-block" tabindex="999" data-bs-toggle="popover" data-bs-placement="top" data-bs-content="Finish all lessons first" data-bs-trigger="hover focus">
+                                                        <button type="button" class="btn btn-primary" disabled>Finish The Section</button>
+                                                        </span>
+                                                    {% elif questions.is_completed %}
+                                                        <button type="button" class="btn btn-success" disabled>Completed</button>
+                                                    {% else %}
+                                                        <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#modal-text-quiz-{{ questions.id }}">
+                                                        Open Text Quiz
+                                                        </button>
+                                                    {% endif %}
+
+                                                    {% elif questions.type == "MULTIPLE_SELECT" %}
+                                                    {% if not i|has_completed_all_lessons:logged_in_profile %}
+                                                        <span class="d-inline-block" tabindex="999" data-bs-toggle="popover" data-bs-placement="top" data-bs-content="Finish all lessons first" data-bs-trigger="hover focus">
+                                                        <button type="button" class="btn btn-primary" disabled>Finish The Section</button>
+                                                        </span>
+                                                    {% elif questions.is_completed %}
+                                                        <button type="button" class="btn btn-success" disabled>Completed</button>
+                                                    {% else %}
+                                                        <button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#modal-msq-{{ questions.id }}">
+                                                        Open Multiple Select Quiz
+                                                        </button>
+                                                    {% endif %}
+
+                                                    {% elif questions.type == "DRAG_DROP" %}
+                                                    {% if not i|has_completed_all_lessons:logged_in_profile %}
+                                                        <span class="d-inline-block" tabindex="999" data-bs-toggle="popover" data-bs-placement="top" data-bs-content="Finish all lessons first" data-bs-trigger="hover focus">
+                                                        <button type="button" class="btn btn-primary" disabled>Finish The Section</button>
+                                                        </span>
+                                                    {% elif questions.is_completed %}
+                                                        <button type="button" class="btn btn-success" disabled>Completed</button>
+                                                    {% else %}
+                                                        <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modal-drag-drop-{{ questions.id }}">
+                                                        Open Drag & Drop Quiz
+                                                        </button>
+                                                    {% endif %}
+
+                                                    {% else %}
+                                                    <p class="text-danger">Unsupported quiz type: {{ questions.type }}</p>
+                                                    {% endif %}
+
+                                                {% endfor %}
+                                            {% endif %}
+                                            {% empty %}
+                                            <h5> No Quizzes! </h5>  
+                                            {% endfor %}
+                                        {% else %}
+                                        <h5> Finish this Section to Unlock Quizzes</h5>  
+                                        {% endif %}
+                                        {% endif %}
+                                    {% endfor %}
                                 </div>
                             </div>
                         </div>
@@ -267,139 +373,139 @@
                         </div>
                     </div> {% endcomment %}
                     <!-- Timeline Tab -->
-<div class="tab-pane fade show active" id="timeline-tab-pane" role="tabpanel" aria-labelledby="timeline-tab">
-  <div class="card shadow-sm mb-3">
-    <div class="card-body">
-      <h2 class="content-title mb-4">📘 Course Timeline</h2>
-      <div class="list-group list-group-flush">
+                    <div class="tab-pane fade show active" id="timeline-tab-pane" role="tabpanel" aria-labelledby="timeline-tab">
+                    <div class="card shadow-sm mb-3">
+                        <div class="card-body">
+                        <h2 class="content-title mb-4">📘 Course Timeline</h2>
+                        <div class="list-group list-group-flush">
 
-        {% for section in course.sections.all %}
-          <!-- Section Header -->
-          <div class="mb-4">
-            <h5 class="fw-semibold">{{ section.title }}</h5>
+                            {% for section in course.sections.all %}
+                            <!-- Section Header -->
+                            <div class="mb-4">
+                                <h5 class="fw-semibold">{{ section.title }}</h5>
 
-            {% if section.article %}
-              <p class="text-muted mb-2">
-                <strong>Article:</strong>
-                <a href="{% url 'article_detail' article_id=section.article.id %}" class="text-decoration-none">
-                  {{ section.article.title|default:"No article available." }}
-                </a>
-              </p>
-            {% endif %}
+                                {% if section.article %}
+                                <p class="text-muted mb-2">
+                                    <strong>Article:</strong>
+                                    <a href="{% url 'article_detail' article_id=section.article.id %}" class="text-decoration-none">
+                                    {{ section.article.title|default:"No article available." }}
+                                    </a>
+                                </p>
+                                {% endif %}
 
-            <!-- Lessons List -->
-            {% for l in section.lesson.all %}
-            <a href="{% url 'video_detail_page' l.id %}"
-            class="list-group-item d-flex flex-column {% if l.id == lesson.id %}active{% endif %}">
-            
-            <div class="d-flex justify-content-between w-100">
-                <h6 class="mb-1">{{ l.title }}</h6>
-            </div>
+                                <!-- Lessons List -->
+                                {% for l in section.lesson.all %}
+                                <a href="{% url 'video_detail_page' l.id %}"
+                                class="list-group-item d-flex flex-column {% if l.id == lesson.id %}active{% endif %}">
+                                
+                                <div class="d-flex justify-content-between w-100">
+                                    <h6 class="mb-1">{{ l.title }}</h6>
+                                </div>
 
-            <div class="progress mt-2 w-100" style="height: 6px;">
-                <div class="progress-bar 
-                    {% if logged_in_profile in l.completed_by_users.all %}
-                    bg-success
-                    {% else %}
-                    bg-secondary
-                    {% endif %}"
-                style="width: {% if logged_in_profile in l.completed_by_users.all %}100{% else %}0{% endif %}%;"></div>
-            </div>
-            </a>
-            {% empty %}
-            <p class="text-muted">No lessons available.</p>
-            {% endfor %}
+                                <div class="progress mt-2 w-100" style="height: 6px;">
+                                    <div class="progress-bar 
+                                        {% if logged_in_profile in l.completed_by_users.all %}
+                                        bg-success
+                                        {% else %}
+                                        bg-secondary
+                                        {% endif %}"
+                                    style="width: {% if logged_in_profile in l.completed_by_users.all %}100{% else %}0{% endif %}%;"></div>
+                                </div>
+                                </a>
+                                {% empty %}
+                                <p class="text-muted">No lessons available.</p>
+                                {% endfor %}
 
+                                <!-- This is the orginal one -->
+                                {% comment %} <!-- Quiz Buttons -->
+                                {% for quiz in quizes %}
+                                {% if quiz.section.id == section.id %}
+                                    <br>
+                                    <h4> Quizzes for this Section:</h4>
 
-            <!-- Quiz Buttons -->
-            {% for quiz in quizes %}
-            {% if quiz.section.id == section.id %}
-                <br>
-                <h4> Quizzes for this Section:</h4>
+                                    {% for questions in questions_list %}
 
-                {% for questions in questions_list %}
+                                        {% if questions.type == "SINGLE_SELECT" %}
+                                        {% if not i|has_completed_all_lessons:logged_in_profile %}
+                                            <span class="d-inline-block" tabindex="999" data-bs-toggle="popover" data-bs-placement="top" data-bs-content="Finish all lessons first" data-bs-trigger="hover focus">
+                                            <button type="button" class="btn btn-primary" disabled>Finish The Section</button>
+                                            </span>
+                                        {% elif questions.is_completed %}
+                                            <button type="button" class="btn btn-success" disabled>Completed</button>
+                                        {% else %}
+                                            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modal-mcq-{{ questions.id }}">
+                                            Open MCQ Quiz
+                                            </button>
+                                        {% endif %}
 
-                    {% if questions.type == "SINGLE_SELECT" %}
-                    {% if not i|has_completed_all_lessons:logged_in_profile %}
-                        <span class="d-inline-block" tabindex="999" data-bs-toggle="popover" data-bs-placement="top" data-bs-content="Finish all lessons first" data-bs-trigger="hover focus">
-                        <button type="button" class="btn btn-primary" disabled>Finish The Section</button>
-                        </span>
-                    {% elif questions.is_completed %}
-                        <button type="button" class="btn btn-success" disabled>Completed</button>
-                    {% else %}
-                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modal-mcq-{{ questions.id }}">
-                        Open MCQ Quiz
-                        </button>
-                    {% endif %}
+                                        {% elif questions.type == "IMAGE_MC" %}
+                                        {% if not i|has_completed_all_lessons:logged_in_profile %}
+                                            <span class="d-inline-block" tabindex="999" data-bs-toggle="popover" data-bs-placement="top" data-bs-content="Finish all lessons first" data-bs-trigger="hover focus">
+                                            <button type="button" class="btn btn-primary" disabled>Finish The Section</button>
+                                            </span>
+                                        {% elif questions.is_completed %}
+                                            <button type="button" class="btn btn-success" disabled>Completed</button>
+                                        {% else %}
+                                            <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#modal-imcq-{{ questions.id }}">
+                                            Open Image MCQ Quiz
+                                            </button>
+                                        {% endif %}
 
-                    {% elif questions.type == "IMAGE_MC" %}
-                    {% if not i|has_completed_all_lessons:logged_in_profile %}
-                        <span class="d-inline-block" tabindex="999" data-bs-toggle="popover" data-bs-placement="top" data-bs-content="Finish all lessons first" data-bs-trigger="hover focus">
-                        <button type="button" class="btn btn-primary" disabled>Finish The Section</button>
-                        </span>
-                    {% elif questions.is_completed %}
-                        <button type="button" class="btn btn-success" disabled>Completed</button>
-                    {% else %}
-                        <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#modal-imcq-{{ questions.id }}">
-                        Open Image MCQ Quiz
-                        </button>
-                    {% endif %}
+                                        {% elif questions.type == "TEXT" %}
+                                        {% if not i|has_completed_all_lessons:logged_in_profile %}
+                                            <span class="d-inline-block" tabindex="999" data-bs-toggle="popover" data-bs-placement="top" data-bs-content="Finish all lessons first" data-bs-trigger="hover focus">
+                                            <button type="button" class="btn btn-primary" disabled>Finish The Section</button>
+                                            </span>
+                                        {% elif questions.is_completed %}
+                                            <button type="button" class="btn btn-success" disabled>Completed</button>
+                                        {% else %}
+                                            <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#modal-text-quiz-{{ questions.id }}">
+                                            Open Text Quiz
+                                            </button>
+                                        {% endif %}
 
-                    {% elif questions.type == "TEXT" %}
-                    {% if not i|has_completed_all_lessons:logged_in_profile %}
-                        <span class="d-inline-block" tabindex="999" data-bs-toggle="popover" data-bs-placement="top" data-bs-content="Finish all lessons first" data-bs-trigger="hover focus">
-                        <button type="button" class="btn btn-primary" disabled>Finish The Section</button>
-                        </span>
-                    {% elif questions.is_completed %}
-                        <button type="button" class="btn btn-success" disabled>Completed</button>
-                    {% else %}
-                        <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#modal-text-quiz-{{ questions.id }}">
-                        Open Text Quiz
-                        </button>
-                    {% endif %}
+                                        {% elif questions.type == "MULTIPLE_SELECT" %}
+                                        {% if not i|has_completed_all_lessons:logged_in_profile %}
+                                            <span class="d-inline-block" tabindex="999" data-bs-toggle="popover" data-bs-placement="top" data-bs-content="Finish all lessons first" data-bs-trigger="hover focus">
+                                            <button type="button" class="btn btn-primary" disabled>Finish The Section</button>
+                                            </span>
+                                        {% elif questions.is_completed %}
+                                            <button type="button" class="btn btn-success" disabled>Completed</button>
+                                        {% else %}
+                                            <button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#modal-msq-{{ questions.id }}">
+                                            Open Multiple Select Quiz
+                                            </button>
+                                        {% endif %}
 
-                    {% elif questions.type == "MULTIPLE_SELECT" %}
-                    {% if not i|has_completed_all_lessons:logged_in_profile %}
-                        <span class="d-inline-block" tabindex="999" data-bs-toggle="popover" data-bs-placement="top" data-bs-content="Finish all lessons first" data-bs-trigger="hover focus">
-                        <button type="button" class="btn btn-primary" disabled>Finish The Section</button>
-                        </span>
-                    {% elif questions.is_completed %}
-                        <button type="button" class="btn btn-success" disabled>Completed</button>
-                    {% else %}
-                        <button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#modal-msq-{{ questions.id }}">
-                        Open Multiple Select Quiz
-                        </button>
-                    {% endif %}
+                                        {% elif questions.type == "DRAG_DROP" %}
+                                        {% if not i|has_completed_all_lessons:logged_in_profile %}
+                                            <span class="d-inline-block" tabindex="999" data-bs-toggle="popover" data-bs-placement="top" data-bs-content="Finish all lessons first" data-bs-trigger="hover focus">
+                                            <button type="button" class="btn btn-primary" disabled>Finish The Section</button>
+                                            </span>
+                                        {% elif questions.is_completed %}
+                                            <button type="button" class="btn btn-success" disabled>Completed</button>
+                                        {% else %}
+                                            <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modal-drag-drop-{{ questions.id }}">
+                                            Open Drag & Drop Quiz
+                                            </button>
+                                        {% endif %}
 
-                    {% elif questions.type == "DRAG_DROP" %}
-                    {% if not i|has_completed_all_lessons:logged_in_profile %}
-                        <span class="d-inline-block" tabindex="999" data-bs-toggle="popover" data-bs-placement="top" data-bs-content="Finish all lessons first" data-bs-trigger="hover focus">
-                        <button type="button" class="btn btn-primary" disabled>Finish The Section</button>
-                        </span>
-                    {% elif questions.is_completed %}
-                        <button type="button" class="btn btn-success" disabled>Completed</button>
-                    {% else %}
-                        <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modal-drag-drop-{{ questions.id }}">
-                        Open Drag & Drop Quiz
-                        </button>
-                    {% endif %}
+                                        {% else %}
+                                        <p class="text-danger">Unsupported quiz type: {{ questions.type }}</p>
+                                        {% endif %}
 
-                    {% else %}
-                    <p class="text-danger">Unsupported quiz type: {{ questions.type }}</p>
-                    {% endif %}
+                                    {% endfor %}
 
-                {% endfor %}
+                                {% endif %}
+                                {% endfor %} {% endcomment %}
+                    
+                            </div>
+                            {% endfor %}
 
-            {% endif %}
-            {% endfor %}
- 
-          </div>
-        {% endfor %}
-
-      </div>
-    </div>
-  </div>
-</div>
+                        </div>
+                        </div>
+                    </div>
+                    </div>
 
 
                     <!-- Notes Tab -->
@@ -410,7 +516,7 @@
 
                                 <div class="mb-4">
                                     {% for sec in course.sections.all %}
-                                        {% if student_profile %}
+                                        {% if student_profile and forloop.counter == 1 %}
                                         <form 
                                             id="note-form-{{ sec.id }}"
                                             hx-post="{% url 'create_course_notes' %}"
