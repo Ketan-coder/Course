@@ -180,6 +180,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 #----------------Replace INSTALLED_APPS with the below code----------------\/
 
 INSTALLED_APPS = [
+    "unfold",
    "django.contrib.admin",
   "django.contrib.auth",
   "django.contrib.contenttypes",

@@ -196,9 +196,12 @@
                     <div class="text-end pt-4">
                         <form method="post" action="{% if course %}{% url 'course_create_step_four' course_id=course.id %} {% else %} {% url 'course_create_step_one' %} {% endif %} " class="d-inline">
                         {% csrf_token %}
-                    <button type="submit" class="btn btn-primary btn-lg">
+                    {% comment %} <button type="submit" class="btn btn-primary btn-lg">
                         Next <i class="ph ph-arrow-right ms-2"></i>
-                    </button>
+                    </button> {% endcomment %}
+                    <button type="submit" class="btn {% if course %} btn-primary {% else %} btn-primary-outline {% endif %}  btn-lg" {% if not course %}disabled{% endif %}>
+                        {% if course %}Next <i class="ph ph-arrow-right ms-2"></i> {% else %} Finish and Save the First Section to continue {% endif %}
+                      </button>
                     </form>
                     </div>
                 </div>

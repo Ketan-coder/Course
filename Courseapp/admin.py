@@ -1,6 +1,6 @@
 from typing import Literal
 from django.contrib import admin
-
+from unfold.admin import ModelAdmin as UnfoldModelAdmin
 from .models import Language, Course, Section, Lesson, Quiz, QuizSubmission, Tag
 from .models import CourseComment, CourseSubComment, CourseReview, CourseCertificate, FAQ, Article
 

@@ -33,7 +33,7 @@
             <main>
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <h2 class="content-title">Course Content</h2>
-                    <button class="btn btn-primary" type="button" data-bs-toggle="modal" data-bs-target="#section-modal">
+                    <button class="btn btn-primary" type="button" data-bs-toggle="modal" data-bs-target="#section-modal" {% if not course %}disabled{% endif %}>
                         <i class="ph ph-plus me-2"></i>
                         Add Section
                     </button>
@@ -99,7 +99,7 @@
                                 <li class="list-group-item text-muted text-center">No lessons in this section yet.</li>
                                 {% endfor %}
                             </ul>
-                            <button class="btn btn-link mt-2 add-lesson-btn" type="button" data-bs-toggle="modal" data-bs-target="#lesson-modal" data-section-id="{{ section.id }}">
+                            <button class="btn btn-link mt-2 add-lesson-btn" type="button" data-bs-toggle="modal" data-bs-target="#lesson-modal" data-section-id="{{ section.id }}" {% if not course %}disabled{% endif %}>
                                 <i class="ph ph-plus"></i> Add Lesson
                             </button>
                         </div>
@@ -109,7 +109,7 @@
                         <div class="content text-center p-5">
                             <h4 class="font-weight-bold">Your curriculum is empty</h4>
                             <p class="text-muted">Start by adding your first section to organize your course content.</p>
-                            <button class="btn btn-primary" type="button" data-bs-toggle="modal" data-bs-target="#section-modal">
+                            <button class="btn btn-primary" type="button" data-bs-toggle="modal" data-bs-target="#section-modal" {% if not course %}disabled{% endif %} >
                                 <i class="ph ph-plus me-2"></i>
                                 Add Your First Section
                             </button>
@@ -121,9 +121,12 @@
                 <div class="text-end mt-4">
                     <form method="post" action="{% if course %}{% url 'course_create_step_three' course_id=course.id %}{% else %}{% url 'course_create_step_three' %} {% endif %}" class="d-inline">
                         {% csrf_token %}
-                    <button type="submit" class="btn btn-primary btn-lg">
+                    {% comment %} <button type="submit" class="btn btn-primary btn-lg">
                         Next <i class="ph ph-arrow-right ms-2"></i>
-                    </button>
+                    </button> {% endcomment %}
+                    <button type="submit" class="btn {% if course %} btn-primary {% else %} btn-primary-outline {% endif %}  btn-lg" {% if not course %}disabled{% endif %}>
+                        {% if course %}Next <i class="ph ph-arrow-right ms-2"></i> {% else %} Finish and Save the First Section to continue {% endif %}
+                      </button>
                     </form>
                 </div>
             </main>

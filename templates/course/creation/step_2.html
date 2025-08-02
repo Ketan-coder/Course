@@ -1,63 +1,5 @@
 {% extends "base.html" %}
 {% load static %}
-    
-
-{% comment %} {% block body %}
-<div class="container-fluid content-wrapper">
-  <div class="text-start my-4 ps-3">
-    <h1 class="font-weight-bold display-3" style="font-family: 'Gucina';">{% if course %}Edit Course{% else %}Create a New Course{% endif %}</h1>
-    <p class="text-muted font-size-18">Follow the steps to build and publish your course.</p>
-  </div>
-
-  <div class="row g-4 container-fluid">
-    <!-- LEFT: Stepper -->
-    <div class="col-lg-3 mb-2">
-      {% include 'course/components/sidebar.html' with step=step course=course %}
-    </div>
-
-    <!-- RIGHT: Form -->
-    <div class="col-lg-8 col-xl-9">
-      <main>
-        <div class="card p-4 p-lg-4">
-          <form id="course-foundation-form" method="post" action="{% if course %}{% url 'course_create_step_two' course_id=course.id %}{% else %}{% url 'course_create_step_one' %}{% endif %}" enctype="multipart/form-data">
-            {% csrf_token %}
-            <div class="text-start">
-              <h1 class="font-weight-bold">Step 2: Curriculum</h1>
-              <p class="text-muted font-size-18">Define course structure and syllabus</p>
-            </div>
-            <hr>
-            <div class="mb-4">
-              <smart-quill
-                name="prerequisites"
-                label="Course Prerequisites"
-                value="{{ course.prerequisites|default_if_none:"" }}"
-                placeholder="Describe the course here..." required>
-              </smart-quill>
-            </div>
-
-            <div class="mb-4">
-              <smart-quill
-                name="circulam"
-                label="Course Circulam"
-                value="{{ course.circulam|default_if_none:"" }}"
-                placeholder="Describe the course here..." required>
-              </smart-quill>
-            </div>
-
-            <div class="text-end">
-              <button type="submit" class="btn btn-primary btn-lg">
-                Next <i class="ph ph-arrow-right ms-2"></i>
-              </button>
-            </div>
-          </form>
-        </div>
-      </main>
-    </div>
-  </div>
-</div>
-
-{% endblock body %} {% endcomment %}
-
 
 {% block body %}
 <div class="container-fluid content-wrapper">
@@ -84,6 +26,26 @@
             </div>
             <hr>
 
+            <!-- Learning Objectives -->
+            <div class="mb-4">
+              <label class="form-label">What You Will Learn</label>
+              <div class="objectives-container">
+                {% for objective in course.learning_objectives %}
+                  <div class="input-group mb-2 objective-item">
+                    <input type="text" class="form-control" value="{{ objective }}" placeholder="Enter learning objective">
+                    <button type="button" class="btn btn-outline-danger remove-objective">Remove</button>
+                  </div>
+                {% empty %}
+                  <div class="input-group mb-2 objective-item">
+                    <input type="text" class="form-control" placeholder="Enter learning objective">
+                    <button type="button" class="btn btn-outline-danger remove-objective">Remove</button>
+                  </div>
+                {% endfor %}
+              </div>
+              <button type="button" class="btn btn-outline-primary add-objective mt-2">Add Objective</button>
+              <input type="hidden" name="learning_objectives" class="learning-objectives-hidden">
+            </div>
+
             <div class="mb-4">
               <smart-quill
                 name="prerequisites"
@@ -102,29 +64,11 @@
               </smart-quill>
             </div>
             <hr>
-            <!-- Learning Objectives -->
-            <div class="mb-4">
-              <label class="form-label">What You Will Learn</label>
-              <div class="objectives-container">
-                {% for objective in course.learning_objectives %}
-                  <div class="input-group mb-2 objective-item">
-                    <input type="text" class="form-control" value="{{ objective }}" placeholder="Enter learning objective">
-                    <button type="button" class="btn btn-danger remove-objective">Remove</button>
-                  </div>
-                {% empty %}
-                  <div class="input-group mb-2 objective-item">
-                    <input type="text" class="form-control" placeholder="Enter learning objective">
-                    <button type="button" class="btn btn-danger remove-objective">Remove</button>
-                  </div>
-                {% endfor %}
-              </div>
-              <button type="button" class="btn btn-outline-primary add-objective mt-2">Add Objective</button>
-              <input type="hidden" name="learning_objectives" class="learning-objectives-hidden">
-            </div>
+            
 
             <div class="text-end">
-              <button type="submit" class="btn btn-primary btn-lg">
-                Next <i class="ph ph-arrow-right ms-2"></i>
+              <button type="submit" class="btn {% if course %} btn-primary {% else %} btn-primary-outline {% endif %}  btn-lg" {% if not course %}disabled{% endif %}>
+                {% if course %}Next <i class="ph ph-arrow-right ms-2"></i> {% else %} Finish and Save the First Section to continue {% endif %}
               </button>
             </div>
           </form>
@@ -151,7 +95,7 @@ document.addEventListener('DOMContentLoaded', () => {
     newObjective.className = 'input-group mb-2 objective-item';
     newObjective.innerHTML = `
       <input type="text" class="form-control" placeholder="Enter learning objective">
-      <button type="button" class="btn btn-danger remove-objective">Remove</button>
+      <button type="button" class="btn btn-outline-danger remove-objective">Remove</button>
     `;
     container.appendChild(newObjective);
     bindRemoveEvents();

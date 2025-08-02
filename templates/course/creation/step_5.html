@@ -88,8 +88,11 @@
             </div>
 
             <div class="text-end">
-              <button type="submit" class="btn btn-primary btn-lg">
+              {% comment %} <button type="submit" class="btn btn-primary btn-lg">
                Finish & Publish <i class="ph ph-rocket-launch ms-2"></i>
+              </button> {% endcomment %}
+              <button type="submit" class="btn {% if course %} btn-primary {% else %} btn-primary-outline {% endif %}  btn-lg" {% if not course %}disabled{% endif %}>
+                {% if course %}Finish & Publish <i class="ph ph-arrow-right ms-2"></i> {% else %} Finish and Save the First Section to continue {% endif %}
               </button>
             </div>
           </form>
