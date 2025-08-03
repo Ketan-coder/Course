@@ -11,7 +11,7 @@
 
 {% block body %}
 
-<div class="container-fluid py-30">
+<div class="container-fluid p-3">
 
     {# =============================================================================== #}
     {# INSTRUCTOR DASHBOARD VIEW                                                       #}
@@ -36,7 +36,7 @@
                         <i class="ph ph-student text-primary mr-5"></i> Total Students
                     </h4>
                     <div class="fs-1 font-weight-bold ms-1">{{ enrolled_students }}</div>
-                    <p class="text-muted mb-0 mt-1">+50 this month</p>
+                    <p class="text-muted mb-0 mt-1"> {% if enrolled_students != 0 %} {{enrolled_students_this_month}} this month {% else %} Nothing this Month, but Stay Stong! {% endif %}</p>
                 </div>
             </div>
             <div class="col-lg-3">
@@ -45,9 +45,9 @@
                         <i class="ph ph-money text-success mr-5"></i> Total Revenue
                     </h4>
                     <div class="flex flex-row align-items-start">
-                      <small class="font-weight-bold mr-1">{{ instructor_currency }}</small> <span class="fs-1 font-weight-bold"> {{ total_earnings }}</span>
+                      <small class="font-weight-bold mr-1 fs-4">{{ instructor_currency }}</small> <span class="fs-1 font-weight-bold"> {{ total_earnings }}</span>
                     </div>
-                    <p class="text-muted mb-0 mt-1">+$720 this month</p>
+                    <p class="text-muted mb-0 mt-1"> {% if total_earnings != 0 %} {{instructor.currency}} {{total_revenue_this_month}} this month {% else %} Nothing this Month, but Stay Stong!{% endif %}</p>
                 </div>
             </div>
             <div class="col-lg-3">
@@ -56,7 +56,7 @@
                         <i class="ph ph-heart text-danger mr-5"></i> Total Likes
                     </h4>
                     <div class="fs-1 font-weight-bold ms-1">{{ total_bookmarked_by_students }}</div>
-                     <p class="text-muted mb-0 mt-1">+210 this month</p>
+                     <p class="text-muted mb-0 mt-1">{% if total_bookmarked_by_students != 0 %} {{total_bookmarked_this_month}} this month {% else %} Nothing this Month {% endif %} </p>
                 </div>
             </div>
             <div class="col-lg-3">
@@ -65,7 +65,7 @@
                         <i class="ph ph-book-open text-info mr-5"></i> Courses
                     </h4>
                     <div class="fs-1 font-weight-bold ms-1">{{ course_count }}</div>
-                    <p class="text-muted mb-0 mt-1">+1 this month</p>
+                    <p class="text-muted mb-0 mt-1"> {% if total_courses_created_this_month != 0 %} {{total_courses_created_this_month}} this month {% else %} Nothing this Month {% endif %}</p>
                 </div>
             </div>
         </div>
@@ -102,9 +102,11 @@
                                 </span></td>
                             <td class="text-right align-middle" style="white-space: nowrap; width: 2em;">
                                 {% comment %} Edit course button {% endcomment %}
-                                <button type="button" class="btn btn-primary btn-sm" {% if course.is_published %} {% else %} disabled {% endif %} data-bs-toggle="modal" data-bs-target="#courseQRModal{{ course.id }}">
-                                    View QR Code
-                                </button>
+                                {% if course.qr_code %}
+                                    <button type="button" class="btn btn-primary btn-sm" {% if course.is_published %} {% else %} disabled {% endif %} data-bs-toggle="modal" data-bs-target="#courseQRModal{{ course.id }}">
+                                        View QR Code
+                                    </button>
+                                {% endif %}
                                 {% comment %} Copy course url button {% endcomment %}
                                 <button type="button" class="btn btn-secondary btn-sm" onclick="copyCourseUrl('{{ course.id }}')">
                                     Copy Course URL
@@ -114,7 +116,18 @@
                                 </a>
                             </td>
                         </tr>
-                        <!-- Vertically centered modal -->
+                        
+
+                        {% endfor %}
+                            
+                        
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% for course in courses %}
+    <!-- Vertically centered modal -->
                     <div class="modal fade" id="courseQRModal{{ course.id }}" tabindex="-1" aria-hidden="true">
                         <div class="modal-dialog modal-dialog-centered">
                             <div class="modal-content">
@@ -131,15 +144,7 @@
                             </div>
                         </div>
                     </div>
-
-                        {% endfor %}
-                            
-                        
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
+    {%endfor%}
     {% else %}
 
     {# =============================================================================== #}

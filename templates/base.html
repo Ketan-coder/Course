@@ -96,7 +96,40 @@
     color: #2ecc71;
     text-align: center;
     margin-top: 20px;
-}
+} 
+  /* Ensure the container-fluid doesn't cause page-wide overflow */
+  .container-fluid-horizontal {
+      overflow-x: hidden;
+  }
+
+  .content-horizontal {
+      overflow-x: hidden;
+  }
+
+  /* Custom horizontal scroll styling */
+  .horizontal-scroll {
+      scrollbar-width: thin; /* Firefox */
+      scrollbar-color: #6c757d #e9ecef; /* Firefox: thumb and track colors */
+  }
+
+  /* Webkit browsers (Chrome, Safari) */
+  .horizontal-scroll::-webkit-scrollbar {
+      height: 8px;
+  }
+
+  .horizontal-scroll::-webkit-scrollbar-track {
+      background: #e9ecef; /* Matches Halfmoon light theme */
+      border-radius: 4px;
+  }
+
+  .horizontal-scroll::-webkit-scrollbar-thumb {
+      background: #6c757d; /* Matches Halfmoon secondary color */
+      border-radius: 4px;
+  }
+
+  .horizontal-scroll::-webkit-scrollbar-thumb:hover {
+      background: #5a6268; /* Slightly darker on hover */
+  }
   {% if request.user.is_authenticated and request.user.profile.isDarkTheme %}
   .ql-toolbar{
     background: darkgrey;
@@ -104,6 +137,7 @@
   {% endif %}
 
   </style>
+  
 
   {% block head %}{% endblock head %}
     </head>

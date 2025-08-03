@@ -11,7 +11,7 @@
   <div class="row g-4 container-fluid">
     <!-- LEFT: Stepper -->
     <div class="col-lg-3 mb-2">
-      {% include 'course/components/sidebar.html' with step=step course=course %}
+      {% include 'course/components/accordian_sidebar.html' with step=step course=course %}
     </div>
 
     <!-- RIGHT: Form -->
@@ -33,8 +33,8 @@
                   <div id="tags_search_results" class="list-group mt-2"></div>
                   <div id="selected_tags" class="mt-2">
                       {% for tag in course.tags.all %}
-                      <span class="badge bg-secondary mr-1 selected-tag" data-tag-id="{{ tag.id }}">
-                          {{ tag.name }} | <button type="button" class="btn btn-sm btn-outline-light ml-1 p-0 border-0" aria-label="Remove" onclick="removeTag(this)">&times;</button>
+                      <span class="badge mr-1 pt-1 selected-tag" style="background-color: {{ tag.extra_fields.bgColor }};color: {{ tag.extra_fields.color }};" data-tag-id="{{ tag.id }}">
+                         <i class="{{ tag.extra_fields.icon }} mt-1" style="color: {{ tag.extra_fields.iconColor }}"></i> {{ tag.name }} | <button type="button" class="btn btn-sm btn-outline-light ml-1 p-0 ps-1 pe-1 border-0" aria-label="Remove" onclick="removeTag(this)">&times;</button>
                       </span>
                       <input type="hidden" name="selected_tags" value="{{ tag.id }}">
                       {% endfor %}
@@ -83,6 +83,31 @@
                     selected-value="{% if course.is_open_to_all %}true{% else %}false{% endif %}"
                     is-big>
                   </smart-input>
+                </div>
+              </div>
+            </div>
+
+            <hr>
+            <h6>Additional Settings</h6>
+            <div class="mb-4 pt-2">
+              <div class="row">
+                <div class="col-md-6">
+                   <smart-input
+                    label="Create Shareable QR/Link/Code?"
+                    name="create_qr_code"
+                    type="switch"
+                    selected-value="false"
+                    is-big>
+                  </smart-input>
+                </div>
+                <div class="col-md-6">
+                   {% comment %} <smart-input
+                    label="Enable Ad Revenue?"
+                    name="ad_revenue_enabled"
+                    type="switch"
+                    selected-value="false"
+                    is-big>
+                  </smart-input> {% endcomment %}
                 </div>
               </div>
             </div>
@@ -155,9 +180,11 @@
               const selectedTagsDiv = document.getElementById('selected_tags');
               if (!selectedTagsDiv.querySelector(`span[data-tag-id="${tag.id}"]`)) {
                 const selectedTagElement = document.createElement('span');
-                selectedTagElement.classList.add('badge', 'bg-secondary', 'mr-1', 'selected-tag', 'd-inline-flex', 'align-items-center');
+                selectedTagElement.classList.add('badge', 'mr-1', 'pt-1', 'selected-tag');
+                selectedTagElement.style.backgroundColor = tag.extra_fields['bgColor'];
+                selectedTagElement.style.color = tag.extra_fields['color'];
                 selectedTagElement.dataset.tagId = tag.id;
-                selectedTagElement.innerHTML = `${tag.name} <button type="button" class="close ml-1" aria-label="Remove" onclick="removeTag(this)">&times;</button>`;
+                selectedTagElement.innerHTML = `<i class="${tag.extra_fields['icon']} mt-1" style="color: ${tag.extra_fields['iconColor']};"></i> ${tag.name} | <button type="button" class="btn btn-sm btn-outline-light ml-1 p-0 ps-1 pe-1 border-0" aria-label="Remove" onclick="removeTag(this)">&times;</button>`;
 
                 const hiddenInput = document.createElement('input');
                 hiddenInput.type = 'hidden';

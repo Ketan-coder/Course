@@ -1,0 +1,57 @@
+<div class="accordion" id="stepsAccordion">
+      <div class="accordion-item">
+        <h2 class="accordion-header"><button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#steps-collapse" aria-expanded="true" aria-controls="steps-collapse-1">Creation Steps</button></h2>
+        <div id="steps-collapse" class="accordion-collapse collapse show" data-bs-parent="#stepsAccordion">
+        <div class="accordion-body">
+      {% include 'course/components/sidebar.html' with step=step course=course %}
+        </div>
+        </div>
+      </div>
+      </div>
+
+      <!-- View Demo -->
+      {% if course %}
+      <div class="accordion" id="viewDemoAccordion">
+        <div class="accordion-item">
+          <h2 class="accordion-header">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#view-demo-collapse" aria-expanded="false" aria-controls="view-demo-collapse">
+              View Live Demo
+            </button>
+          </h2>
+          <div id="view-demo-collapse" class="accordion-collapse collapse" data-bs-parent="#viewDemoAccordion">
+            <div class="accordion-body">
+              <div style="border: 1px solid #ccc; border-radius: 10px; width: 375px; height: 667px; overflow: hidden; margin: auto;">
+                <iframe src="{% url 'course_detail' course.pk %}" style="width: 100%; height: 100%; border: none;"></iframe>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+
+
+      <!-- View Creation Demo -->
+      <div class="accordion" id="videoDemoAccordion">
+      <div class="accordion-item">
+        <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#video-demo-collapse" aria-expanded="false" aria-controls="video-demo-collapse-1">Video Demo</button></h2>
+        <div id="video-demo-collapse" class="accordion-collapse collapse" data-bs-parent="#videoDemoAccordion">
+        <div class="accordion-body">
+          <a href="https://www.youtube.com/watch?v=example" target="_blank" class="btn btn-primary w-100 mb-3">
+            {% comment %} <i class="ph ph-youtube-logo me-2"></i> Watch Video Demo {% endcomment %}
+            <div class="mt-2 p-3">
+              <i class="ph ph-youtube-logo me-2 display-4"></i>
+              <br>
+              <strong> Watch Video Demo</strong><br>
+              A great title and description helps your course get discovered.
+            </div>
+          </a>
+          
+        </div>
+        </div>
+      </div>
+      </div>
+      
+      <div class="mt-2 p-3 bg-secondary text-white rounded">
+        <strong>💡 Pro Tip</strong><br>
+        A great title and description helps your course get discovered.
+      </div>

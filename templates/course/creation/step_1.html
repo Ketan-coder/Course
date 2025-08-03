@@ -10,9 +10,10 @@
   </div>
 
   <div class="row g-4 container-fluid">
-    <!-- LEFT: Stepper -->
+    <!-- LEFT -->
+     <!-- LEFT: Stepper -->
     <div class="col-lg-3 mb-2">
-      {% include 'course/components/sidebar.html' with step=step course=course %}
+      {% include "course/components/accordian_sidebar.html" with step=step course=course %}
     </div>
 
     <!-- RIGHT: Form -->
@@ -117,9 +118,8 @@
 {% endblock body %}
     
 {% block script %}
-<!-- Quill Rich Text Editor JS -->
-<script src="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.js"></script>
 <script>
+    document.querySelector('#view-demo-collapse iframe').contentWindow.location.reload();
     // Simple function to preview the selected thumbnail image
     function previewImage(event, previewId) {
         const preview = document.getElementById(previewId);

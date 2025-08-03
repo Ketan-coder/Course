@@ -180,7 +180,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 #----------------Replace INSTALLED_APPS with the below code----------------\/
 
 INSTALLED_APPS = [
-    "unfold",
+    # "unfold",
    "django.contrib.admin",
   "django.contrib.auth",
   "django.contrib.contenttypes",
@@ -229,6 +229,8 @@ CSRF_TRUSTED_ORIGINS = [
     'https://www.calsie.com.au',
     'https://8000-firebase-coursegit-1747156684969.cluster-htdgsbmflbdmov5xrjithceibm.cloudworkstations.dev',
 ]
+
+X_FRAME_OPTIONS = 'SAMEORIGIN'
 
 CHANNEL_LAYERS = {
         "default": {

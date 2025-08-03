@@ -19,9 +19,11 @@
         <!-- <h1 class="card-text mt-2 mx-auto text-success text-start"><b>{{ course.get_course_type_display }}</b></h1> -->
         <div class="d-flex justify-content-start align-items-center">
         {% for tag in course.tags.all %} 
-        <span class="badge bg-secondary m-1 selected-lesson" data-lesson-id="{{ tag.id }}">
-          {{ tag.name }}
+        <span class="badge m-1 selected-lesson text-dark" style="background-color: {{ tag.extra_fields.bgColor }};color: {{ tag.extra_fields.color }}" data-lesson-id="{{ tag.id }}">
+          <i class="{{ tag.extra_fields.icon }}" style="color: {{ tag.extra_fields.iconColor }}"></i> {{ tag.name }}
         </span>
+        {% empty %}
+        <span class="badge bg-secondary m-1"></span>
         {% endfor %}
       </div>
         <h5 class="card-title mb-2">{{ course.title }}</h5>

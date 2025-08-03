@@ -94,25 +94,17 @@
 
     </div>
     <hr class="my-4"> 
-    {% comment %} <div class="row g-4">
-        {% for course in courses %}
-            <div class="col-12 col-sm-6 col-lg-4 col-xl-3"> {% include "course/components/course_card.html" with course=course %}
-            </div>
-        {% empty %}
-            <div class="col-12">
-                <p class="text-center">No courses available.</p>
-            </div>
-        {% endfor %}
-    </div> {% endcomment %}
 
     {% for tag_name, course_list in grouped_courses.items %}
-        <div class="content mt-2 m-2 {% if not forloop.first %}mt-5{% endif %}">
-            <h5 class="text-muted">{{ tag_name }}</h5>
-            <div class="horizontal-scroll scrollbar-hover d-flex flex-nowrap">
+        <div class="content-horizontal mt-2 m-2 {% if not forloop.first %}mt-5{% endif %}" style="overflow-x: hidden;">
+            <h5 class="text-muted ps-3"> {{ tag_name }} ({{ course_list|length }})</h5>
+            <div class="horizontal-scroll d-flex flex-nowrap" style="overflow-x: auto; overflow-y: hidden; white-space: nowrap; -webkit-overflow-scrolling: touch;">
                 {% for course in course_list %}
-                    <div class="card me-1" style="min-width: 250px;">
+                    <div class="card m-1" style="min-width: 250px; display: inline-block;">
                         {% include "course/components/course_card.html" with course=course %}
                     </div>
+                {% empty %}
+                    <p>No courses found for this tag.</p>
                 {% endfor %}
             </div>
         </div>

@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from Tiers.models import Tier, Tournament, LeaderboardEntry
@@ -246,6 +247,26 @@ def index(request):
                             for c in course:
                                 total_earnings += users_who_bought_courses.count() * c.price
                     total_bookmarked_by_students = sum(c.bookmarked_by_users.count() for c in course)
+                    student_growth_this_month = sum(c.is_bought_by_users.filter(
+                        user__is_active=True,
+                        created_at__month=datetime.now().month,
+                        created_at__year=datetime.now().year
+                    ).count() for c in course) or 0
+                    total_revenue_this_month = sum(c.is_bought_by_users.filter(
+                        user__is_active=True,
+                        created_at__month=datetime.now().month,
+                        created_at__year=datetime.now().year
+                    ).count() * c.price for c in course if c.is_open_to_all is False and c.course_type == 'paid') or 0
+                    total_bookmarked_this_month = sum(c.bookmarked_by_users.filter(
+                        user__is_active=True,
+                        created_at__month=datetime.now().month,
+                        created_at__year=datetime.now().year
+                    ).count() for c in course) or 0
+                    total_courses_created_this_month = course.filter(
+                        is_published=True,
+                        created_at__month=datetime.now().month,
+                        created_at__year=datetime.now().year
+                    ).count() or 0
 
                     for c in course:
                         c.students_count = c.is_bought_by_users.count()
@@ -261,7 +282,11 @@ def index(request):
                     'total_bookmarked_by_students': total_bookmarked_by_students or 0,
                     'instructor_name': profile.user.get_full_name() or profile.user.username,
                     'courses': course,
-                    'instructor_currency': profile.currency.symbol or 'INR'
+                    'instructor_currency': profile.currency.symbol or 'INR',
+                    'student_growth_this_month': student_growth_this_month or 0,
+                    'total_revenue_this_month': total_revenue_this_month or 0,    
+                    'total_bookmarked_this_month': total_bookmarked_this_month or 0,
+                    'total_courses_created_this_month': total_courses_created_this_month or 0
                 }
         except Profile.DoesNotExist:
             messages.error(request,"Profile Cannot be Found!")

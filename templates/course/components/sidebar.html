@@ -1,9 +1,9 @@
 <div class="card p-1">
-  <div class="text-start ps-2">
+  {% comment %} <div class="text-start ps-2">
     <h5 class="font-weight-bold">Steps</h5>
-    {% comment %} <p class="text-muted font-size-1">Follow the steps to build and publish your course.</p> {% endcomment %}
-  </div>
-  <hr>
+    <p class="text-muted font-size-1">Follow the steps to build and publish your course.</p>
+  </div> {% endcomment %}
+  {% comment %} <hr> {% endcomment %}
   <div class="d-flex flex-column gap-2">
     <smart-list-tile
       leading-icon= {% if request.session.step_one_done %}"ph ph-check-fill"{% else %} "ph ph-identification-card-fill"{% endif %}
@@ -76,10 +76,4 @@
     </smart-list-tile>
   </div>
 
-
-
-  <div class="mt-2 p-3 bg-secondary text-white rounded">
-    <strong>💡 Pro Tip</strong><br>
-    A great title and description helps your course get discovered.
-  </div>
 </div>

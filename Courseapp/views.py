@@ -347,7 +347,7 @@ def create_quiz(request) -> HttpResponse:
 def search_tags(request) -> JsonResponse:
     search_term = request.GET.get("q")
     if search_term:
-        tags= Tag.objects.filter(name__icontains=search_term).values("id", "name")
+        tags= Tag.objects.filter(name__icontains=search_term).values("id", "name", "icon_image", "extra_fields")
         return JsonResponse(list(tags), safe=False)
     return JsonResponse([], safe=False)
 
@@ -2040,6 +2040,7 @@ def course_create_step_five(request, course_id=None) -> HttpResponse:
 
             # handle faq selection
             selected_faq_ids = request.POST.getlist("selected_faqs")
+            create_qr_code = 'create_qr_code' in request.POST
             
             if course_id:
                 course = get_object_or_404(Course, id=course_id)
@@ -2052,7 +2053,7 @@ def course_create_step_five(request, course_id=None) -> HttpResponse:
                 course.is_published = 'is_published' in request.POST
                 course.is_open_to_all = 'is_open_to_all' in request.POST
 
-                course.save()
+                course.save(create_qr=create_qr_code)
                 # Log activity
                 Activity.objects.create(
                     user=user,

@@ -4,15 +4,20 @@
 {% block title %}
   {{ course.title|default:'Course Details' }}
 {% endblock %}
-{% block namespace %}course-detail{% endblock %}
+{% block namespace %}
+  course-detail
+{% endblock %}
 {% block body %}
-
   <!-- Main Content Wrapper -->
   <div class="content-wrapper">
     <!-- Hero Section with Video Background (UNCHANGED) -->
     <div class="hero-section">
       <video autoplay muted loop playsinline class="hero-video">
-        <source src="{% if course.intro_video %}{{ course.intro_video.url }}{% else %}{% static 'resoures/videos/hero-section-video.mp4' %}{% endif %}"
+        <source src="{% if course.intro_video %}
+            {{ course.intro_video.url }}
+          {% else %}
+            {% static 'resoures/videos/hero-section-video.mp4' %}
+          {% endif %}"
           type="video/mp4" />
       </video>
       <div class="hero-overlay"></div>
@@ -28,9 +33,28 @@
               </div>
             </div>
             <div class="d-flex align-items-center mt-3 font-size-14">
-              <span class="badge {% if request.user.profile.isDarkTheme %}bg-warning text-light {% else %} bg-warning text-dark {% endif %}  me-2">Bestseller</span>
-              <span class="me-3"><i class="ph-fill {% if user_review %} ph-star-fill {% else %} ph-star {% endif %} text-warning me-1"></i> {% if user_review %}{{avg_reviews}} ({{reviews_count}} ratings) {% else %} No Reviews {% endif %} </span>
-              <span><i class="ph ph-student me-1"></i> {{student_enrolled_count}} students</span>
+              <span class="badge {% if request.user.profile.isDarkTheme %}
+                  bg-warning text-light
+                {% else %}
+                   bg-warning text-dark
+                {% endif %}  me-2">
+                Bestseller
+              </span>
+              <span class="me-3">
+                <i class="ph-fill {% if user_review %}
+                     ph-star-fill
+                  {% else %}
+                     ph-star
+                  {% endif %} text-warning me-1">
+
+                </i>
+                {% if user_review %}
+                  {{ avg_reviews }} ({{ reviews_count }} ratings)
+                {% else %}
+                  No Reviews
+                {% endif %}
+              </span>
+              <span><i class="ph ph-student me-1"></i> {{ student_enrolled_count }} students</span>
             </div>
             <div class="mt-4">
               <form method="post" action="." class="d-inline-block">
@@ -65,14 +89,22 @@
             <div class="row">
               <div class="col-md-6">
                 <ul class="list-unstyled">
-                  <li class="mb-2"><i class="ph ph-check text-success me-2"></i> Fundamental analysis techniques.</li>
-                  <li class="mb-2"><i class="ph ph-check text-success me-2"></i> Advanced portfolio management.</li>
+                  <li class="mb-2">
+                    <i class="ph ph-check text-success me-2"></i> Fundamental analysis techniques.
+                  </li>
+                  <li class="mb-2">
+                    <i class="ph ph-check text-success me-2"></i> Advanced portfolio management.
+                  </li>
                 </ul>
               </div>
               <div class="col-md-6">
                 <ul class="list-unstyled">
-                  <li class="mb-2"><i class="ph ph-check text-success me-2"></i> Risk mitigation strategies.</li>
-                  <li class="mb-2"><i class="ph ph-check text-success me-2"></i> Options and derivatives trading.</li>
+                  <li class="mb-2">
+                    <i class="ph ph-check text-success me-2"></i> Risk mitigation strategies.
+                  </li>
+                  <li class="mb-2">
+                    <i class="ph ph-check text-success me-2"></i> Options and derivatives trading.
+                  </li>
                 </ul>
               </div>
             </div>
@@ -83,15 +115,19 @@
               {% with objectives=course.learning_objectives %}
                 <div class="col-md-6">
                   <ul class="list-unstyled">
-                    {% for objective in objectives|slice:":2" %}
-                      <li class="mb-2"><i class="ph ph-check text-success me-2"></i> {{ objective }}</li>
+                    {% for objective in objectives|slice:':2' %}
+                      <li class="mb-2">
+                        <i class="ph ph-check text-success me-2"></i> {{ objective }}
+                      </li>
                     {% endfor %}
                   </ul>
                 </div>
                 <div class="col-md-6">
                   <ul class="list-unstyled">
-                    {% for objective in objectives|slice:"2:4" %}
-                      <li class="mb-2"><i class="ph ph-check text-success me-2"></i> {{ objective }}</li>
+                    {% for objective in objectives|slice:'2:4' %}
+                      <li class="mb-2">
+                        <i class="ph ph-check text-success me-2"></i> {{ objective }}
+                      </li>
                     {% endfor %}
                   </ul>
                 </div>
@@ -110,7 +146,15 @@
               {% if course.course_type == 'free' or course.instructor.profile.user.id == request.user.id or logged_in_profile in course.is_bought_by_users.all or course.is_open_to_all %}
                 <div class="accordion-item">
                   <h2 class="accordion-header" id="heading-{{ forloop.counter }}">
-                    <button class="accordion-button {% if not forloop.first %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-{{ forloop.counter }}" aria-expanded="{% if forloop.first %}true{% else %}false{% endif %}">
+                    <button class="accordion-button {% if not forloop.first %}collapsed{% endif %}"
+                      type="button"
+                      data-bs-toggle="collapse"
+                      data-bs-target="#collapse-{{ forloop.counter }}"
+                      aria-expanded="{% if forloop.first %}
+                        true
+                      {% else %}
+                        false
+                      {% endif %}">
                       Chapter {{ forloop.counter }}: {{ chapter.title }}
                     </button>
                   </h2>
@@ -118,13 +162,23 @@
                     <div class="accordion-body">
                       <p class="text-muted mb-3">{{ chapter.description|safe|default:'No description available.' }}</p>
                       {% if chapter.article %}
-                        <div class="mb-3"><strong>Article:</strong> <a href="{% url 'article_detail' article_id=chapter.article.id %}" class="text-decoration-none">{{ chapter.article.title|default:"No article available." }}</a></div>
+                        <div class="mb-3">
+                          <strong>Article:</strong> <a href="{% url 'article_detail' article_id=chapter.article.id %}" class="text-decoration-none">{{ chapter.article.title|default:'No article available.' }}</a>
+                        </div>
                       {% endif %}
                       {% for lesson in chapter.lesson.all %}
-                        <div class="d-flex align-items-center justify-content-between p-2 mb-2 rounded-2 {% if request.user.profile.isDarkTheme %}bg-dark {% else %} bg-light {% endif %}">
-                          <div class="d-flex align-items-center"><i class="ph ph-play-circle me-2 text-primary fs-4"></i><span class="font-weight-semi-bold">{{ lesson.title|default:'Lesson Topic' }}</span></div>
+                        <div class="d-flex align-items-center justify-content-between p-2 mb-2 rounded-2 {% if request.user.profile.isDarkTheme %}
+                            bg-dark
+                          {% else %}
+                             bg-light
+                          {% endif %}">
+                          <div class="d-flex align-items-center">
+                            <i class="ph ph-play-circle me-2 text-primary fs-4"></i><span class="font-weight-semi-bold">{{ lesson.title|default:'Lesson Topic' }}</span>
+                          </div>
                           <div>
-                            {% if logged_in_profile.id == course.instructor.profile.id %}<a href="{% url 'course_create_step_three' course_id=course.id %}" class="btn btn-sm">Edit</a>{% endif %}
+                            {% if logged_in_profile.id == course.instructor.profile.id %}
+                              <a href="{% url 'course_create_step_three' course_id=course.id %}" class="btn btn-sm">Edit</a>
+                            {% endif %}
                             {% if logged_in_profile in course.is_bought_by_users.all or course.is_open_to_all and logged_in_profile in course.is_bought_by_users.all %}
                               <a href="{% url 'video_detail_page' lesson_id=lesson.id %}" class="btn btn-sm">Watch</a>
                             {% endif %}
@@ -172,17 +226,63 @@
               <!-- Show review form only if user is authenticated AND enrolled -->
               {% if request.user.is_authenticated and logged_in_profile in course.is_bought_by_users.all %}
                 <div class="mb-4">
-                  <h4 class="font-weight-bold mb-3">{% if user_review %}Update your review{% else %}Leave a Review{% endif %}</h4>
+                  <h4 class="font-weight-bold mb-3">
+                    {% if user_review %}
+                      Update your review
+                    {% else %}
+                      Leave a Review
+                    {% endif %}
+                  </h4>
                   <form method="POST" action="{% url 'course_detail' pk=course.id %}#reviews" id="review-form">
                     {% csrf_token %}
                     <div class="mb-3">
                       <label class="form-label">Your Rating</label>
                       <div id="star-rating">
-                        <i class="ph {% if user_review.rating|default:0 >= 1 %}ph-star-fill{% else %}ph-star{% endif %} text-warning fs-3 star" data-value="1" style="cursor:pointer;"></i>
-                        <i class="ph {% if user_review.rating|default:0 >= 2 %}ph-star-fill{% else %}ph-star{% endif %} text-warning fs-3 star" data-value="2" style="cursor:pointer;"></i>
-                        <i class="ph {% if user_review.rating|default:0 >= 3 %}ph-star-fill{% else %}ph-star{% endif %} text-warning fs-3 star" data-value="3" style="cursor:pointer;"></i>
-                        <i class="ph {% if user_review.rating|default:0 >= 4 %}ph-star-fill{% else %}ph-star{% endif %} text-warning fs-3 star" data-value="4" style="cursor:pointer;"></i>
-                        <i class="ph {% if user_review.rating|default:0 >= 5 %}ph-star-fill{% else %}ph-star{% endif %} text-warning fs-3 star" data-value="5" style="cursor:pointer;"></i>
+                        <i class="ph {% if user_review.rating|default:0 >= 1 %}
+                            ph-star-fill
+                          {% else %}
+                            ph-star
+                          {% endif %} text-warning fs-3 star"
+                          data-value="1"
+                          style="cursor:pointer;">
+
+                        </i>
+                        <i class="ph {% if user_review.rating|default:0 >= 2 %}
+                            ph-star-fill
+                          {% else %}
+                            ph-star
+                          {% endif %} text-warning fs-3 star"
+                          data-value="2"
+                          style="cursor:pointer;">
+
+                        </i>
+                        <i class="ph {% if user_review.rating|default:0 >= 3 %}
+                            ph-star-fill
+                          {% else %}
+                            ph-star
+                          {% endif %} text-warning fs-3 star"
+                          data-value="3"
+                          style="cursor:pointer;">
+
+                        </i>
+                        <i class="ph {% if user_review.rating|default:0 >= 4 %}
+                            ph-star-fill
+                          {% else %}
+                            ph-star
+                          {% endif %} text-warning fs-3 star"
+                          data-value="4"
+                          style="cursor:pointer;">
+
+                        </i>
+                        <i class="ph {% if user_review.rating|default:0 >= 5 %}
+                            ph-star-fill
+                          {% else %}
+                            ph-star
+                          {% endif %} text-warning fs-3 star"
+                          data-value="5"
+                          style="cursor:pointer;">
+
+                        </i>
                       </div>
                       <input type="hidden" name="rating" id="review_rating" value="{{ user_review.rating|default:0 }}" />
                     </div>
@@ -192,29 +292,67 @@
                       <textarea class="form-control d-none" id="review_text" name="review_text" rows="3">{{ user_review.review_text|safe }}</textarea> {% endcomment %}
                       <smart-quill name="review_text" id="review_text-quill" label="Review" value="{{ user_review.review_text|safe }}">{{ user_review.review_text|safe }}</smart-quill>
                     </div>
-                    <button type="submit" name="submit_review" value="1" class="btn btn-primary">{% if user_review %}Update Review{% else %}Submit Review{% endif %}</button>
+                    <button type="submit" name="submit_review" value="1" class="btn btn-primary">
+                      {% if user_review %}
+                        Update Review
+                      {% else %}
+                        Submit Review
+                      {% endif %}
+                    </button>
                   </form>
                 </div>
               {% elif request.user.is_authenticated %}
                 <p class="text-muted">You must enroll in this course to leave a review.</p>
               {% else %}
-                <p class="text-muted">You must <a href="{% url 'login' %}?next={{ request.path }}#reviews">log in</a> to leave a review.</p>
+                <p class="text-muted">
+                  You must <a href="{% url 'login' %}?next={{ request.path }}#reviews">log in</a> to leave a review.
+                </p>
               {% endif %}
-              
+
               <!-- Show reviews to everyone -->
               {% with all_reviews=course.reviews.all %}
-                {% for review in all_reviews|slice:":3" %}
+                {% for review in all_reviews|slice:':3' %}
                   <div class="border-top pt-3 mt-3">
                     <div class="d-flex align-items-center mb-2">
                       <img src="{{ review.user.profile.avatar.url|default:'https://placehold.co/40x40/EBF1FF/7F9CF5?text=A' }}" alt="Reviewer" class="rounded-circle" width="40" height="40" />
                       <div class="ms-2">
                         <div class="font-weight-bold">{{ review.user.user.username }}</div>
                         <div>
-                          <i class="ph {% if review.rating|default:0 >= 1 %}ph-star-fill{% else %}ph-star{% endif %} text-warning"></i>
-                          <i class="ph {% if review.rating|default:0 >= 2 %}ph-star-fill{% else %}ph-star{% endif %} text-warning"></i>
-                          <i class="ph {% if review.rating|default:0 >= 3 %}ph-star-fill{% else %}ph-star{% endif %} text-warning"></i>
-                          <i class="ph {% if review.rating|default:0 >= 4 %}ph-star-fill{% else %}ph-star{% endif %} text-warning"></i>
-                          <i class="ph {% if review.rating|default:0 >= 5 %}ph-star-fill{% else %}ph-star{% endif %} text-warning"></i>
+                          <i class="ph {% if review.rating|default:0 >= 1 %}
+                              ph-star-fill
+                            {% else %}
+                              ph-star
+                            {% endif %} text-warning">
+
+                          </i>
+                          <i class="ph {% if review.rating|default:0 >= 2 %}
+                              ph-star-fill
+                            {% else %}
+                              ph-star
+                            {% endif %} text-warning">
+
+                          </i>
+                          <i class="ph {% if review.rating|default:0 >= 3 %}
+                              ph-star-fill
+                            {% else %}
+                              ph-star
+                            {% endif %} text-warning">
+
+                          </i>
+                          <i class="ph {% if review.rating|default:0 >= 4 %}
+                              ph-star-fill
+                            {% else %}
+                              ph-star
+                            {% endif %} text-warning">
+
+                          </i>
+                          <i class="ph {% if review.rating|default:0 >= 5 %}
+                              ph-star-fill
+                            {% else %}
+                              ph-star
+                            {% endif %} text-warning">
+
+                          </i>
                         </div>
                       </div>
                     </div>
@@ -226,18 +364,48 @@
 
                 {% if all_reviews|length > 3 %}
                   <div class="collapse" id="moreReviews">
-                    {% for review in all_reviews|slice:"3:" %}
+                    {% for review in all_reviews|slice:'3:' %}
                       <div class="border-top pt-3 mt-3">
                         <div class="d-flex align-items-center mb-2">
                           <img src="{{ review.user.profile.avatar.url|default:'https://placehold.co/40x40/EBF1FF/7F9CF5?text=A' }}" alt="Reviewer" class="rounded-circle" width="40" height="40" />
                           <div class="ms-2">
                             <div class="font-weight-bold">{{ review.user.user.username }}</div>
                             <div>
-                              <i class="ph {% if review.rating|default:0 >= 1 %}ph-star-fill{% else %}ph-star{% endif %} text-warning"></i>
-                              <i class="ph {% if review.rating|default:0 >= 2 %}ph-star-fill{% else %}ph-star{% endif %} text-warning"></i>
-                              <i class="ph {% if review.rating|default:0 >= 3 %}ph-star-fill{% else %}ph-star{% endif %} text-warning"></i>
-                              <i class="ph {% if review.rating|default:0 >= 4 %}ph-star-fill{% else %}ph-star{% endif %} text-warning"></i>
-                              <i class="ph {% if review.rating|default:0 >= 5 %}ph-star-fill{% else %}ph-star{% endif %} text-warning"></i>
+                              <i class="ph {% if review.rating|default:0 >= 1 %}
+                                  ph-star-fill
+                                {% else %}
+                                  ph-star
+                                {% endif %} text-warning">
+
+                              </i>
+                              <i class="ph {% if review.rating|default:0 >= 2 %}
+                                  ph-star-fill
+                                {% else %}
+                                  ph-star
+                                {% endif %} text-warning">
+
+                              </i>
+                              <i class="ph {% if review.rating|default:0 >= 3 %}
+                                  ph-star-fill
+                                {% else %}
+                                  ph-star
+                                {% endif %} text-warning">
+
+                              </i>
+                              <i class="ph {% if review.rating|default:0 >= 4 %}
+                                  ph-star-fill
+                                {% else %}
+                                  ph-star
+                                {% endif %} text-warning">
+
+                              </i>
+                              <i class="ph {% if review.rating|default:0 >= 5 %}
+                                  ph-star-fill
+                                {% else %}
+                                  ph-star
+                                {% endif %} text-warning">
+
+                              </i>
                             </div>
                           </div>
                         </div>
@@ -245,9 +413,7 @@
                       </div>
                     {% endfor %}
                   </div>
-                  <button class="btn btn-outline-primary w-full mt-3" type="button" data-bs-toggle="collapse" data-bs-target="#moreReviews" aria-expanded="false" aria-controls="moreReviews">
-                    Show more reviews
-                  </button>
+                  <button class="btn btn-outline-primary w-full mt-3" type="button" data-bs-toggle="collapse" data-bs-target="#moreReviews" aria-expanded="false" aria-controls="moreReviews">Show more reviews</button>
                 {% endif %}
               {% endwith %}
             </div>
@@ -256,38 +422,64 @@
       </div>
     </div>
 
-    <div class="container-fluid my-4 p-2">
+    <div class="container-fluid-horizontal my-4 p-2">
       <h2 class="font-weight-bold mt-4 mb-3">More Courses from this <b class="text-decoration-underline">{{ course.instructor.profile.user.username }}</b></h2>
-      <div class="horizontal-scroll scrollbar-hover d-flex flex-nowrap">
+      <div class="horizontal-scroll d-flex flex-nowrap" style="overflow-x: auto; overflow-y: hidden; white-space: nowrap; -webkit-overflow-scrolling: touch;">
         {% for course in instructor_related_courses %}
-            <div class="card m-2" style="min-width: 250px;">
-                {% include "course/components/course_card.html" with course=course %}
-            </div>
-            {% empty %}
-            <p> No Courses Found.</p>
+          <div class="card m-3" style="min-width: 250px; display: inline-block;">
+            {% include 'course/components/course_card.html' with course=course %}
+          </div>
+        {% empty %}
+          <p>No Courses Found.</p>
         {% endfor %}
-        </div>
+      </div>
     </div>
-
-    <div class="container-fluid my-4 p-2">
+    
+    <div class="container-fluid-horizontal my-4 p-2">
       <h2 class="font-weight-bold mt-4 mb-3">More Courses to Browse</h2>
-      <div class="horizontal-scroll scrollbar-hover d-flex flex-nowrap">
+      <div class="horizontal-scroll d-flex flex-nowrap" style="overflow-x: auto; overflow-y: hidden; white-space: nowrap; -webkit-overflow-scrolling: touch;">
         {% for course in course_list %}
-            <div class="card m-1" style="min-width: 250px;">
-                {% include "course/components/course_card.html" with course=course %}
-            </div>
-            {% empty %}
-            <p> No Courses Found.</p>
+          <div class="card m-3" style="min-width: 250px; display: inline-block;">
+            {% include 'course/components/course_card.html' with course=course %}
+          </div>
+        {% empty %}
+          <p>No Courses Found.</p>
         {% endfor %}
-        </div>
+      </div>
     </div>
   </div>
 
   <style>
-    .hero-section { position: relative; height: 60vh; min-height: 400px; display: flex; align-items: center; justify-content: flex-start; }
-    .hero-video { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1; }
-    .hero-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(90deg, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.6) 50%, rgba(0, 0, 0, 0.2) 100%); z-index: 2; }
-    .hero-content { position: relative; z-index: 3; }
+    .hero-section {
+      position: relative;
+      height: 60vh;
+      min-height: 400px;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+    }
+    .hero-video {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      z-index: 1;
+    }
+    .hero-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.6) 50%, rgba(0, 0, 0, 0.2) 100%);
+      z-index: 2;
+    }
+    .hero-content {
+      position: relative;
+      z-index: 3;
+    }
   </style>
 
   <script>
@@ -297,40 +489,40 @@
           theme: 'snow',
           placeholder: 'Write your review...',
           modules: { toolbar: globalToolbarOptions, history: globalHistoryForQuill }
-        });
-        const initialReviewText = `{{ user_review.review_text|safe|default:""|escapejs }}`;
-        quill.root.innerHTML = initialReviewText;
-        const reviewForm = document.getElementById('review-form');
+        })
+        const initialReviewText = `{{ user_review.review_text|safe|default:""|escapejs }}`
+        quill.root.innerHTML = initialReviewText
+        const reviewForm = document.getElementById('review-form')
         reviewForm.addEventListener('submit', function (e) {
-          document.getElementById('review_text').value = quill.root.innerHTML.trim();
+          document.getElementById('review_text').value = quill.root.innerHTML.trim()
           if (quill.getText().trim().length === 0) {
-            alert('Review cannot be empty!');
-            e.preventDefault();
+            alert('Review cannot be empty!')
+            e.preventDefault()
           }
-        });
+        })
       }
       if (document.getElementById('star-rating')) {
-        const stars = document.querySelectorAll('#star-rating .star');
-        const ratingInput = document.getElementById('review_rating');
-        let currentRating = parseInt(ratingInput.value) || 0;
+        const stars = document.querySelectorAll('#star-rating .star')
+        const ratingInput = document.getElementById('review_rating')
+        let currentRating = parseInt(ratingInput.value) || 0
         function setStars(rating) {
           stars.forEach((star, idx) => {
-            star.classList.toggle('ph-star-fill', idx < rating);
-            star.classList.toggle('ph-star', idx >= rating);
-          });
+            star.classList.toggle('ph-star-fill', idx < rating)
+            star.classList.toggle('ph-star', idx >= rating)
+          })
         }
         stars.forEach((star, idx) => {
-          star.addEventListener('mouseenter', () => setStars(idx + 1));
-          star.addEventListener('mouseleave', () => setStars(currentRating));
+          star.addEventListener('mouseenter', () => setStars(idx + 1))
+          star.addEventListener('mouseleave', () => setStars(currentRating))
           star.addEventListener('click', () => {
-            currentRating = idx + 1;
-            ratingInput.value = currentRating;
-            setStars(currentRating);
-          });
-        });
-        setStars(currentRating);
+            currentRating = idx + 1
+            ratingInput.value = currentRating
+            setStars(currentRating)
+          })
+        })
+        setStars(currentRating)
       }
-    });
+    })
   </script>
 
   {% include 'footer.html' %}

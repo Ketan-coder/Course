@@ -49,6 +49,7 @@ class Course(models.Model):
     discount_price = models.DecimalField(max_digits=8, decimal_places=2, default=0.0, validators=[validate_discount])
     is_published = models.BooleanField(default=False)
     is_open_to_all = models.BooleanField(default=True)
+    # required_points = models.PositiveIntegerField(default=0, help_text="Required Points to Unlock the scores")
     is_bought_by_users = models.ManyToManyField('Users.Profile', related_name='bought_courses', blank=True)
     bookmarked_by_users = models.ManyToManyField('Users.Profile', related_name='bookmarked_courses', blank=True)
     completed_by_users = models.ManyToManyField('Users.Profile', related_name='completed_courses', blank=True)
@@ -94,7 +95,7 @@ class Course(models.Model):
 
     @check_load_time
     @retry_on_failure(retries=3, delay=2)
-    def save(self, *args, **kwargs):
+    def save(self, create_qr=False, enable_ad_revenue = False,*args, **kwargs):
         self.extra_fields['last_updated'] = str(self.updated_at)
         self.extra_fields['is_active'] = self.is_published
 
@@ -122,7 +123,7 @@ class Course(models.Model):
             if resized_path:
                 self.thumbnail = resized_path
 
-        if not self.qr_code:
+        if not self.qr_code and create_qr:
             self.generate_qr(auto_save=False)
         super().save(*args, **kwargs)
 
@@ -329,8 +330,11 @@ class QuizSubmission(models.Model):
 
 
 class Tag(models.Model):
+    icon_image = models.ImageField(upload_to='tag_icons', blank=True, null=True)
     name = models.CharField(max_length=50, unique=True)
     description = models.TextField(blank=True, null=True, max_length=200)
+    is_active = models.BooleanField(default=True)
+    is_deleted = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     extra_fields = models.JSONField(blank=True, null=True, default=dict)
@@ -339,7 +343,25 @@ class Tag(models.Model):
         ordering: list[str] = ['name']
 
     def __str__(self) -> str:
-        return self.name
+        if self.extra_fields.get('icon'):
+            return f"{self.name} ({self.extra_fields.get('icon')})"
+        elif self.extra_fields.get('emoji'):
+            return f"{self.name} {self.extra_fields.get('emoji')}"
+        else:
+            return self.name
+        
+    def save(self, emoji='📊', icon="ph ph-tag", bcColor="#00e5ff", color="#000", iconColor = "#000" ,*args, **kwargs) -> None:
+        self.extra_fields['last_updated'] = str(self.updated_at)
+        self.extra_fields['emoji'] = emoji or self.extra_fields.get('emoji', '📊')
+        self.extra_fields['icon'] = icon or self.extra_fields.get('icon', 'ph ph-tag')
+        self.extra_fields['bgColor'] = bcColor or self.extra_fields.get('bcColor', '#00e5ff')
+        self.extra_fields['color'] = color or self.extra_fields.get('color', '#000000') 
+        self.extra_fields['iconColor'] = iconColor or self.extra_fields.get('iconColor', '#000')
+        if self.icon_image and '_resized' not in self.icon_image.name:
+            resized_path = MediaHandler.resize_image(self.icon_image, size=(50, 50))
+            if resized_path:
+                self.icon_image = resized_path
+        super().save(*args, **kwargs)
 
 
 class FAQ(models.Model):
@@ -353,7 +375,7 @@ class FAQ(models.Model):
         ordering: list[str] = ['-created_at']
 
     def __str__(self) -> str:
-        return self.question
+        return self.question + " \n- " + self.answer[:20]
 
 class CourseReview(models.Model):
     user = models.ForeignKey('Users.Profile', on_delete=models.CASCADE, related_name='course_reviews')
