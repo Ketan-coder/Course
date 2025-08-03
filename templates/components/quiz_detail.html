@@ -1,0 +1,577 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block head %}
+<style>
+    :root {
+        --quiz-container-max-width: 800px;
+        --quiz-transition-speed: 0.4s;
+    }
+
+    .quiz-wrapper {
+        max-width: var(--quiz-container-max-width);
+        margin: 2rem auto;
+        padding: 0 1rem;
+    }
+
+    .quiz-container {
+        position: relative;
+        overflow: hidden;
+    }
+
+    .questions-track {
+        display: flex;
+        transition: transform var(--quiz-transition-speed) ease-in-out;
+    }
+
+    .question-slide {
+        width: 100%;
+        flex-shrink: 0;
+        padding: 0 0.5rem;
+    }
+
+    .question-card {
+        background-color: var(--hm-content-bg-color);
+        border: 1px solid var(--hm-border-color);
+    }
+
+    .answer-option {
+        display: flex;
+        align-items: center;
+        padding: 1rem;
+        border: 1px solid var(--hm-border-color);
+        border-radius: var(--hm-border-radius);
+        margin-bottom: 0.75rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .answer-option:hover {
+        border-color: var(--hm-primary-color);
+        background-color: var(--hm-hover-bg-color);
+    }
+
+    .answer-option input[type="radio"],
+    .answer-option input[type="checkbox"] {
+        display: none;
+    }
+
+    .answer-option.selected {
+        background-color: var(--hm-primary-bg-color-light);
+        border-color: var(--hm-primary-color);
+        color: var(--hm-primary-text-color);
+    }
+
+    .answer-option .ph {
+        font-size: 1.5rem;
+        margin-right: 1rem;
+    }
+
+    .answer-option.selected .ph {
+        font-weight: bold;
+    }
+
+    .text-input {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid var(--hm-border-color);
+        border-radius: var(--hm-border-radius);
+        transition: border-color 0.2s ease;
+    }
+
+    .text-input:focus {
+        border-color: var(--hm-primary-color);
+        outline: none;
+    }
+
+    .image-mcq {
+        max-width: 100%;
+        height: auto;
+        border-radius: var(--hm-border-radius);
+        margin-bottom: 1rem;
+    }
+
+    .image-error {
+        color: var(--hm-danger-color);
+        margin-bottom: 1rem;
+    }
+
+    .drag-drop-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .drop-zone {
+        min-width: 100px;
+        min-height: 40px;
+        border: 2px dashed var(--hm-border-color);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.5rem;
+        border-radius: var(--hm-border-radius);
+    }
+
+    .drop-zone.filled {
+        border-style: solid;
+        background-color: var(--hm-primary-bg-color-light);
+    }
+
+    .draggable-option {
+        padding: 0.5rem 1rem;
+        border: 1px solid var(--hm-border-color);
+        border-radius: var(--hm-border-radius);
+        cursor: move;
+        background-color: var(--hm-content-bg-color);
+    }
+
+    .draggable-option.dragging {
+        opacity: 0.5;
+    }
+
+    .results-card {
+        text-align: center;
+    }
+
+    .results-icon {
+        font-size: 5rem;
+    }
+
+    .results-icon.pass { color: var(--hm-success-color); }
+    .results-icon.fail { color: var(--hm-danger-color); }
+
+    #confetti-canvas {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 1000;
+    }
+</style>
+{% endblock head %}
+
+{% block body %}
+{{ quiz_data|json_script:"quiz-data-json" }}
+
+<div class="quiz-wrapper">
+    <h1 id="quiz-title" class="text-center font-weight-bold"></h1>
+    <p id="quiz-progress-text" class="text-center text-muted"></p>
+
+    <div class="progress my-4">
+        <div class="progress-bar" id="quiz-progress-bar" role="progressbar" style="width: 0%;"></div>
+    </div>
+
+    <div id="quiz-container" class="quiz-container">
+        <div id="questions-track" class="questions-track">
+        </div>
+    </div>
+
+    <div id="results-screen" class="d-none">
+        <div class="card p-4 p-lg-5 results-card position-relative">
+            <canvas id="confetti-canvas"></canvas>
+            <i id="results-icon" class="ph"></i>
+            <h1 id="results-title" class="font-weight-bold mt-3"></h1>
+            <p class="font-size-20">You scored <strong id="results-score"></strong> out of <strong id="results-total-score"></strong>.</p>
+            <p id="results-message" class="text-muted"></p>
+            <div class="mt-4">
+                <a href="#" class="btn btn-primary">Back to Course</a>
+            </div>
+        </div>
+    </div>
+
+    <div id="quiz-navigation" class="d-flex justify-content-between mt-4">
+        <button id="prev-btn" class="btn btn-secondary" disabled>
+            <i class="ph ph-arrow-left"></i> Previous
+        </button>
+        <button id="next-btn" class="btn btn-primary">
+            Save & Next <i class="ph ph-arrow-right"></i>
+        </button>
+    </div>
+</div>
+{% endblock body %}
+
+{% block script %}
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    // --- SETUP & STATE ---
+    const quizData = JSON.parse(document.getElementById('quiz-data-json').textContent);
+    const questions = quizData.questions;
+    const totalQuestions = questions.length;
+    let currentQuestionIndex = 0;
+    let userAnswers = {};
+    let totalPossibleScore = 0;
+    questions.forEach(q => totalPossibleScore += q.score_on_completion);
+
+    // --- DOM ELEMENTS ---
+    const track = document.getElementById('questions-track');
+    const nextBtn = document.getElementById('next-btn');
+    const prevBtn = document.getElementById('prev-btn');
+    const progressBar = document.getElementById('quiz-progress-bar');
+    const progressText = document.getElementById('quiz-progress-text');
+
+    // --- INITIALIZATION ---
+    function initializeQuiz() {
+        document.getElementById('quiz-title').textContent = quizData.title;
+        renderAllQuestions();
+        updateUI();
+    }
+
+    // --- RENDERING ---
+    function renderAllQuestions() {
+        track.innerHTML = '';
+        questions.forEach((q, index) => {
+            const slide = document.createElement('div');
+            slide.className = 'question-slide';
+            slide.innerHTML = `<div class="card question-card p-4 p-lg-5" id="question-${q.id}"></div>`;
+            track.appendChild(slide);
+            renderQuestion(q);
+        });
+    }
+
+    function renderQuestion(question) {
+        const container = document.getElementById(`question-${question.id}`);
+        if (!container) return;
+
+        let optionsHtml = '';
+        const questionType = question.type;
+
+        if (questionType === 'SINGLE_SELECT' || questionType === 'MULTIPLE_SELECT') {
+            const inputType = questionType === 'SINGLE_SELECT' ? 'radio' : 'checkbox';
+            const icon = questionType === 'SINGLE_SELECT' ? 'ph-circle' : 'ph-square';
+            const iconSelected = questionType === 'SINGLE_SELECT' ? 'ph-check-circle' : 'ph-check-square';
+
+            question.options.forEach(opt => {
+                optionsHtml += `
+                    <label class="answer-option" data-question-id="${question.id}" for="opt_${question.id}_${opt.id}">
+                        <input type="${inputType}" id="opt_${question.id}_${opt.id}" name="q_${question.id}" value="${opt.id}">
+                        <i class="ph ${icon}" data-icon="${icon}" data-icon-selected="${iconSelected}"></i>
+                        <span>${opt.text}</span>
+                    </label>`;
+            });
+        } else if (questionType === 'TEXT') {
+            optionsHtml = `
+                <input type="text" class="text-input" data-question-id="${question.id}" placeholder="Type your answer here">
+            `;
+        } else if (questionType === 'IMAGE_MC') {
+            question.options.forEach(opt => {
+                optionsHtml += `
+                    <label class="answer-option" data-question-id="${question.id}" for="opt_${question.id}_${opt.id}">
+                        <input type="radio" id="opt_${question.id}_${opt.id}" name="q_${question.id}" value="${opt.id}">
+                        <i class="ph ph-circle" data-icon="ph-circle" data-icon-selected="ph-check-circle"></i>
+                        <span>${opt.text}</span>
+                    </label>`;
+            });
+            optionsHtml = `
+                <img src="/${question.image}" class="image-mcq" alt="Question image" onerror="this.style.display='none';this.nextElementSibling.style.display='block';">
+                <div class="image-error" style="display:none;">Image failed to load. Please select an answer based on the options.</div>
+                ${optionsHtml}
+            `;
+        } else if (questionType === 'DRAG_DROP') {
+            let sentenceHtml = question.sentence_parts.map((part, index) => {
+                if (part === null) {
+                    return `<span class="drop-zone" data-index="${index}" data-question-id="${question.id}"></span>`;
+                }
+                return `<span>${part}</span>`;
+            }).join(' ');
+
+            let draggableOptionsHtml = question.draggable_options.map(opt => {
+                return `<span class="draggable-option" draggable="true" data-option-id="${opt.id}">${opt.text}</span>`;
+            }).join('');
+
+            optionsHtml = `
+                <div class="drag-drop-container">${sentenceHtml}</div>
+                <div class="drag-drop-options">${draggableOptionsHtml}</div>
+            `;
+        }
+
+        container.innerHTML = `
+            <h4 class="font-weight-bold mb-4">${currentQuestionIndex + 1}. ${question.question}</h4>
+            <div class="answer-container">${optionsHtml}</div>
+        `;
+
+        if (questionType === 'DRAG_DROP') {
+            setupDragAndDrop(question.id);
+        }
+    }
+
+    // --- DRAG AND DROP ---
+    function setupDragAndDrop(questionId) {
+        const container = document.getElementById(`question-${questionId}`);
+        const draggables = container.querySelectorAll('.draggable-option');
+        const dropZones = container.querySelectorAll('.drop-zone');
+
+        draggables.forEach(draggable => {
+            draggable.addEventListener('dragstart', (e) => {
+                e.dataTransfer.setData('text/plain', e.target.dataset.optionId);
+                e.target.classList.add('dragging');
+            });
+            draggable.addEventListener('dragend', (e) => {
+                e.target.classList.remove('dragging');
+            });
+        });
+
+        dropZones.forEach(zone => {
+            zone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+            });
+            zone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                const optionId = e.dataTransfer.getData('text/plain');
+                const draggable = container.querySelector(`.draggable-option[data-option-id="${optionId}"]`);
+                if (zone.innerHTML === '' && draggable) {
+                    zone.innerHTML = draggable.textContent;
+                    zone.dataset.optionId = optionId;
+                    zone.classList.add('filled');
+                    draggable.style.display = 'none';
+                }
+            });
+        });
+    }
+
+    // --- UI & NAVIGATION ---
+    function updateUI() {
+        const progress = totalQuestions > 0 ? ((currentQuestionIndex + 1) / totalQuestions) * 100 : 0;
+        progressBar.style.width = `${progress}%`;
+        progressText.textContent = `Question ${currentQuestionIndex + 1} of ${totalQuestions}`;
+        track.style.transform = `translateX(-${currentQuestionIndex * 100}%)`;
+        prevBtn.disabled = currentQuestionIndex === 0;
+        nextBtn.innerHTML = currentQuestionIndex === totalQuestions - 1 ?
+            'Submit Quiz <i class="ph ph-paper-plane-tilt"></i>' :
+            'Save & Next <i class="ph ph-arrow-right"></i>';
+        restoreAnswer();
+    }
+
+    function goToNextQuestion() {
+        if (!hasValidAnswer()) {
+            alert('Please provide an answer before proceeding.');
+            return;
+        }
+        saveCurrentAnswer();
+        if (currentQuestionIndex < totalQuestions - 1) {
+            currentQuestionIndex++;
+            updateUI();
+        } else {
+            showResults();
+        }
+    }
+
+    function goToPrevQuestion() {
+        saveCurrentAnswer();
+        if (currentQuestionIndex > 0) {
+            currentQuestionIndex--;
+            updateUI();
+        }
+    }
+
+    function hasValidAnswer() {
+        const question = questions[currentQuestionIndex];
+        const container = document.getElementById(`question-${question.id}`);
+        if (!container) return false;
+
+        if (question.type === 'SINGLE_SELECT' || question.type === 'IMAGE_MC') {
+            return !!container.querySelector(`input[name="q_${question.id}"]:checked`);
+        } else if (question.type === 'MULTIPLE_SELECT') {
+            return container.querySelectorAll(`input[name="q_${question.id}"]:checked`).length > 0;
+        } else if (question.type === 'TEXT') {
+            const input = container.querySelector('.text-input');
+            return input && input.value.trim() !== '';
+        } else if (question.type === 'DRAG_DROP') {
+            const dropZones = container.querySelectorAll('.drop-zone');
+            return Array.from(dropZones).every(zone => zone.innerHTML !== '');
+        }
+        return false;
+    }
+
+    // --- ANSWER HANDLING ---
+    function handleOptionSelect(e) {
+        const label = e.target.closest('.answer-option');
+        if (!label) return;
+
+        const input = label.querySelector('input');
+        if (!input) return;
+
+        const questionId = label.dataset.questionId;
+        const question = questions.find(q => q.id == questionId);
+
+        if (question.type === 'SINGLE_SELECT' || question.type === 'IMAGE_MC') {
+            document.querySelectorAll(`.answer-option[data-question-id="${questionId}"]`).forEach(lbl => {
+                if (lbl !== label) {
+                    lbl.classList.remove('selected');
+                    const otherInput = lbl.querySelector('input');
+                    if (otherInput) otherInput.checked = false;
+                    const otherIcon = lbl.querySelector('.ph');
+                    if (otherIcon) otherIcon.className = `ph ${otherIcon.dataset.icon}`;
+                }
+            });
+        }
+
+        const isSelected = !label.classList.contains('selected');
+        label.classList.toggle('selected', isSelected);
+        input.checked = isSelected;
+        const icon = label.querySelector('.ph');
+        if (icon) {
+            icon.className = `ph ${isSelected ? icon.dataset.iconSelected : icon.dataset.icon}`;
+        }
+    }
+
+    function saveCurrentAnswer() {
+        const question = questions[currentQuestionIndex];
+        const container = document.getElementById(`question-${question.id}`);
+        if (!container) return;
+
+        if (question.type === 'SINGLE_SELECT' || question.type === 'IMAGE_MC') {
+            const selectedRadio = container.querySelector(`input[name="q_${question.id}"]:checked`);
+            userAnswers[question.id] = selectedRadio ? selectedRadio.value : null;
+        } else if (question.type === 'MULTIPLE_SELECT') {
+            const selectedCheckboxes = Array.from(container.querySelectorAll(`input[name="q_${question.id}"]:checked`));
+            userAnswers[question.id] = selectedCheckboxes.map(cb => cb.value);
+        } else if (question.type === 'TEXT') {
+            const input = container.querySelector('.text-input');
+            userAnswers[question.id] = input ? input.value.trim() : null;
+        } else if (question.type === 'DRAG_DROP') {
+            const dropZones = container.querySelectorAll('.drop-zone');
+            const mapping = {};
+            dropZones.forEach(zone => {
+                if (zone.dataset.index && zone.dataset.optionId) {
+                    mapping[zone.dataset.index] = zone.dataset.optionId;
+                }
+            });
+            userAnswers[question.id] = mapping;
+        }
+    }
+
+    function restoreAnswer() {
+        const question = questions[currentQuestionIndex];
+        const savedAnswer = userAnswers[question.id];
+        if (savedAnswer === undefined) return;
+
+        const container = document.getElementById(`question-${question.id}`);
+        if (question.type === 'SINGLE_SELECT' || question.type === 'MULTIPLE_SELECT' || question.type === 'IMAGE_MC') {
+            container.querySelectorAll('.answer-option').forEach(label => {
+                const input = label.querySelector('input');
+                if (!input) return;
+                let isSelected = false;
+                if (Array.isArray(savedAnswer)) {
+                    isSelected = savedAnswer.includes(input.value);
+                } else {
+                    isSelected = savedAnswer === input.value;
+                }
+                label.classList.toggle('selected', isSelected);
+                input.checked = isSelected;
+                const icon = label.querySelector('.ph');
+                if (icon) {
+                    icon.className = `ph ${isSelected ? icon.dataset.iconSelected : icon.dataset.icon}`;
+                }
+            });
+        } else if (question.type === 'TEXT') {
+            const input = container.querySelector('.text-input');
+            if (input && savedAnswer) {
+                input.value = savedAnswer;
+            }
+        } else if (question.type === 'DRAG_DROP') {
+            const dropZones = container.querySelectorAll('.drop-zone');
+            dropZones.forEach(zone => {
+                const index = zone.dataset.index;
+                if (savedAnswer[index]) {
+                    const option = question.draggable_options.find(opt => opt.id === savedAnswer[index]);
+                    if (option) {
+                        zone.innerHTML = option.text;
+                        zone.dataset.optionId = option.id;
+                        zone.classList.add('filled');
+                        const draggable = container.querySelector(`.draggable-option[data-option-id="${option.id}"]`);
+                        if (draggable) draggable.style.display = 'none';
+                    }
+                }
+            });
+        }
+    }
+
+    // --- RESULTS & SUBMISSION ---
+    function calculateScore() {
+        let score = 0;
+        questions.forEach(q => {
+            const userAnswer = userAnswers[q.id];
+            const correctAnswer = q.answer;
+            let isCorrect = false;
+
+            if (q.type === 'SINGLE_SELECT' || q.type === 'IMAGE_MC') {
+                isCorrect = userAnswer === correctAnswer;
+            } else if (q.type === 'MULTIPLE_SELECT') {
+                const correctAnswers = correctAnswer.split(',').sort();
+                isCorrect = Array.isArray(userAnswer) &&
+                    userAnswer.length === correctAnswers.length &&
+                    userAnswer.sort().every((val, index) => val === correctAnswers[index]);
+            } else if (q.type === 'TEXT') {
+                isCorrect = userAnswer && userAnswer.toLowerCase().trim() === correctAnswer.toLowerCase().trim();
+            } else if (q.type === 'DRAG_DROP') {
+                isCorrect = Object.keys(q.correct_mapping).every(index => {
+                    return userAnswer && userAnswer[index] === q.correct_mapping[index];
+                });
+            }
+
+            if (isCorrect) {
+                score += q.score_on_completion;
+            }
+        });
+        return score;
+    }
+
+    function showResults() {
+        const score = calculateScore();
+        const passed = score >= quizData.passing_marks;
+
+        document.getElementById('quiz-container').classList.add('d-none');
+        document.getElementById('quiz-navigation').classList.add('d-none');
+        document.getElementById('progress-bar').parentElement.classList.add('d-none');
+        progressText.classList.add('d-none');
+        document.getElementById('results-screen').classList.remove('d-none');
+
+        document.getElementById('results-icon').className = `results-icon ph ${passed ? 'ph-confetti pass' : 'ph-x-circle fail'}`;
+        document.getElementById('results-title').textContent = passed ? 'Congratulations, you passed!' : 'Better luck next time!';
+        document.getElementById('results-score').textContent = score;
+        document.getElementById('results-total-score').textContent = totalPossibleScore;
+        document.getElementById('results-message').textContent = `You needed ${quizData.passing_marks} points to pass.`;
+
+        if (passed) {
+            launchConfetti();
+        }
+    }
+
+    function launchConfetti() {
+        const canvas = document.getElementById('confetti-canvas');
+        const myConfetti = confetti.create(canvas, {
+            resize: true,
+            useWorker: true
+        });
+        myConfetti({
+            particleCount: 150,
+            spread: 180,
+            origin: { y: 0.6 }
+        });
+    }
+
+    // --- EVENT LISTENERS ---
+    nextBtn.addEventListener('click', goToNextQuestion);
+    prevBtn.addEventListener('click', goToPrevQuestion);
+    track.addEventListener('click', handleOptionSelect);
+
+    // Add direct input click handling for better reliability
+    track.addEventListener('change', (e) => {
+        if (e.target.matches('input[type="radio"], input[type="checkbox"]')) {
+            const label = e.target.closest('.answer-option');
+            if (label) {
+                handleOptionSelect({ target: label });
+            }
+        }
+    });
+
+    initializeQuiz();
+});
+</script>
+{% endblock script %}

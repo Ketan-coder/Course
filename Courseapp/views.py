@@ -2076,3 +2076,36 @@ def course_create_step_five(request, course_id=None) -> HttpResponse:
 def get_quiz_questions(request, quiz_id):
     quiz = Quiz.objects.get(id=quiz_id)
     return JsonResponse(quiz.questions, safe=False)
+
+
+def quiz_detail(request, quiz_id):
+    request.session["page"] = "course"
+    quiz = get_object_or_404(Quiz, id=quiz_id)
+
+    if not request.user.is_authenticated:
+        return redirect("login")
+
+    # This logic seems correct
+    profile = request.user.profile
+    if Instructor.objects.filter(profile=profile).exists():
+        return HttpResponse("Instructors cannot take quizzes.", status=403)
+
+    # 1. Get the questions dictionary from your model.
+    questions_dict = quiz.questions or {}
+
+    # 2. Build the exact data structure the JavaScript expects.
+    #    The JavaScript expects 'questions' to be an array of objects.
+    quiz_data_for_js = {
+        "id": quiz.id,
+        "title": quiz.title,
+        "passing_marks": quiz.passing_score, # Make sure your Quiz model has this field
+        "questions": list(questions_dict.values()) # Convert the questions dictionary to a list
+    }
+    print("Quiz Data for JS:", quiz_data_for_js)
+
+    # 3. Pass this complete structure to the template.
+    return render(request, "components/quiz_detail.html", {
+        "quiz": quiz,
+        "quiz_data": quiz_data_for_js, # Pass the newly created object
+        "quiz_id": quiz_id
+    })

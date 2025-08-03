@@ -29,21 +29,21 @@ def quiz_completion(sender, instance, created, **kwargs):
                     instance.questions[qid] = qdata
                 instance.save()
 
-# @receiver(post_save, sender=Course)
-# def update_earn_points(sender, instance, created, **kwargs):
-#     section_ids = instance.section.all().values_list('id', flat=True)
+@receiver(post_save, sender=Course)
+def update_earn_points(sender, instance, created, **kwargs):
+    section_ids = instance.section.all().values_list('id', flat=True)
 
-#     linked_quizzes = Quiz.objects.filter(
-#         Q(course_id=instance.id) | Q(section_id__in=section_ids)
-#     )
+    linked_quizzes = Quiz.objects.filter(
+        Q(course_id=instance.id) | Q(section_id__in=section_ids)
+    )
 
-#     total_score = 0
+    total_score = 0
 
-#     for quiz in linked_quizzes:
-#         if isinstance(quiz.question, dict):
-#             for q_id, q_data in quiz.question.items():
-#                 total_score += q_data.get('score_on_completion', 0)
+    for quiz in linked_quizzes:
+        if isinstance(quiz.question, dict):
+            for q_id, q_data in quiz.question.items():
+                total_score += q_data.get('score_on_completion', 0)
 
-#     if instance.extra_fields.get('score_on_completion') != total_score:
-#         instance.extra_fields['score_on_completion'] = total_score
-#         Course.objects.filter(pk=instance.pk).update(extra_fields=instance.extra_fields)
+    if instance.extra_fields.get('score_on_completion') != total_score:
+        instance.extra_fields['score_on_completion'] = total_score
+        Course.objects.filter(pk=instance.pk).update(extra_fields=instance.extra_fields)

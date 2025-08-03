@@ -49,7 +49,7 @@ class Course(models.Model):
     discount_price = models.DecimalField(max_digits=8, decimal_places=2, default=0.0, validators=[validate_discount])
     is_published = models.BooleanField(default=False)
     is_open_to_all = models.BooleanField(default=True)
-    # required_points = models.PositiveIntegerField(default=0, help_text="Required Points to Unlock the scores")
+    required_points = models.PositiveIntegerField(default=0, help_text="Required Points to Unlock the scores")
     is_bought_by_users = models.ManyToManyField('Users.Profile', related_name='bought_courses', blank=True)
     bookmarked_by_users = models.ManyToManyField('Users.Profile', related_name='bookmarked_courses', blank=True)
     completed_by_users = models.ManyToManyField('Users.Profile', related_name='completed_courses', blank=True)
