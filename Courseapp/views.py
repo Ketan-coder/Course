@@ -6,7 +6,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.db.models import Q
 from utils.models import Activity
 from Stock.models import Stock
-from .models import FAQ, Course, Language, Quiz, Section, Tag, Lesson, CourseNotes, Article
+from .models import FAQ, Course, Language, Quiz, Section, Tag, Lesson, CourseNotes, Article, QuizSubmission
 from Users.models import Instructor, Profile, Student
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
@@ -20,6 +20,7 @@ from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.core.exceptions import ValidationError
 from django.db.models import Avg
+from django.views.decorators.http import require_POST
 
 # def course_list(request) -> HttpResponse:
 #     courses: BaseManager[Course] = Course.objects.all()
@@ -2108,4 +2109,101 @@ def quiz_detail(request, quiz_id):
         "quiz": quiz,
         "quiz_data": quiz_data_for_js, # Pass the newly created object
         "quiz_id": quiz_id
+    })
+
+@require_POST
+# Use @csrf_exempt for simplicity in API endpoints, but ensure you have other
+# authentication/authorization in place (like checking request.user.is_authenticated).
+# For production, consider using Django REST Framework which handles this securely.
+@csrf_exempt
+def submit_quiz_api(request):
+    """
+    API endpoint to handle the final submission of a quiz.
+    Expects a JSON payload with the quiz_id and a submission object.
+    """
+    # Ensure the user is authenticated before processing
+    if not request.user.is_authenticated:
+        return JsonResponse({'status': 'error', 'message': 'Authentication required.'}, status=401)
+
+    try:
+        data = json.loads(request.body)
+        quiz_id = data.get('quiz_id')
+        submission_data = data.get('submission')
+
+        if not quiz_id or not submission_data:
+            return JsonResponse({'status': 'error', 'message': 'Missing quiz_id or submission data.'}, status=400)
+
+    except (json.JSONDecodeError, KeyError):
+        return JsonResponse({'status': 'error', 'message': 'Invalid JSON format.'}, status=400)
+
+    # --- Backend Validation and Processing ---
+    # It's crucial to re-validate everything on the backend as the frontend can be manipulated.
+    
+    quiz = get_object_or_404(Quiz, id=quiz_id)
+    questions = quiz.questions or {}
+    
+    final_score = 0
+    total_possible_score = 0
+    results_summary = {}
+
+    for question_id, submitted_answer_details in submission_data.items():
+        question_info = questions.get(str(question_id)) # Ensure keys are strings if needed
+        
+        if not question_info:
+            # Handle case where a question ID from the frontend doesn't exist on the backend
+            continue
+
+        question_score = question_info.get('score_on_completion', 0)
+        total_possible_score += question_score
+        
+        # Here you would implement your backend `check_answer` logic.
+        # This is a simplified example. You should have a robust function for this.
+        is_correct = False # Default to false
+        
+        # Example check for SINGLE_SELECT
+        if question_info.get('type') == 'SINGLE_SELECT':
+            if question_info.get('answer') == submitted_answer_details.get('user_answer'):
+                is_correct = True
+        
+        # Example check for MULTIPLE_SELECT
+        elif question_info.get('type') == 'MULTIPLE_SELECT':
+            correct_answers = sorted((question_info.get('answer') or '').split(','))
+            user_answers = sorted(submitted_answer_details.get('user_answer') or [])
+            if correct_answers == user_answers and correct_answers != ['']:
+                 is_correct = True
+        
+        # Add checks for TEXT and DRAG_DROP here...
+
+        if is_correct:
+            final_score += question_score
+
+        results_summary[question_id] = {
+            'is_correct': is_correct,
+            'score_awarded': final_score
+        }
+
+    # --- Save the attempt to the database ---
+    # Example of saving to a model. You will need to create this model.
+    try:
+        profile = request.user.profile # Assuming user has a one-to-one with a Profile model
+        QuizSubmission.objects.create(
+            user_profile=profile,
+            quiz=quiz,
+            score=final_score,
+            total=total_possible_score,
+            passed= bool(final_score >= quiz.passing_score),
+            answers=submission_data
+        )
+    except Exception as e:
+        # Log the error, e.g., logging.error(f"Failed to save quiz attempt: {e}")
+        return JsonResponse({'status': 'error', 'message': 'Could not save quiz attempt.'}, status=500)
+
+
+    # Return a success response
+    return JsonResponse({
+        'status': 'success',
+        'message': 'Quiz submitted successfully.',
+        'final_score': final_score,
+        'total_possible_score': total_possible_score,
+        'backend_results': results_summary # Optionally send back the backend's scoring
     })

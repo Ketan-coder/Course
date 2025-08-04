@@ -2,15 +2,23 @@
 {% load static %}
 
 {% block head %}
+<link href="https://cdn.jsdelivr.net/npm/halfmoon@2.0.1/css/halfmoon.min.css" rel="stylesheet" integrity="sha384-APseV2Wh8CIbyS12+JAE2iE26oHw35TzTpeH2x2D2U9c9S/2/w+y3d3D0kLzG2dj" crossorigin="anonymous">
+<script src="https://unpkg.com/@phosphor-icons/web"></script>
+
 <style>
     :root {
         --quiz-container-max-width: 800px;
         --quiz-transition-speed: 0.4s;
+        --hm-primary-bg-color-light: #e6f3ff;
+    }
+
+    body {
+        background-color: var(--hm-body-bg-color);
     }
 
     .quiz-wrapper {
         max-width: var(--quiz-container-max-width);
-        margin: 2rem auto;
+        margin: 3rem auto;
         padding: 0 1rem;
     }
 
@@ -33,6 +41,15 @@
     .question-card {
         background-color: var(--hm-content-bg-color);
         border: 1px solid var(--hm-border-color);
+        border-radius: var(--hm-border-radius-lg);
+        box-shadow: var(--hm-shadow-lg);
+        padding: 2rem 2.5rem;
+    }
+    
+    .question-title {
+        font-weight: 600;
+        font-size: 1.25rem;
+        margin-bottom: 2rem;
     }
 
     .answer-option {
@@ -43,45 +60,43 @@
         border-radius: var(--hm-border-radius);
         margin-bottom: 0.75rem;
         cursor: pointer;
-        transition: all 0.2s ease;
+        transition: all 0.2s ease-in-out;
+        transform: scale(1);
     }
-
     .answer-option:hover {
         border-color: var(--hm-primary-color);
         background-color: var(--hm-hover-bg-color);
+        transform: scale(1.02);
     }
-
     .answer-option input[type="radio"],
     .answer-option input[type="checkbox"] {
         display: none;
     }
-
     .answer-option.selected {
         background-color: var(--hm-primary-bg-color-light);
         border-color: var(--hm-primary-color);
         color: var(--hm-primary-text-color);
+        transform: scale(1.02);
+        box-shadow: 0 0 0 2px var(--hm-primary-color);
     }
-
     .answer-option .ph {
         font-size: 1.5rem;
         margin-right: 1rem;
+        transition: transform 0.2s ease;
     }
-
     .answer-option.selected .ph {
         font-weight: bold;
+        transform: scale(1.1);
     }
-
-    .text-input {
+    
+    .text-answer-input {
         width: 100%;
-        padding: 0.75rem;
-        border: 1px solid var(--hm-border-color);
+        padding: 0.75rem 1rem;
         border-radius: var(--hm-border-radius);
-        transition: border-color 0.2s ease;
-    }
-
-    .text-input:focus {
-        border-color: var(--hm-primary-color);
-        outline: none;
+        border: 1px solid var(--hm-border-color);
+        background-color: var(--hm-body-bg-color);
+        font-size: 1rem;
+        min-height: 120px;
     }
 
     .image-mcq {
@@ -94,54 +109,69 @@
     .image-error {
         color: var(--hm-danger-color);
         margin-bottom: 1rem;
+        display: none;
     }
 
-    .drag-drop-container {
+    .drag-drop-sentence {
+        font-size: 1.2rem;
+        line-height: 2.5;
+        padding: 1rem;
+        text-align: center;
+    }
+    .drop-zone {
+        display: inline-block;
+        min-width: 120px;
+        min-height: 40px;
+        padding: 0.2rem 0.5rem;
+        margin: 0 0.25em;
+        vertical-align: middle;
+        text-align: center;
+        border-bottom: 2px dashed var(--hm-primary-color);
+        background-color: var(--hm-hover-bg-color);
+        border-radius: var(--hm-border-radius-sm);
+        transition: all 0.2s ease;
+    }
+    .drop-zone.drag-over {
+        background-color: var(--hm-primary-bg-color-light);
+        border-bottom-style: solid;
+    }
+    .drop-zone.filled {
+        border-bottom-style: solid;
+        background-color: var(--hm-content-bg-color);
+        color: var(--hm-primary-text-color);
+        font-weight: 500;
+    }
+    .draggable-options-pool {
         display: flex;
         flex-wrap: wrap;
-        gap: 0.5rem;
-        margin-bottom: 1rem;
-    }
-
-    .drop-zone {
-        min-width: 100px;
-        min-height: 40px;
-        border: 2px dashed var(--hm-border-color);
-        display: inline-flex;
-        align-items: center;
         justify-content: center;
-        padding: 0.5rem;
-        border-radius: var(--hm-border-radius);
+        gap: 0.75rem;
+        padding: 1rem;
+        margin-top: 1rem;
+        border-top: 1px solid var(--hm-border-color);
     }
-
-    .drop-zone.filled {
-        border-style: solid;
-        background-color: var(--hm-primary-bg-color-light);
-    }
-
     .draggable-option {
         padding: 0.5rem 1rem;
         border: 1px solid var(--hm-border-color);
-        border-radius: var(--hm-border-radius);
-        cursor: move;
+        border-radius: var(--hm-border-radius-lg);
+        cursor: grab;
         background-color: var(--hm-content-bg-color);
+        transition: opacity 0.2s ease, transform 0.2s ease;
     }
-
     .draggable-option.dragging {
         opacity: 0.5;
+        transform: scale(0.95);
     }
 
     .results-card {
         text-align: center;
+        box-shadow: var(--hm-shadow-lg);
     }
-
     .results-icon {
         font-size: 5rem;
     }
-
     .results-icon.pass { color: var(--hm-success-color); }
     .results-icon.fail { color: var(--hm-danger-color); }
-
     #confetti-canvas {
         position: absolute;
         top: 0;
@@ -151,6 +181,12 @@
         pointer-events: none;
         z-index: 1000;
     }
+
+    .error-message {
+        color: var(--hm-danger-color);
+        margin-top: 1rem;
+        display: none;
+    }
 </style>
 {% endblock head %}
 
@@ -158,16 +194,15 @@
 {{ quiz_data|json_script:"quiz-data-json" }}
 
 <div class="quiz-wrapper">
-    <h1 id="quiz-title" class="text-center font-weight-bold"></h1>
+    <h1 id="quiz-title" class="text-center font-weight-bold mb-2"></h1>
     <p id="quiz-progress-text" class="text-center text-muted"></p>
 
-    <div class="progress my-4">
-        <div class="progress-bar" id="quiz-progress-bar" role="progressbar" style="width: 0%;"></div>
+    <div class="progress my-4" style="height: 8px;">
+        <div class="progress-bar rounded-pill" id="quiz-progress-bar" role="progressbar" style="width: 0%;"></div>
     </div>
 
     <div id="quiz-container" class="quiz-container">
-        <div id="questions-track" class="questions-track">
-        </div>
+        <div id="questions-track" class="questions-track"></div>
     </div>
 
     <div id="results-screen" class="d-none">
@@ -191,6 +226,7 @@
             Save & Next <i class="ph ph-arrow-right"></i>
         </button>
     </div>
+    <p id="error-message" class="error-message text-center">Please provide an answer before proceeding.</p>
 </div>
 {% endblock body %}
 
@@ -206,7 +242,7 @@ document.addEventListener("DOMContentLoaded", () => {
     let currentQuestionIndex = 0;
     let userAnswers = {};
     let totalPossibleScore = 0;
-    questions.forEach(q => totalPossibleScore += q.score_on_completion);
+    questions.forEach(q => totalPossibleScore += q.score_on_completion || 0);
 
     // --- DOM ELEMENTS ---
     const track = document.getElementById('questions-track');
@@ -214,6 +250,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const prevBtn = document.getElementById('prev-btn');
     const progressBar = document.getElementById('quiz-progress-bar');
     const progressText = document.getElementById('quiz-progress-text');
+    const errorMessage = document.getElementById('error-message');
 
     // --- INITIALIZATION ---
     function initializeQuiz() {
@@ -228,110 +265,77 @@ document.addEventListener("DOMContentLoaded", () => {
         questions.forEach((q, index) => {
             const slide = document.createElement('div');
             slide.className = 'question-slide';
-            slide.innerHTML = `<div class="card question-card p-4 p-lg-5" id="question-${q.id}"></div>`;
+            slide.innerHTML = `<div class="card question-card" id="question-${q.id}"></div>`;
             track.appendChild(slide);
-            renderQuestion(q);
+            renderQuestion(q, index);
         });
     }
 
-    function renderQuestion(question) {
+    function renderQuestion(question, index) {
         const container = document.getElementById(`question-${question.id}`);
         if (!container) return;
 
         let optionsHtml = '';
         const questionType = question.type;
 
-        if (questionType === 'SINGLE_SELECT' || questionType === 'MULTIPLE_SELECT') {
-            const inputType = questionType === 'SINGLE_SELECT' ? 'radio' : 'checkbox';
-            const icon = questionType === 'SINGLE_SELECT' ? 'ph-circle' : 'ph-square';
-            const iconSelected = questionType === 'SINGLE_SELECT' ? 'ph-check-circle' : 'ph-check-square';
-
-            question.options.forEach(opt => {
-                optionsHtml += `
-                    <label class="answer-option" data-question-id="${question.id}" for="opt_${question.id}_${opt.id}">
-                        <input type="${inputType}" id="opt_${question.id}_${opt.id}" name="q_${question.id}" value="${opt.id}">
-                        <i class="ph ${icon}" data-icon="${icon}" data-icon-selected="${iconSelected}"></i>
-                        <span>${opt.text}</span>
-                    </label>`;
-            });
-        } else if (questionType === 'TEXT') {
-            optionsHtml = `
-                <input type="text" class="text-input" data-question-id="${question.id}" placeholder="Type your answer here">
-            `;
-        } else if (questionType === 'IMAGE_MC') {
-            question.options.forEach(opt => {
-                optionsHtml += `
-                    <label class="answer-option" data-question-id="${question.id}" for="opt_${question.id}_${opt.id}">
-                        <input type="radio" id="opt_${question.id}_${opt.id}" name="q_${question.id}" value="${opt.id}">
-                        <i class="ph ph-circle" data-icon="ph-circle" data-icon-selected="ph-check-circle"></i>
-                        <span>${opt.text}</span>
-                    </label>`;
-            });
-            optionsHtml = `
-                <img src="/${question.image}" class="image-mcq" alt="Question image" onerror="this.style.display='none';this.nextElementSibling.style.display='block';">
-                <div class="image-error" style="display:none;">Image failed to load. Please select an answer based on the options.</div>
-                ${optionsHtml}
-            `;
-        } else if (questionType === 'DRAG_DROP') {
-            let sentenceHtml = question.sentence_parts.map((part, index) => {
-                if (part === null) {
-                    return `<span class="drop-zone" data-index="${index}" data-question-id="${question.id}"></span>`;
-                }
-                return `<span>${part}</span>`;
-            }).join(' ');
-
-            let draggableOptionsHtml = question.draggable_options.map(opt => {
-                return `<span class="draggable-option" draggable="true" data-option-id="${opt.id}">${opt.text}</span>`;
-            }).join('');
-
-            optionsHtml = `
-                <div class="drag-drop-container">${sentenceHtml}</div>
-                <div class="drag-drop-options">${draggableOptionsHtml}</div>
-            `;
+        switch (questionType) {
+            case 'SINGLE_SELECT':
+            case 'MULTIPLE_SELECT': {
+                const inputType = questionType === 'SINGLE_SELECT' ? 'radio' : 'checkbox';
+                const icon = questionType === 'SINGLE_SELECT' ? 'ph-circle' : 'ph-square';
+                const iconSelected = questionType === 'SINGLE_SELECT' ? 'ph-check-circle' : 'ph-check-square';
+                question.options.forEach(opt => {
+                    optionsHtml += `
+                        <label class="answer-option" data-question-id="${question.id}" for="opt_${question.id}_${opt.id}">
+                            <input type="${inputType}" id="opt_${question.id}_${opt.id}" name="q_${question.id}" value="${opt.id}">
+                            <i class="ph ${icon}" data-icon="${icon}" data-icon-selected="${iconSelected}"></i>
+                            <span>${opt.text}</span>
+                        </label>`;
+                });
+                break;
+            }
+            case 'IMAGE_MC': {
+                question.options.forEach(opt => {
+                    optionsHtml += `
+                        <label class="answer-option" data-question-id="${question.id}" for="opt_${question.id}_${opt.id}">
+                            <input type="radio" id="opt_${question.id}_${opt.id}" name="q_${question.id}" value="${opt.id}">
+                            <i class="ph ph-circle" data-icon="ph-circle" data-icon-selected="ph-check-circle"></i>
+                            <span>${opt.text}</span>
+                        </label>`;
+                });
+                optionsHtml = `
+                    <img src="/${question.image}" class="image-mcq" alt="Question image" onerror="this.style.display='none';this.nextElementSibling.style.display='block';">
+                    <div class="image-error">Image failed to load. Please select an answer based on the options.</div>
+                    ${optionsHtml}`;
+                break;
+            }
+            case 'TEXT': {
+                optionsHtml = `<textarea class="form-control text-answer-input" rows="4" placeholder="Type your answer here..." data-question-id="${question.id}"></textarea>`;
+                break;
+            }
+            case 'DRAG_DROP': {
+                const sentenceParts = Array.isArray(question.sentence_parts) ? question.sentence_parts : [];
+                const draggableOptions = Array.isArray(question.draggable_options) ? question.draggable_options : [];
+                const sentenceHtml = sentenceParts.map((part, i) => 
+                    part === null ? `<span class="drop-zone" data-index="${i}" data-question-id="${question.id}"></span>` : `<span>${part}</span>`
+                ).join('');
+                const draggablesHtml = draggableOptions.map(opt =>
+                    `<span class="draggable-option" draggable="true" data-id="${opt.id}">${opt.text}</span>`
+                ).join('');
+                optionsHtml = `
+                    <div class="drag-drop-sentence">${sentenceHtml}</div>
+                    <div class="draggable-options-pool">${draggablesHtml}</div>`;
+                break;
+            }
         }
-
+        
         container.innerHTML = `
-            <h4 class="font-weight-bold mb-4">${currentQuestionIndex + 1}. ${question.question}</h4>
-            <div class="answer-container">${optionsHtml}</div>
-        `;
-
+            <h4 class="question-title">${index + 1}. ${question.question}</h4>
+            <div class="answer-container">${optionsHtml}</div>`;
+        
         if (questionType === 'DRAG_DROP') {
-            setupDragAndDrop(question.id);
+            setupDragDrop(question.id);
         }
-    }
-
-    // --- DRAG AND DROP ---
-    function setupDragAndDrop(questionId) {
-        const container = document.getElementById(`question-${questionId}`);
-        const draggables = container.querySelectorAll('.draggable-option');
-        const dropZones = container.querySelectorAll('.drop-zone');
-
-        draggables.forEach(draggable => {
-            draggable.addEventListener('dragstart', (e) => {
-                e.dataTransfer.setData('text/plain', e.target.dataset.optionId);
-                e.target.classList.add('dragging');
-            });
-            draggable.addEventListener('dragend', (e) => {
-                e.target.classList.remove('dragging');
-            });
-        });
-
-        dropZones.forEach(zone => {
-            zone.addEventListener('dragover', (e) => {
-                e.preventDefault();
-            });
-            zone.addEventListener('drop', (e) => {
-                e.preventDefault();
-                const optionId = e.dataTransfer.getData('text/plain');
-                const draggable = container.querySelector(`.draggable-option[data-option-id="${optionId}"]`);
-                if (zone.innerHTML === '' && draggable) {
-                    zone.innerHTML = draggable.textContent;
-                    zone.dataset.optionId = optionId;
-                    zone.classList.add('filled');
-                    draggable.style.display = 'none';
-                }
-            });
-        });
     }
 
     // --- UI & NAVIGATION ---
@@ -344,12 +348,13 @@ document.addEventListener("DOMContentLoaded", () => {
         nextBtn.innerHTML = currentQuestionIndex === totalQuestions - 1 ?
             'Submit Quiz <i class="ph ph-paper-plane-tilt"></i>' :
             'Save & Next <i class="ph ph-arrow-right"></i>';
+        errorMessage.style.display = 'none';
         restoreAnswer();
     }
 
     function goToNextQuestion() {
         if (!hasValidAnswer()) {
-            alert('Please provide an answer before proceeding.');
+            errorMessage.style.display = 'block';
             return;
         }
         saveCurrentAnswer();
@@ -374,16 +379,18 @@ document.addEventListener("DOMContentLoaded", () => {
         const container = document.getElementById(`question-${question.id}`);
         if (!container) return false;
 
-        if (question.type === 'SINGLE_SELECT' || question.type === 'IMAGE_MC') {
-            return !!container.querySelector(`input[name="q_${question.id}"]:checked`);
-        } else if (question.type === 'MULTIPLE_SELECT') {
-            return container.querySelectorAll(`input[name="q_${question.id}"]:checked`).length > 0;
-        } else if (question.type === 'TEXT') {
-            const input = container.querySelector('.text-input');
-            return input && input.value.trim() !== '';
-        } else if (question.type === 'DRAG_DROP') {
-            const dropZones = container.querySelectorAll('.drop-zone');
-            return Array.from(dropZones).every(zone => zone.innerHTML !== '');
+        switch (question.type) {
+            case 'SINGLE_SELECT':
+            case 'IMAGE_MC':
+                return !!container.querySelector(`input[name="q_${question.id}"]:checked`);
+            case 'MULTIPLE_SELECT':
+                return container.querySelectorAll(`input[name="q_${question.id}"]:checked`).length > 0;
+            case 'TEXT':
+                const textarea = container.querySelector('.text-answer-input');
+                return textarea && textarea.value.trim() !== '';
+            case 'DRAG_DROP':
+                const dropZones = container.querySelectorAll('.drop-zone');
+                return Array.from(dropZones).every(zone => zone.children.length > 0);
         }
         return false;
     }
@@ -392,31 +399,26 @@ document.addEventListener("DOMContentLoaded", () => {
     function handleOptionSelect(e) {
         const label = e.target.closest('.answer-option');
         if (!label) return;
-
         const input = label.querySelector('input');
         if (!input) return;
-
         const questionId = label.dataset.questionId;
         const question = questions.find(q => q.id == questionId);
 
         if (question.type === 'SINGLE_SELECT' || question.type === 'IMAGE_MC') {
-            document.querySelectorAll(`.answer-option[data-question-id="${questionId}"]`).forEach(lbl => {
-                if (lbl !== label) {
-                    lbl.classList.remove('selected');
-                    const otherInput = lbl.querySelector('input');
-                    if (otherInput) otherInput.checked = false;
-                    const otherIcon = lbl.querySelector('.ph');
-                    if (otherIcon) otherIcon.className = `ph ${otherIcon.dataset.icon}`;
-                }
+            document.querySelectorAll(`.answer-option[data-question-id="${questionId}"]`).forEach(optLabel => {
+                const isClickedLabel = (optLabel === label);
+                optLabel.classList.toggle('selected', isClickedLabel);
+                const optInput = optLabel.querySelector('input');
+                if (optInput) optInput.checked = isClickedLabel;
+                const icon = optLabel.querySelector('.ph');
+                if (icon) icon.className = `ph ${isClickedLabel ? icon.dataset.iconSelected : icon.dataset.icon}`;
             });
-        }
-
-        const isSelected = !label.classList.contains('selected');
-        label.classList.toggle('selected', isSelected);
-        input.checked = isSelected;
-        const icon = label.querySelector('.ph');
-        if (icon) {
-            icon.className = `ph ${isSelected ? icon.dataset.iconSelected : icon.dataset.icon}`;
+        } else if (question.type === 'MULTIPLE_SELECT') {
+            const isSelected = !label.classList.contains('selected');
+            label.classList.toggle('selected', isSelected);
+            input.checked = isSelected;
+            const icon = label.querySelector('.ph');
+            if (icon) icon.className = `ph ${isSelected ? icon.dataset.iconSelected : icon.dataset.icon}`;
         }
     }
 
@@ -425,24 +427,31 @@ document.addEventListener("DOMContentLoaded", () => {
         const container = document.getElementById(`question-${question.id}`);
         if (!container) return;
 
-        if (question.type === 'SINGLE_SELECT' || question.type === 'IMAGE_MC') {
-            const selectedRadio = container.querySelector(`input[name="q_${question.id}"]:checked`);
-            userAnswers[question.id] = selectedRadio ? selectedRadio.value : null;
-        } else if (question.type === 'MULTIPLE_SELECT') {
-            const selectedCheckboxes = Array.from(container.querySelectorAll(`input[name="q_${question.id}"]:checked`));
-            userAnswers[question.id] = selectedCheckboxes.map(cb => cb.value);
-        } else if (question.type === 'TEXT') {
-            const input = container.querySelector('.text-input');
-            userAnswers[question.id] = input ? input.value.trim() : null;
-        } else if (question.type === 'DRAG_DROP') {
-            const dropZones = container.querySelectorAll('.drop-zone');
-            const mapping = {};
-            dropZones.forEach(zone => {
-                if (zone.dataset.index && zone.dataset.optionId) {
-                    mapping[zone.dataset.index] = zone.dataset.optionId;
-                }
-            });
-            userAnswers[question.id] = mapping;
+        switch (question.type) {
+            case 'SINGLE_SELECT':
+            case 'IMAGE_MC': {
+                const selectedRadio = container.querySelector(`input[name="q_${question.id}"]:checked`);
+                userAnswers[question.id] = selectedRadio ? selectedRadio.value : null;
+                break;
+            }
+            case 'MULTIPLE_SELECT': {
+                const selectedCheckboxes = Array.from(container.querySelectorAll(`input[name="q_${question.id}"]:checked`));
+                userAnswers[question.id] = selectedCheckboxes.map(cb => cb.value);
+                break;
+            }
+            case 'TEXT': {
+                userAnswers[question.id] = container.querySelector('.text-answer-input').value.trim();
+                break;
+            }
+            case 'DRAG_DROP': {
+                const answer = {};
+                container.querySelectorAll('.drop-zone').forEach(zone => {
+                    const droppedItem = zone.querySelector('.draggable-option');
+                    answer[zone.dataset.index] = droppedItem ? droppedItem.dataset.id : null;
+                });
+                userAnswers[question.id] = answer;
+                break;
+            }
         }
     }
 
@@ -450,81 +459,134 @@ document.addEventListener("DOMContentLoaded", () => {
         const question = questions[currentQuestionIndex];
         const savedAnswer = userAnswers[question.id];
         if (savedAnswer === undefined) return;
-
         const container = document.getElementById(`question-${question.id}`);
-        if (question.type === 'SINGLE_SELECT' || question.type === 'MULTIPLE_SELECT' || question.type === 'IMAGE_MC') {
-            container.querySelectorAll('.answer-option').forEach(label => {
-                const input = label.querySelector('input');
-                if (!input) return;
-                let isSelected = false;
-                if (Array.isArray(savedAnswer)) {
-                    isSelected = savedAnswer.includes(input.value);
-                } else {
-                    isSelected = savedAnswer === input.value;
-                }
-                label.classList.toggle('selected', isSelected);
-                input.checked = isSelected;
-                const icon = label.querySelector('.ph');
-                if (icon) {
-                    icon.className = `ph ${isSelected ? icon.dataset.iconSelected : icon.dataset.icon}`;
-                }
-            });
-        } else if (question.type === 'TEXT') {
-            const input = container.querySelector('.text-input');
-            if (input && savedAnswer) {
-                input.value = savedAnswer;
+        if (!container) return;
+
+        switch (question.type) {
+            case 'SINGLE_SELECT':
+            case 'IMAGE_MC':
+            case 'MULTIPLE_SELECT': {
+                container.querySelectorAll('.answer-option').forEach(label => {
+                    const input = label.querySelector('input');
+                    const isSelected = Array.isArray(savedAnswer) ? savedAnswer.includes(input.value) : savedAnswer === input.value;
+                    label.classList.toggle('selected', isSelected);
+                    input.checked = isSelected;
+                    const icon = label.querySelector('.ph');
+                    if (icon) icon.className = `ph ${isSelected ? icon.dataset.iconSelected : icon.dataset.icon}`;
+                });
+                break;
             }
-        } else if (question.type === 'DRAG_DROP') {
-            const dropZones = container.querySelectorAll('.drop-zone');
-            dropZones.forEach(zone => {
-                const index = zone.dataset.index;
-                if (savedAnswer[index]) {
-                    const option = question.draggable_options.find(opt => opt.id === savedAnswer[index]);
-                    if (option) {
-                        zone.innerHTML = option.text;
-                        zone.dataset.optionId = option.id;
-                        zone.classList.add('filled');
-                        const draggable = container.querySelector(`.draggable-option[data-option-id="${option.id}"]`);
-                        if (draggable) draggable.style.display = 'none';
+            case 'TEXT': {
+                container.querySelector('.text-answer-input').value = savedAnswer || '';
+                break;
+            }
+            case 'DRAG_DROP': {
+                const pool = container.querySelector('.draggable-options-pool');
+                const allOptions = Array.from(pool.children);
+                container.querySelectorAll('.drop-zone').forEach(zone => {
+                    const index = zone.dataset.index;
+                    const droppedId = savedAnswer[index];
+                    if (droppedId) {
+                        const droppedOption = allOptions.find(opt => opt.dataset.id === droppedId);
+                        if (droppedOption) {
+                            zone.appendChild(droppedOption);
+                            zone.classList.add('filled');
+                        }
                     }
-                }
-            });
+                });
+                break;
+            }
         }
     }
 
-    // --- RESULTS & SUBMISSION ---
-    function calculateScore() {
-        let score = 0;
-        questions.forEach(q => {
-            const userAnswer = userAnswers[q.id];
-            const correctAnswer = q.answer;
-            let isCorrect = false;
+    // --- DRAG & DROP LOGIC ---
+    function setupDragDrop(questionId) {
+        const container = document.getElementById(`question-${questionId}`);
+        const draggables = container.querySelectorAll('.draggable-option');
+        const dropZones = container.querySelectorAll('.drop-zone');
+        const optionsPool = container.querySelector('.draggable-options-pool');
+        let draggedItem = null;
 
-            if (q.type === 'SINGLE_SELECT' || q.type === 'IMAGE_MC') {
-                isCorrect = userAnswer === correctAnswer;
-            } else if (q.type === 'MULTIPLE_SELECT') {
-                const correctAnswers = correctAnswer.split(',').sort();
-                isCorrect = Array.isArray(userAnswer) &&
-                    userAnswer.length === correctAnswers.length &&
-                    userAnswer.sort().every((val, index) => val === correctAnswers[index]);
-            } else if (q.type === 'TEXT') {
-                isCorrect = userAnswer && userAnswer.toLowerCase().trim() === correctAnswer.toLowerCase().trim();
-            } else if (q.type === 'DRAG_DROP') {
-                isCorrect = Object.keys(q.correct_mapping).every(index => {
-                    return userAnswer && userAnswer[index] === q.correct_mapping[index];
-                });
-            }
-
-            if (isCorrect) {
-                score += q.score_on_completion;
-            }
+        draggables.forEach(draggable => {
+            draggable.addEventListener('dragstart', (e) => {
+                draggedItem = e.target;
+                setTimeout(() => e.target.classList.add('dragging'), 0);
+            });
+            draggable.addEventListener('dragend', () => {
+                if (draggedItem) draggedItem.classList.remove('dragging');
+                draggedItem = null;
+            });
         });
-        return score;
+
+        const handleDrop = (targetContainer) => {
+            if (targetContainer.children.length > 0 && targetContainer.classList.contains('drop-zone')) {
+                optionsPool.appendChild(targetContainer.firstElementChild);
+            }
+            targetContainer.appendChild(draggedItem);
+            targetContainer.classList.add('filled');
+        };
+
+        dropZones.forEach(zone => {
+            zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
+            zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+            zone.addEventListener('drop', e => { e.preventDefault(); zone.classList.remove('drag-over'); handleDrop(zone); });
+        });
+
+        optionsPool.addEventListener('dragover', e => e.preventDefault());
+        optionsPool.addEventListener('drop', e => {
+            e.preventDefault();
+            const parentZone = draggedItem.closest('.drop-zone');
+            if (parentZone) parentZone.classList.remove('filled');
+            optionsPool.appendChild(draggedItem);
+        });
+    }
+
+    // --- RESULTS & SUBMISSION ---
+    function checkAnswer(question, userAnswer) {
+        const correctAnswer = question.answer;
+        if (!userAnswer) return false;
+
+        if (question.type === 'SINGLE_SELECT' || question.type === 'IMAGE_MC' || question.type === 'TEXT') {
+            return typeof userAnswer === 'string' && typeof correctAnswer === 'string' && userAnswer.toLowerCase().trim() === correctAnswer.toLowerCase().trim();
+        } else if (question.type === 'MULTIPLE_SELECT') {
+            const correctAnswers = correctAnswer.split(',').sort();
+            return Array.isArray(userAnswer) && userAnswer.length === correctAnswers.length && userAnswer.sort().every((val, i) => val === correctAnswers[i]);
+        } else if (question.type === 'DRAG_DROP') {
+            const correctMapping = question.correct_mapping || {};
+            return Object.keys(correctMapping).length > 0 && Object.keys(correctMapping).every(index => correctMapping[index] === userAnswer[index]);
+        }
+        return false;
+    }
+
+    function finalizeAndSubmitQuiz() {
+        const submission = {};
+        questions.forEach(q => {
+            const isCorrect = checkAnswer(q, userAnswers[q.id]);
+            submission[q.id] = {
+                type: q.type,
+                user_answer: userAnswers[q.id] || null,
+                is_correct: isCorrect,
+                score_awarded: isCorrect ? (q.score_on_completion || 0) : 0
+            };
+        });
+
+        const finalPayload = {
+            quiz_id: quizData.id,
+            submission: submission
+        };
+
+        console.log("Final payload to be sent to backend:", JSON.stringify(finalPayload, null, 2));
     }
 
     function showResults() {
-        const score = calculateScore();
-        const passed = score >= quizData.passing_marks;
+        let score = 0;
+        Object.values(userAnswers).forEach((ans, index) => {
+            if (checkAnswer(questions[index], ans)) {
+                score += questions[index].score_on_completion || 0;
+            }
+        });
+        
+        const passed = score >= (quizData.passing_marks || 0);
 
         document.getElementById('quiz-container').classList.add('d-none');
         document.getElementById('quiz-navigation').classList.add('d-none');
@@ -532,36 +594,44 @@ document.addEventListener("DOMContentLoaded", () => {
         progressText.classList.add('d-none');
         document.getElementById('results-screen').classList.remove('d-none');
 
-        document.getElementById('results-icon').className = `results-icon ph ${passed ? 'ph-confetti pass' : 'ph-x-circle fail'}`;
+        document.getElementById('results-icon').className = `results-icon ph ${passed ? 'ph-trophy pass' : 'ph-x-circle fail'}`;
         document.getElementById('results-title').textContent = passed ? 'Congratulations, you passed!' : 'Better luck next time!';
         document.getElementById('results-score').textContent = score;
         document.getElementById('results-total-score').textContent = totalPossibleScore;
-        document.getElementById('results-message').textContent = `You needed ${quizData.passing_marks} points to pass.`;
+        document.getElementById('results-message').textContent = `You needed ${quizData.passing_marks || 0} points to pass.`;
 
         if (passed) {
-            launchConfetti();
+            launchConfetti(score, totalPossibleScore);
         }
+
+        finalizeAndSubmitQuiz();
     }
 
-    function launchConfetti() {
+    function launchConfetti(score, totalScore) {
         const canvas = document.getElementById('confetti-canvas');
-        const myConfetti = confetti.create(canvas, {
-            resize: true,
-            useWorker: true
-        });
+        if (!canvas || typeof confetti === 'undefined') return;
+        const myConfetti = confetti.create(canvas, { resize: true, useWorker: true });
+        
+        const intensity = totalScore > 0 ? score / totalScore : 0;
+        
         myConfetti({
-            particleCount: 150,
-            spread: 180,
-            origin: { y: 0.6 }
+            particleCount: 100 + (200 * intensity),
+            spread: 90 + (90 * intensity),
+            origin: { y: 0.6 },
+            drift: intensity > 0.5 ? 0 : (0.5 - intensity) * 0.2,
+            ticks: 200 + (200 * intensity)
         });
+
+        if (intensity > 0.9) {
+            setTimeout(() => myConfetti({ particleCount: 100, spread: 120, startVelocity: 45, origin: { x: 0.1, y: 0.8 } }), 200);
+            setTimeout(() => myConfetti({ particleCount: 100, spread: 120, startVelocity: 45, origin: { x: 0.9, y: 0.8 } }), 400);
+        }
     }
 
     // --- EVENT LISTENERS ---
     nextBtn.addEventListener('click', goToNextQuestion);
     prevBtn.addEventListener('click', goToPrevQuestion);
     track.addEventListener('click', handleOptionSelect);
-
-    // Add direct input click handling for better reliability
     track.addEventListener('change', (e) => {
         if (e.target.matches('input[type="radio"], input[type="checkbox"]')) {
             const label = e.target.closest('.answer-option');
