@@ -92,6 +92,10 @@ class Course(models.Model):
         if auto_save:
             super(Course, self).save(update_fields=['qr_code'])
 
+    def get_absolute_url(self):
+        from django.urls import reverse
+        return reverse('course_detail', kwargs={'pk': self.pk})
+
 
     @check_load_time
     @retry_on_failure(retries=3, delay=2)

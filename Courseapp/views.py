@@ -2082,7 +2082,7 @@ def get_quiz_questions(request, quiz_id):
 def quiz_detail(request, quiz_id):
     request.session["page"] = "course"
     quiz = get_object_or_404(Quiz, id=quiz_id)
-
+    rediect_url = ""
     if not request.user.is_authenticated:
         return redirect("login")
 
@@ -2090,6 +2090,24 @@ def quiz_detail(request, quiz_id):
     profile = request.user.profile
     if Instructor.objects.filter(profile=profile).exists():
         return HttpResponse("Instructors cannot take quizzes.", status=403)
+    
+    #  Ensure the quiz is linked to a section/course/lesson
+    if not (quiz.section or quiz.course or quiz.lesson):
+        return HttpResponse("This quiz is not linked to any section, course, or lesson.", status=404)
+    
+    if not quiz.questions:
+        return HttpResponse("This quiz has no questions.", status=404)
+    
+    if quiz.is_deleted:
+        return HttpResponse("This quiz has been deleted.", status=404)
+    
+    if quiz.course:
+        rediect_url = quiz.course.get_absolute_url()
+    elif quiz.section:
+        rediect_url = Course.objects.filter(sections=quiz.section).first().get_absolute_url()
+    elif quiz.lesson:
+        filtered_section = Section.objects.filter(lessons=quiz.lesson).first()
+        rediect_url = Course.objects.filter(sections=filtered_section).first().get_absolute_url()
 
     # 1. Get the questions dictionary from your model.
     questions_dict = quiz.questions or {}
@@ -2108,20 +2126,14 @@ def quiz_detail(request, quiz_id):
     return render(request, "components/quiz_detail.html", {
         "quiz": quiz,
         "quiz_data": quiz_data_for_js, # Pass the newly created object
-        "quiz_id": quiz_id
+        "quiz_id": quiz_id,
+        "is_completed": quiz.completed_by_users.filter(id=profile.id).exists(),
+        "redirect_url": rediect_url
     })
 
 @require_POST
-# Use @csrf_exempt for simplicity in API endpoints, but ensure you have other
-# authentication/authorization in place (like checking request.user.is_authenticated).
-# For production, consider using Django REST Framework which handles this securely.
 @csrf_exempt
 def submit_quiz_api(request):
-    """
-    API endpoint to handle the final submission of a quiz.
-    Expects a JSON payload with the quiz_id and a submission object.
-    """
-    # Ensure the user is authenticated before processing
     if not request.user.is_authenticated:
         return JsonResponse({'status': 'error', 'message': 'Authentication required.'}, status=401)
 
@@ -2132,78 +2144,67 @@ def submit_quiz_api(request):
 
         if not quiz_id or not submission_data:
             return JsonResponse({'status': 'error', 'message': 'Missing quiz_id or submission data.'}, status=400)
-
-    except (json.JSONDecodeError, KeyError):
+    except (json.JSONDecodeError, KeyError) as e:
         return JsonResponse({'status': 'error', 'message': 'Invalid JSON format.'}, status=400)
 
-    # --- Backend Validation and Processing ---
-    # It's crucial to re-validate everything on the backend as the frontend can be manipulated.
-    
     quiz = get_object_or_404(Quiz, id=quiz_id)
     questions = quiz.questions or {}
-    
+
     final_score = 0
     total_possible_score = 0
-    results_summary = {}
+    backend_results = {}
 
     for question_id, submitted_answer_details in submission_data.items():
-        question_info = questions.get(str(question_id)) # Ensure keys are strings if needed
-        
+        question_info = questions.get(str(question_id))
         if not question_info:
-            # Handle case where a question ID from the frontend doesn't exist on the backend
+            print(f"Question {question_id} not found in quiz questions.")
             continue
 
+        # Pull score from question metadata
         question_score = question_info.get('score_on_completion', 0)
         total_possible_score += question_score
-        
-        # Here you would implement your backend `check_answer` logic.
-        # This is a simplified example. You should have a robust function for this.
-        is_correct = False # Default to false
-        
-        # Example check for SINGLE_SELECT
-        if question_info.get('type') == 'SINGLE_SELECT':
-            if question_info.get('answer') == submitted_answer_details.get('user_answer'):
-                is_correct = True
-        
-        # Example check for MULTIPLE_SELECT
-        elif question_info.get('type') == 'MULTIPLE_SELECT':
-            correct_answers = sorted((question_info.get('answer') or '').split(','))
-            user_answers = sorted(submitted_answer_details.get('user_answer') or [])
-            if correct_answers == user_answers and correct_answers != ['']:
-                 is_correct = True
-        
-        # Add checks for TEXT and DRAG_DROP here...
 
+        # Pull correctness and score from frontend submission
+        is_correct = submitted_answer_details.get("is_correct", False)
+        score_awarded = submitted_answer_details.get("score_awarded", 0)
+
+        # Validate score on backend just in case
         if is_correct:
+            score_awarded = question_score
             final_score += question_score
+        else:
+            score_awarded = 0
 
-        results_summary[question_id] = {
-            'is_correct': is_correct,
-            'score_awarded': final_score
+        backend_results[question_id] = {
+            "is_correct": is_correct,
+            "score_awarded": score_awarded,
+            "user_answer": submitted_answer_details.get("user_answer")
         }
 
-    # --- Save the attempt to the database ---
-    # Example of saving to a model. You will need to create this model.
+    # Save attempt
     try:
-        profile = request.user.profile # Assuming user has a one-to-one with a Profile model
+        profile = request.user.profile
         QuizSubmission.objects.create(
-            user_profile=profile,
+            user=profile,
             quiz=quiz,
             score=final_score,
             total=total_possible_score,
-            passed= bool(final_score >= quiz.passing_score),
-            answers=submission_data
+            passed=bool(final_score >= quiz.passing_score),
+            answers=backend_results  # Save normalized backend-evaluated results
         )
+        # check if every answer is correct
+        all_correct = all(result['is_correct'] for result in backend_results.values())
+        if all_correct:
+            quiz.completed_by_users.add(profile)
+            quiz.save()
     except Exception as e:
-        # Log the error, e.g., logging.error(f"Failed to save quiz attempt: {e}")
-        return JsonResponse({'status': 'error', 'message': 'Could not save quiz attempt.'}, status=500)
+        print("Could not save quiz attempt:", str(e))
+        return JsonResponse({'status': 'error', 'message': 'Could not save quiz attempt. Error: ' + str(e)}, status=500)
 
-
-    # Return a success response
     return JsonResponse({
         'status': 'success',
         'message': 'Quiz submitted successfully.',
         'final_score': final_score,
         'total_possible_score': total_possible_score,
-        'backend_results': results_summary # Optionally send back the backend's scoring
+        'backend_results': backend_results
     })

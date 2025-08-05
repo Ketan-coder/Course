@@ -308,11 +308,12 @@
     <!-- Main content -->
     
 
-    <body data-barba="wrapper">
-      <div data-barba="container" data-barba-namespace="{% block namespace %}default{% endblock %}">
-        {% block body %}
-        <!-- Your page content -->
-        {% endblock %}
+      <div data-barba="wrapper">
+        <div data-barba="container" data-barba-namespace="{% block namespace %}default{% endblock %}">
+          {% block body %}
+          <!-- Your page content -->
+          {% endblock %}
+        </div>
       </div>
     </body>
 
@@ -326,7 +327,7 @@
      <script type="module" src="{% static 'resoures/js/components/smart_list_tile.js' %}"></script>
      <script src="{% static 'resoures/js/script.js' %}"></script>
       <script src="{% static 'resoures/js/anime.js' %}"></script>
-     <script type="module">
+     {% comment %} <script type="module">
         import barba from 'https://cdn.skypack.dev/@barba/core';
 
         barba.init({
@@ -362,6 +363,123 @@
             container.style.opacity = 1;
           }, 10);
         }
+      </script> {% endcomment %}
+      <!-- Slide In transition -->
+      <script type="module">
+        import barba from 'https://cdn.skyPack.dev/@barba/core';
+      
+        // Create overlay element with Halfmoon variables
+        const overlay = document.createElement('div');
+        Object.assign(overlay.style, {
+          position: 'fixed',
+          top: '0',
+          left: '0',
+          width: '100%',
+          height: '100%',
+          backgroundColor: 'var(--dm-bg-color, #000)',
+          color: 'var(--dm-text-color, #fff)',
+          zIndex: '9999',
+          transform: 'translateX(-100%)',
+          //transition: 'transform 0.7s cubic-bezier(0.65, 0, 0.35, 1)',
+          transition: 'transform 0.7s cubic-bezier(.53,.55,.48,1.01)',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontFamily: 'var(--font-family)'
+        });
+      
+        // Create loading spinner container
+        const spinnerContainer = document.createElement('div');
+        spinnerContainer.style.textAlign = 'center';
+        spinnerContainer.style.padding = '2rem';
+        
+        // Create Halfmoon spinner
+        const spinner = document.createElement('div');
+        spinner.className = 'spinner';
+        spinner.style.width = '3rem';
+        spinner.style.height = '3rem';
+        spinner.style.border = '0.25rem solid var(--dm-text-color, #fff)';
+        spinner.style.borderRightColor = 'transparent';
+        spinner.style.borderRadius = '50%';
+        spinner.style.animation = 'spin 0.75s linear infinite';
+        spinner.style.margin = '0 auto 1rem';
+        
+        // Create loading text
+        const loadingText = document.createElement('div');
+        loadingText.textContent = 'Loading content for you...';
+        loadingText.style.fontSize = '1.25rem';
+        loadingText.style.fontWeight = '500';
+        
+        // Add spinner and text to container
+        spinnerContainer.appendChild(spinner);
+        spinnerContainer.appendChild(loadingText);
+        overlay.appendChild(spinnerContainer);
+        document.body.appendChild(overlay);
+      
+        // Add spin animation
+        const style = document.createElement('style');
+        style.textContent = `
+          @keyframes spin {
+            to { transform: rotate(360deg); }
+          }
+        `;
+        document.head.appendChild(style);
+      
+        barba.init({
+          transitions: [{
+            name: 'cinematic-slide-transition',
+            sync: true,
+            
+            once({ next }) {
+              overlay.style.transform = 'translateX(-100%)';
+              next.container.style.opacity = '1';
+            },
+            
+            leave({ current }) {
+              return new Promise((resolve) => {
+                current.container.style.transition = 'opacity 0.4s ease';
+                current.container.style.opacity = '0';
+                
+                setTimeout(() => {
+                  overlay.style.transform = 'translateX(0)';
+                }, 100);
+                
+                setTimeout(resolve, 800);
+              });
+            },
+            
+            enter({ next }) {
+              return new Promise((resolve) => {
+                next.container.style.opacity = '0';
+                next.container.style.transition = 'opacity 0.6s ease 0.3s';
+                
+                overlay.style.transform = 'translateX(+100%)';
+                
+                setTimeout(() => {
+                  next.container.style.opacity = '1';
+                }, 300);
+                
+                setTimeout(() => {
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                  resolve();
+                }, 900);
+              });
+            },
+            
+            afterEnter() {
+              setTimeout(() => {
+                overlay.style.transform = 'translateX(+100%)';
+              }, 100);
+            }
+          }]
+        });
+      
+        // Fallback for content visibility
+        document.addEventListener('DOMContentLoaded', () => {
+          const wrapper = document.querySelector('[data-barba="wrapper"]');
+          if (wrapper) wrapper.style.opacity = '1';
+        });
       </script>
 
      <script>

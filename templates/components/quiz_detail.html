@@ -10,6 +10,8 @@
         --quiz-container-max-width: 800px;
         --quiz-transition-speed: 0.4s;
         --hm-primary-bg-color-light: #e6f3ff;
+        --hm-success-bg-color-light: #e3fcef;
+        --hm-danger-bg-color-light: #fce8e8;
     }
 
     body {
@@ -35,7 +37,7 @@
     .question-slide {
         width: 100%;
         flex-shrink: 0;
-        padding: 0 0.5rem;
+       /* padding: 0 0.5rem; */
     }
 
     .question-card {
@@ -73,9 +75,9 @@
         display: none;
     }
     .answer-option.selected {
-        background-color: var(--hm-primary-bg-color-light);
+        background-color: var(--hm-primary-bg-color-dark);
         border-color: var(--hm-primary-color);
-        color: var(--hm-primary-text-color);
+        color: var(--hm-primary-color);
         transform: scale(1.02);
         box-shadow: 0 0 0 2px var(--hm-primary-color);
     }
@@ -166,12 +168,70 @@
     .results-card {
         text-align: center;
         box-shadow: var(--hm-shadow-lg);
+        border-width: 2px;
+        padding: 2.5rem 3rem;
+        border-radius: var(--hm-border-radius-xl);
+        transition: all 0.5s ease-in-out;
     }
+    .results-card.pass {
+        border-color: var(--hm-success-color);
+        background: radial-gradient(circle at top, var(--hm-success-bg-color-light) 0%, var(--hm-content-bg-color) 70%);
+        animation: celebrate 1.5s ease-in-out infinite alternate;
+    }
+    .results-card.fail {
+        border-color: var(--hm-danger-color);
+        background: radial-gradient(circle at top, var(--hm-danger-bg-color-light) 0%, var(--hm-content-bg-color) 70%);
+        animation: shake 0.5s ease-in-out;
+    }
+    @keyframes celebrate {
+        0% { transform: scale(1); }
+        100% { transform: scale(1.03); }
+    }
+    @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        25% { transform: translateX(-5px); }
+        75% { transform: translateX(5px); }
+    }
+
     .results-icon {
-        font-size: 5rem;
+        font-size: 6rem;
+        margin-bottom: 1.5rem;
+        transition: transform 0.5s ease;
     }
-    .results-icon.pass { color: var(--hm-success-color); }
-    .results-icon.fail { color: var(--hm-danger-color); }
+    .results-card.pass .results-icon {
+        color: var(--hm-success-color);
+        transform: scale(1.2) rotate(-10deg);
+    }
+    .results-card.fail .results-icon {
+        color: var(--hm-danger-color);
+        transform: scale(1.1);
+    }
+
+    .results-title {
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+    }
+    .results-card.pass .results-title { color: var(--hm-success-color); }
+    .results-card.fail .results-title { color: var(--hm-danger-color); }
+
+    .results-score {
+        font-size: 1.5rem;
+        margin: 1rem 0;
+    }
+    .results-card.pass .results-score { color: var(--hm-success-color-dark); }
+    .results-card.fail .results-score { color: var(--hm-danger-color-dark); }
+
+    .results-message {
+        font-size: 1.1rem;
+        margin-bottom: 2rem;
+        max-width: 600px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+    .results-card.pass .results-message { color: var(--hm-success-text-color); }
+    .results-card.fail .results-message { color: var(--hm-danger-text-color); }
+
     #confetti-canvas {
         position: absolute;
         top: 0;
@@ -180,6 +240,32 @@
         height: 100%;
         pointer-events: none;
         z-index: 1000;
+    }
+
+    .completed-screen {
+        text-align: center;
+        padding: 3rem 2rem;
+        background-color: var(--hm-content-bg-color);
+        border: 1px solid var(--hm-border-color);
+        border-radius: var(--hm-border-radius-lg);
+        box-shadow: var(--hm-shadow-lg);
+        max-width: 600px;
+        margin: 3rem auto;
+    }
+    .completed-screen .ph {
+        font-size: 4rem;
+        color: var(--hm-warning-color);
+        margin-bottom: 1rem;
+    }
+    .completed-screen h2 {
+        font-size: 1.75rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+    }
+    .completed-screen p {
+        font-size: 1.1rem;
+        color: var(--hm-text-color);
+        margin-bottom: 2rem;
     }
 
     .error-message {
@@ -206,16 +292,23 @@
     </div>
 
     <div id="results-screen" class="d-none">
-        <div class="card p-4 p-lg-5 results-card position-relative">
+        <div class="card p-4 p-lg-5 results-card position-relative text-center">
             <canvas id="confetti-canvas"></canvas>
             <i id="results-icon" class="ph"></i>
-            <h1 id="results-title" class="font-weight-bold mt-3"></h1>
-            <p class="font-size-20">You scored <strong id="results-score"></strong> out of <strong id="results-total-score"></strong>.</p>
-            <p id="results-message" class="text-muted"></p>
+            <h1 id="results-title" class="results-title"></h1>
+            <p class="results-score">You scored <strong id="results-score"></strong> out of <strong id="results-total-score"></strong>.</p>
+            <p id="results-message" class="results-message"></p>
             <div class="mt-4">
-                <a href="#" class="btn btn-primary">Back to Course</a>
+                <a href="{{redirect_url}}" class="btn btn-primary">Back to Course</a>
             </div>
         </div>
+    </div>
+
+    <div id="completed-screen" class="d-none completed-screen">
+        <i class="ph ph-check-circle"></i>
+        <h2>Quiz Completed</h2>
+        <p>You have already completed this quiz and cannot resubmit. Thank you for your participation!</p>
+        <a href="#" class="btn btn-primary">Back to Course</a>
     </div>
 
     <div id="quiz-navigation" class="d-flex justify-content-between mt-4">
@@ -242,6 +335,7 @@ document.addEventListener("DOMContentLoaded", () => {
     let currentQuestionIndex = 0;
     let userAnswers = {};
     let totalPossibleScore = 0;
+    const isCompleted = quizData.is_completed || false;
     questions.forEach(q => totalPossibleScore += q.score_on_completion || 0);
 
     // --- DOM ELEMENTS ---
@@ -251,10 +345,23 @@ document.addEventListener("DOMContentLoaded", () => {
     const progressBar = document.getElementById('quiz-progress-bar');
     const progressText = document.getElementById('quiz-progress-text');
     const errorMessage = document.getElementById('error-message');
+    const quizContainer = document.getElementById('quiz-container');
+    const quizNavigation = document.getElementById('quiz-navigation');
+    const resultsScreen = document.getElementById('results-screen');
+    const completedScreen = document.getElementById('completed-screen');
 
     // --- INITIALIZATION ---
     function initializeQuiz() {
         document.getElementById('quiz-title').textContent = quizData.title;
+        if (isCompleted) {
+            quizContainer.classList.add('d-none');
+            quizNavigation.classList.add('d-none');
+            const progressBarContainer = progressBar?.parentElement;
+            if (progressBarContainer) progressBarContainer.classList.add('d-none');
+            if (progressText) progressText.classList.add('d-none');
+            completedScreen.classList.remove('d-none');
+            return;
+        }
         renderAllQuestions();
         updateUI();
     }
@@ -340,6 +447,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // --- UI & NAVIGATION ---
     function updateUI() {
+        if (isCompleted) return;
         const progress = totalQuestions > 0 ? ((currentQuestionIndex + 1) / totalQuestions) * 100 : 0;
         progressBar.style.width = `${progress}%`;
         progressText.textContent = `Question ${currentQuestionIndex + 1} of ${totalQuestions}`;
@@ -348,6 +456,8 @@ document.addEventListener("DOMContentLoaded", () => {
         nextBtn.innerHTML = currentQuestionIndex === totalQuestions - 1 ?
             'Submit Quiz <i class="ph ph-paper-plane-tilt"></i>' :
             'Save & Next <i class="ph ph-arrow-right"></i>';
+        nextBtn.classList.remove('btn-success-light', 'btn-danger-light');
+        nextBtn.classList.add('btn-primary');
         errorMessage.style.display = 'none';
         restoreAnswer();
     }
@@ -358,12 +468,33 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
         saveCurrentAnswer();
-        if (currentQuestionIndex < totalQuestions - 1) {
-            currentQuestionIndex++;
-            updateUI();
+        const question = questions[currentQuestionIndex];
+        const isCorrect = checkAnswer(question, userAnswers[question.id]);
+
+        const originalText = nextBtn.innerHTML;
+        nextBtn.disabled = true;
+        nextBtn.classList.remove('btn-primary', 'btn-success-light', 'btn-danger-light');
+        if (isCorrect) {
+            nextBtn.classList.add('btn-success-light');
+            nextBtn.innerHTML = 'Correct! <i class="ph ph-check"></i>';
         } else {
-            showResults();
+            nextBtn.classList.add('btn-danger-light');
+            nextBtn.innerHTML = 'Incorrect <i class="ph ph-x"></i>';
         }
+
+        setTimeout(() => {
+            nextBtn.disabled = false;
+            nextBtn.classList.remove('btn-success-light', 'btn-danger-light');
+            nextBtn.classList.add('btn-primary');
+            nextBtn.innerHTML = originalText;
+
+            if (currentQuestionIndex < totalQuestions - 1) {
+                currentQuestionIndex++;
+                updateUI();
+            } else {
+                showResults();
+            }
+        }, 1000);
     }
 
     function goToPrevQuestion() {
@@ -375,6 +506,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function hasValidAnswer() {
+        if (isCompleted) return true;
         const question = questions[currentQuestionIndex];
         const container = document.getElementById(`question-${question.id}`);
         if (!container) return false;
@@ -423,6 +555,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function saveCurrentAnswer() {
+        if (isCompleted) return;
         const question = questions[currentQuestionIndex];
         const container = document.getElementById(`question-${question.id}`);
         if (!container) return;
@@ -456,6 +589,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function restoreAnswer() {
+        if (isCompleted) return;
         const question = questions[currentQuestionIndex];
         const savedAnswer = userAnswers[question.id];
         if (savedAnswer === undefined) return;
@@ -482,6 +616,7 @@ document.addEventListener("DOMContentLoaded", () => {
             }
             case 'DRAG_DROP': {
                 const pool = container.querySelector('.draggable-options-pool');
+                if (!pool) return;
                 const allOptions = Array.from(pool.children);
                 container.querySelectorAll('.drop-zone').forEach(zone => {
                     const index = zone.dataset.index;
@@ -501,6 +636,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // --- DRAG & DROP LOGIC ---
     function setupDragDrop(questionId) {
+        if (isCompleted) return;
         const container = document.getElementById(`question-${questionId}`);
         const draggables = container.querySelectorAll('.draggable-option');
         const dropZones = container.querySelectorAll('.drop-zone');
@@ -576,6 +712,25 @@ document.addEventListener("DOMContentLoaded", () => {
         };
 
         console.log("Final payload to be sent to backend:", JSON.stringify(finalPayload, null, 2));
+
+        // SEND DATA TO YOUR BACKEND
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || '';
+        fetch(`{% url 'submit_quiz_api' %}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify(finalPayload)
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('Backend response:', data);
+        })
+        .catch(error => {
+            console.error('Error submitting quiz:', error);
+        });
+
     }
 
     function showResults() {
@@ -590,11 +745,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
         document.getElementById('quiz-container').classList.add('d-none');
         document.getElementById('quiz-navigation').classList.add('d-none');
-        document.getElementById('progress-bar').parentElement.classList.add('d-none');
-        progressText.classList.add('d-none');
-        document.getElementById('results-screen').classList.remove('d-none');
+        const progressBarContainer = document.getElementById('quiz-progress-bar')?.parentElement;
+        if (progressBarContainer) progressBarContainer.classList.add('d-none');
+        if (progressText) progressText.classList.add('d-none');
+        
+        const resultsScreen = document.getElementById('results-screen');
+        const resultsCard = resultsScreen.querySelector('.results-card');
+        resultsScreen.classList.remove('d-none');
+        resultsCard.classList.add(passed ? 'pass' : 'fail');
 
-        document.getElementById('results-icon').className = `results-icon ph ${passed ? 'ph-trophy pass' : 'ph-x-circle fail'}`;
+        document.getElementById('results-icon').className = `results-icon ph ${passed ? 'ph-trophy' : 'ph-x-circle'}`;
         document.getElementById('results-title').textContent = passed ? 'Congratulations, you passed!' : 'Better luck next time!';
         document.getElementById('results-score').textContent = score;
         document.getElementById('results-total-score').textContent = totalPossibleScore;
