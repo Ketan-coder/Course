@@ -138,6 +138,7 @@
                                             {% if quiz.section.id == section.id and forloop.counter == 1 %}
                                                 <br>
                                                 <h4> Quizzes for this Section:</h4>
+                                                <a href="{% url 'quiz_detail' quiz.id %}" class="btn btn-primary mb-3">Start Quiz</a>
                                                 {% for questions in questions_list %}
 
                                                     {% if questions.type == "SINGLE_SELECT" %}
@@ -417,13 +418,20 @@
                                 {% endfor %}
 
                                 <!-- This is the orginal one -->
-                                {% comment %} <!-- Quiz Buttons -->
+                                <!-- Quiz Buttons -->
                                 {% for quiz in quizes %}
-                                {% if quiz.section.id == section.id %}
+                                {% if quiz.section.id == section.id and forloop.counter == 1 %}
                                     <br>
                                     <h4> Quizzes for this Section:</h4>
-
-                                    {% for questions in questions_list %}
+                                    {% if not i|has_completed_all_lessons:logged_in_profile %}
+                                    <span class="d-inline-block" tabindex="999" data-bs-toggle="popover" data-bs-placement="top" data-bs-content="Finish all lessons first" data-bs-trigger="hover focus">
+                                        <button type="button" class="btn btn-primary mb-3" disabled>Finish The Section</button>
+                                    </span>
+                                    {% else %}
+                                    <br>
+                                    <a href="{% url 'quiz_detail' quiz.id %}" class="btn btn-primary mb-3">Start Quiz</a>
+                                    {% endif %}
+                                    {% comment %} {% for questions in questions_list %}
 
                                         {% if questions.type == "SINGLE_SELECT" %}
                                         {% if not i|has_completed_all_lessons:logged_in_profile %}
@@ -494,10 +502,10 @@
                                         <p class="text-danger">Unsupported quiz type: {{ questions.type }}</p>
                                         {% endif %}
 
-                                    {% endfor %}
+                                    {% endfor %} {% endcomment %}
 
                                 {% endif %}
-                                {% endfor %} {% endcomment %}
+                                {% endfor %}
                     
                             </div>
                             {% endfor %}
