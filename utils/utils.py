@@ -248,3 +248,15 @@ Lesson Content:
     except Exception as e:
         print("Error parsing Gemini response:", e)
         return {}
+
+def generate_unique_code():
+    """
+    Generates a unique code for a course.
+    The code is a 6-character alphanumeric string.
+    """
+    import random
+    import string
+
+    characters = string.ascii_letters + string.digits
+    code = ''.join(random.choice(characters) for _ in range(6))
+    return code

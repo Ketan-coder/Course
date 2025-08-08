@@ -366,121 +366,130 @@
       </script> {% endcomment %}
       <!-- Slide In transition -->
       <script type="module">
-        import barba from 'https://cdn.skyPack.dev/@barba/core';
-      
-        // Create overlay element with Halfmoon variables
-        const overlay = document.createElement('div');
-        Object.assign(overlay.style, {
-          position: 'fixed',
-          top: '0',
-          left: '0',
-          width: '100%',
-          height: '100%',
-          backgroundColor: 'var(--dm-bg-color, #000)',
-          color: 'var(--dm-text-color, #fff)',
-          zIndex: '9999',
-          transform: 'translateX(-100%)',
-          //transition: 'transform 0.7s cubic-bezier(0.65, 0, 0.35, 1)',
-          transition: 'transform 0.7s cubic-bezier(.53,.55,.48,1.01)',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          fontFamily: 'var(--font-family)'
-        });
-      
-        // Create loading spinner container
-        const spinnerContainer = document.createElement('div');
-        spinnerContainer.style.textAlign = 'center';
-        spinnerContainer.style.padding = '2rem';
-        
-        // Create Halfmoon spinner
-        const spinner = document.createElement('div');
-        spinner.className = 'spinner';
-        spinner.style.width = '3rem';
-        spinner.style.height = '3rem';
-        spinner.style.border = '0.25rem solid var(--dm-text-color, #fff)';
-        spinner.style.borderRightColor = 'transparent';
-        spinner.style.borderRadius = '50%';
-        spinner.style.animation = 'spin 0.75s linear infinite';
-        spinner.style.margin = '0 auto 1rem';
-        
-        // Create loading text
-        const loadingText = document.createElement('div');
-        loadingText.textContent = 'Loading content for you...';
-        loadingText.style.fontSize = '1.25rem';
-        loadingText.style.fontWeight = '500';
-        
-        // Add spinner and text to container
-        spinnerContainer.appendChild(spinner);
-        spinnerContainer.appendChild(loadingText);
-        overlay.appendChild(spinnerContainer);
-        document.body.appendChild(overlay);
-      
-        // Add spin animation
-        const style = document.createElement('style');
-        style.textContent = `
-          @keyframes spin {
-            to { transform: rotate(360deg); }
+      import barba from 'https://cdn.skypack.dev/@barba/core';
+
+      // Create overlay element
+      const overlay = document.createElement('div');
+      Object.assign(overlay.style, {
+        position: 'fixed',
+        top: '0',
+        left: '0',
+        width: '100%',
+        height: '100%',
+        backgroundColor: 'var(--dm-bg-color, #000)',
+        color: 'var(--dm-text-color, #fff)',
+        zIndex: '9999',
+        transform: 'translateX(-100%)',
+        transition: 'transform 0.7s cubic-bezier(.53,.55,.48,1.01)',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontFamily: 'var(--font-family)'
+      });
+
+      // Create loading elements
+      const spinnerContainer = document.createElement('div');
+      spinnerContainer.innerHTML = `
+        <div style="text-align: center; padding: 2rem;">
+          <div class="spinner" style="width:3rem;height:3rem;border:0.25rem solid var(--dm-text-color, #fff);border-right-color:transparent;border-radius:50%;margin:0 auto 1rem;animation:spin 0.75s linear infinite"></div>
+          <div style="font-size:1.25rem;font-weight:500">Loading content for you...</div>
+        </div>
+      `;
+      overlay.appendChild(spinnerContainer);
+      document.body.appendChild(overlay);
+
+      // Add spin animation
+      document.head.insertAdjacentHTML('beforeend', `
+        <style>
+          @keyframes spin { to { transform: rotate(360deg); } }
+        </style>
+      `);
+
+      // Custom transition rules
+      const customTransitions = [
+        {
+          name: 'course-detail-exit',
+          from: { namespace: ['course-detail'] },
+          to: { namespace: ['default'] },
+          leave({ current }) {
+            return new Promise(resolve => {
+              current.container.style.opacity = '0';
+              current.container.style.transition = 'opacity 0.3s ease';
+              setTimeout(resolve, 300);
+            });
           }
-        `;
-        document.head.appendChild(style);
-      
-        barba.init({
-          transitions: [{
-            name: 'cinematic-slide-transition',
-            sync: true,
-            
-            once({ next }) {
-              overlay.style.transform = 'translateX(-100%)';
-              next.container.style.opacity = '1';
-            },
-            
-            leave({ current }) {
-              return new Promise((resolve) => {
-                current.container.style.transition = 'opacity 0.4s ease';
-                current.container.style.opacity = '0';
-                
-                setTimeout(() => {
-                  overlay.style.transform = 'translateX(0)';
-                }, 100);
-                
-                setTimeout(resolve, 800);
-              });
-            },
-            
-            enter({ next }) {
-              return new Promise((resolve) => {
-                next.container.style.opacity = '0';
-                next.container.style.transition = 'opacity 0.6s ease 0.3s';
-                
-                overlay.style.transform = 'translateX(+100%)';
-                
-                setTimeout(() => {
-                  next.container.style.opacity = '1';
-                }, 300);
-                
-                setTimeout(() => {
-                  window.scrollTo({ top: 0, behavior: 'smooth' });
-                  resolve();
-                }, 900);
-              });
-            },
-            
-            afterEnter() {
+        },
+        {
+          name: 'default-transition',
+          sync: true,
+          leave({ current }) {
+            return new Promise(resolve => {
+              current.container.style.transition = 'opacity 0.4s ease';
+              current.container.style.opacity = '0';
+              setTimeout(() => overlay.style.transform = 'translateX(0)', 100);
+              setTimeout(resolve, 800);
+            });
+          },
+          enter({ next }) {
+            return new Promise(resolve => {
+              next.container.style.opacity = '0';
+              next.container.style.transition = 'opacity 0.6s ease 0.3s';
+              overlay.style.transform = 'translateX(100%)';
+              setTimeout(() => next.container.style.opacity = '1', 300);
               setTimeout(() => {
-                overlay.style.transform = 'translateX(+100%)';
-              }, 100);
-            }
-          }]
-        });
-      
-        // Fallback for content visibility
-        document.addEventListener('DOMContentLoaded', () => {
-          const wrapper = document.querySelector('[data-barba="wrapper"]');
-          if (wrapper) wrapper.style.opacity = '1';
-        });
-      </script>
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                resolve();
+              }, 900);
+            });
+          },
+          afterEnter() {
+            setTimeout(() => overlay.style.transform = 'translateX(+100%)', 100);
+          }
+        }
+      ];
+
+      barba.init({
+        prevent: ({ href }) => {
+          const excluded = [
+            '/video-page/',
+            '/quiz-builder/',
+            '/accounts/login/',
+            '/accounts/logout/',
+            '/course/detail/',
+            'quiz/detail/',
+          ];
+          return excluded.some(path => href.includes(path));
+        },
+        transitions: customTransitions,
+        views: [{
+          namespace: 'course-detail',
+          beforeEnter() {
+            // Add specific course detail page handling if needed
+          }
+        }]
+      });
+
+      // Set namespace based on current page
+      document.addEventListener('DOMContentLoaded', () => {
+        const path = window.location.pathname;
+        if (path.match(/\/course\/course\/\d+\//)) {
+          document.body.dataset.barbaNamespace = 'course-detail';
+        }
+        
+        // Initialize wrapper
+        const wrapper = document.querySelector('[data-barba="wrapper"]');
+        if (wrapper) wrapper.style.opacity = '1';
+      });
+
+      // Handle link clicks to set proper namespace
+      document.addEventListener('click', (e) => {
+        let target = e.target.closest('a');
+        if (target && target.href && target.href.match(/\/course\/course\/\d+\//)) {
+          document.body.dataset.barbaNamespace = 'course-detail';
+        }
+      });
+    </script>
 
      <script>
       function launchConfetti(score) {

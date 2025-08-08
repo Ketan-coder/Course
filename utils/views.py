@@ -2,10 +2,11 @@ from datetime import datetime, timezone
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from Tiers.models import Tier, Tournament, LeaderboardEntry
-from Courseapp.models import Quiz, Course
+from Courseapp.models import Quiz, Course, QuizSubmission
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
+from utils.decorators import check_load_time
 from utils.models import FeedBack, Activity
 from Users.models import Profile, Student, Instructor
 from django.db.models import Sum
@@ -20,74 +21,6 @@ import os
 
 # Create your views here.
 def quiz_helper(request) -> HttpResponse:
-    # mcq_quiz = {
-    #     "id": "science_q1",
-    #     "title": "Science Quiz!",
-    #     "current_question_number": 1,
-    #     "total_questions": 5,
-    #     "question": "What is H₂O?",
-    #     "options": [
-    #         {"id": "opt_water", "text": "Water"},
-    #         {"id": "opt_acid", "text": "Acid"},
-    #         {"id": "opt_salt", "text": "Salt"},
-    #     ],
-    #     "correct_option_id": "opt_water",
-    #     "correct_feedback": "Excellent! That's correct.",
-    #     "incorrect_feedback": "Not quite. H₂O is the chemical formula for Water."
-    # }
-
-    # imcq_quiz = {
-    #     "id": "geo_q1",
-    #     "title": "Geography Challenge",
-    #     "current_question_number": 1,
-    #     "total_questions": 3,
-    #     "question": "Which monument is shown in the image?",
-    #     "image_to_show_url": "{% static 'path/to/your/image.jpg' %}", # Use Django's static template tag
-    #     "image_alt_text": "A famous monument",
-    #     "options": [
-    #         {"id": "iopt_eiffel", "text": "Eiffel Tower"},
-    #         {"id": "iopt_taj", "text": "Taj Mahal"},
-    #         {"id": "iopt_colosseum", "text": "Colosseum"},
-    #     ],
-    #     "correct_option_id": "iopt_eiffel",
-    # }
-
-    # dnd_quiz = {
-    #     "id": "grammar_q1",
-    #     "title": "Complete the Sentence",
-    #     "progress_percentage": 33,
-    #     "sentence_parts": ["The quick brown ", None, " jumps over the ", None, " dog."],
-    #     "draggable_options": [
-    #         {"id": "fox", "text": "fox", "icon_class": "bi bi-record-fill"}, # Example icon
-    #         {"id": "lazy", "text": "lazy", "icon_class": "bi bi-pause-fill"},
-    #         {"id": "quick", "text": "quick"}, # No icon
-    #     ],
-    #     # blank_index: draggable_option_id (the part after "drag-quiz_id-")
-    #     "correct_mapping": { 
-    #         "0": "fox",
-    #         "1": "lazy"
-    #     },
-    #     #  "icon_svg_path": "path/to/your/custom_click_icon.svg", # Optional custom icon for modal title
-    # }
-    # # Calculate progress percentage
-    # current_question_number = 1
-    # # total_questions = mcq_quiz["total_questions"] + imcq_quiz["total_questions"] + dnd_quiz["total_questions"]
-    # total_questions = 3
-    # print(f"Total Questions: {total_questions}")
-    # print(f"Current Question Number: {current_question_number}")
-    # if total_questions > 0:
-    #     progress: float = (current_question_number / total_questions) * 100
-    # else:
-    #     progress = 0
-
-    # context = {
-    #     "mcq_data_1": mcq_quiz,
-    #     "imcq_data_1": imcq_quiz,
-    #     "dnd_data_1": dnd_quiz,
-    #     "current_question_number": 1,
-    #     "total_questions": total_questions,
-    #     "progress_percentage": round(progress),
-    # }
     try:
         quiz: Quiz = get_object_or_404(Quiz, id=1)
 
@@ -138,6 +71,7 @@ def quiz_helper(request) -> HttpResponse:
     }
     return render(request, 'components/quiz_helper.html', context)
 
+@check_load_time
 def index(request):
     request.session["page"] = "home"
     # Check if user is authenticated
@@ -152,6 +86,7 @@ def index(request):
             profile = Profile.objects.get(user=current_user)
             request.session['isDarkTheme'] = profile.isDarkTheme
             request.session['theme'] = profile.theme
+            quizzes = Quiz.objects.filter()
             if Student.objects.filter(profile=profile).exists():
                 enrolled_courses = Course.objects.filter(is_bought_by_users=profile)
                 
@@ -274,6 +209,21 @@ def index(request):
                         users_who_bought_courses = c.is_bought_by_users.all()
                         c.earnings = (users_who_bought_courses.count() if users_who_bought_courses else 0) * c.price if users_who_bought_courses else 0
 
+                        if c.is_class_room_course:
+                            student_data = []
+                            for student in c.is_bought_by_users.all():
+                                quizzes = QuizSubmission.objects.filter(user=student).order_by('-submitted_at')
+                                if quizzes.exists():
+                                    latest_quiz = quizzes.first()
+                                    student_data.append({
+                                        'student': student,
+                                        'status': latest_quiz.status,
+                                        'score': latest_quiz.score or 0,
+                                        'passed': latest_quiz.passed or False,
+                                    })
+                            # context['student_data'] = student_data
+                                
+
                 context = {
                     'user_role': 'instructor',
                     'course_count': course_count or 0,
@@ -286,7 +236,8 @@ def index(request):
                     'student_growth_this_month': student_growth_this_month or 0,
                     'total_revenue_this_month': total_revenue_this_month or 0,    
                     'total_bookmarked_this_month': total_bookmarked_this_month or 0,
-                    'total_courses_created_this_month': total_courses_created_this_month or 0
+                    'total_courses_created_this_month': total_courses_created_this_month or 0,
+                    'student_data': student_data
                 }
         except Profile.DoesNotExist:
             messages.error(request,"Profile Cannot be Found!")
@@ -294,7 +245,43 @@ def index(request):
         return redirect('login')
     return render(request, 'index.html',context)
 
+def update_quiz_submission_status(request):
+    """
+    Updates the status of a QuizSubmission.
+
+    Args:
+        request (HttpRequest): The incoming request.
+            with the following parameters:
+            - submission_id (str): The ID of the QuizSubmission to update.
+            - status (str): The new status of the QuizSubmission.
+
+    Returns:
+        JsonResponse: A JSON response with a message indicating whether the submission status was updated successfully.
+
+    Raises:
+        Http404: If the submission ID is not provided in the request.
+    """
+    if request.method == 'POST':
+        submission_id = request.POST.get('submission_id')
+        status = request.POST.get('status')
+        if not submission_id:
+            return JsonResponse({'error': 'Submission ID is required.'}, status=400)
+        submission = QuizSubmission.objects.get(id=submission_id)
+        submission.status = status
+        submission.save()
+        # return JsonResponse({'message': 'Submission status updated successfully.'}, status=200)
+        return HttpResponse(content='Submission status updated successfully',status=400)
+    
 def landing_page(request) -> HttpResponse:
+    """
+    The landing page for the website. It renders the landing_page.html template and allows users to send a message to the site owners.
+
+    Args:
+        request (HttpRequest): The request object containing the HTTP request information.
+
+    Returns:
+        HttpResponse: The rendered html page.
+    """
     request.session["page"] = "home"
     if request.method == "POST":
         print(request.POST)

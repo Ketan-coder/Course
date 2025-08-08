@@ -57,6 +57,7 @@ class Course(models.Model):
     qr_code = models.ImageField(upload_to='qr_codes/', blank=True, null=True)
     referred_by = models.ManyToManyField('Users.Profile', related_name='referred_courses', blank=True)
     is_deleted = models.BooleanField(default=False)
+    is_class_room_course = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     extra_fields = models.JSONField(blank=True, null=True, default=dict)
@@ -308,11 +309,20 @@ class Quiz(models.Model):
         super().save(*args, **kwargs)
 
 class QuizSubmission(models.Model):
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('completed', 'Completed'),
+        ('failed', 'Failed'),
+        ('in_progress', 'In Progress'),
+        ('not_attempted', 'Not Attempted'),
+        ('not_started', 'Not Started'),
+    ]
     quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE, related_name='submissions')
     user = models.ForeignKey('Users.Profile', on_delete=models.CASCADE)
     score = models.DecimalField(max_digits=5, decimal_places=2, default=0.0)
     total = models.DecimalField(max_digits=5, decimal_places=2, default=0.0)
     passed = models.BooleanField(default=False)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='not_started')
     submitted_at = models.DateTimeField(auto_now_add=True)
     answers = models.JSONField(default=dict)
 

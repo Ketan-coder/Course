@@ -5,6 +5,7 @@ from .models import Course, Quiz, QuizSubmission
 from django.db.models import Sum, Q
 from django.db import transaction
 from django.contrib.auth.models import User
+from utils.utils import generate_unique_code
 
 @receiver(post_save, sender=Quiz)
 def quiz_completion(sender, instance, created, **kwargs):
@@ -31,7 +32,7 @@ def quiz_completion(sender, instance, created, **kwargs):
 
 @receiver(post_save, sender=Course)
 def update_earn_points(sender, instance, created, **kwargs):
-    section_ids = instance.section.all().values_list('id', flat=True)
+    section_ids = instance.sections.all().values_list('id', flat=True)
 
     linked_quizzes = Quiz.objects.filter(
         Q(course_id=instance.id) | Q(section_id__in=section_ids)
@@ -40,10 +41,13 @@ def update_earn_points(sender, instance, created, **kwargs):
     total_score = 0
 
     for quiz in linked_quizzes:
-        if isinstance(quiz.question, dict):
-            for q_id, q_data in quiz.question.items():
+        if isinstance(quiz.questions, dict):
+            for q_id, q_data in quiz.questions.items():
                 total_score += q_data.get('score_on_completion', 0)
+
+    if instance.is_class_room_course:
+        instance.course_code = generate_unique_code()
 
     if instance.extra_fields.get('score_on_completion') != total_score:
         instance.extra_fields['score_on_completion'] = total_score
-        Course.objects.filter(pk=instance.pk).update(extra_fields=instance.extra_fields)
+        Course.objects.filter(pk=instance.pk).update(extra_fields=instance.extra_fields, course_code=instance.course_code)

@@ -52,6 +52,7 @@ class CourseAdmin(admin.ModelAdmin):
                     "price",
                     "discount_price",
                     "qr_code",
+                    "is_class_room_course",
                 )
             },
         ),
