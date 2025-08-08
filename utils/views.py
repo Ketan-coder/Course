@@ -172,6 +172,7 @@ def index(request):
                 enrolled_students = 0
                 total_earnings = 0
                 total_bookmarked_by_students = 0
+                student_data = []
                 if course.exists():
                     course_count = course.count()
                     enrolled_students = sum(c.is_bought_by_users.count() for c in course)
@@ -210,7 +211,6 @@ def index(request):
                         c.earnings = (users_who_bought_courses.count() if users_who_bought_courses else 0) * c.price if users_who_bought_courses else 0
 
                         if c.is_class_room_course:
-                            student_data = []
                             for student in c.is_bought_by_users.all():
                                 quizzes = QuizSubmission.objects.filter(user=student).order_by('-submitted_at')
                                 if quizzes.exists():
@@ -221,7 +221,6 @@ def index(request):
                                         'score': latest_quiz.score or 0,
                                         'passed': latest_quiz.passed or False,
                                     })
-                            # context['student_data'] = student_data
                                 
 
                 context = {
@@ -237,7 +236,7 @@ def index(request):
                     'total_revenue_this_month': total_revenue_this_month or 0,    
                     'total_bookmarked_this_month': total_bookmarked_this_month or 0,
                     'total_courses_created_this_month': total_courses_created_this_month or 0,
-                    'student_data': student_data
+                    'student_data': student_data or [],
                 }
         except Profile.DoesNotExist:
             messages.error(request,"Profile Cannot be Found!")

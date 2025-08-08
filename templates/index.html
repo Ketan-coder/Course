@@ -15,7 +15,7 @@
 
     {# =============================================================================== #}
     {# INSTRUCTOR DASHBOARD VIEW                                                       #}
-    {# This section will render if the 'user_role' context variable is 'instructor'. #}
+    {# This section will render if the 'user_role' context variable is 'instructor'.   #}
     {# =============================================================================== #}
     {% if user_role == 'instructor' %}
     <div class="content-wrapper">
@@ -134,35 +134,37 @@
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {% for student in student_data %}
-                                                <tr>
-                                                    <td><b>{{ student.student.user.username }}</b> (Student-{{ student.student.id }})</td>
-                                                    {% comment %} <td>
-                                                        {% if student.status == 'pending' %}Pending
-                                                        {% elif student.status == 'completed' %}Completed
-                                                        {% elif student.status == 'failed' %}Failed
-                                                        {% elif student.status == 'in_progress' %}In Progress
-                                                        {% elif student.status == 'not_attempted' %}Not Attempted
-                                                        {% elif student.status == 'not_started' %}Not Started
-                                                        {% else %}{{ student.status }}{% endif %}
-                                                    </td> {% endcomment %}
-                                                    <td>
-                                                        <smart-input
-                                                            type="select" name="status" label="Status"
-                                                            value="{{ student.status|default:'pending' }}" required
-                                                            data-options='[{"id": "pending", "name": "Pending"}, {"id": "completed", "name": "Completed"}, {"id": "failed", "name": "Failed"}, {"id": "in_progress", "name": "In-Progress"}, {"id": "not_attempted", "name": "Not Attempted"}, {"id": "not_started", "name": "Not Started"}]'>
-                                                        </smart-input>
-                                                    </td>
+                                            {% if student_data %}
+                                                {% for student in student_data %}
+                                                    <tr>
+                                                        <td><b>{{ student.student.user.username }}</b> (Student-{{ student.student.id }})</td>
+                                                        {% comment %} <td>
+                                                            {% if student.status == 'pending' %}Pending
+                                                            {% elif student.status == 'completed' %}Completed
+                                                            {% elif student.status == 'failed' %}Failed
+                                                            {% elif student.status == 'in_progress' %}In Progress
+                                                            {% elif student.status == 'not_attempted' %}Not Attempted
+                                                            {% elif student.status == 'not_started' %}Not Started
+                                                            {% else %}{{ student.status }}{% endif %}
+                                                        </td> {% endcomment %}
+                                                        <td>
+                                                            <smart-input
+                                                                type="select" name="status" label="Status"
+                                                                value="{{ student.status|default:'pending' }}" required
+                                                                data-options='[{"id": "pending", "name": "Pending"}, {"id": "completed", "name": "Completed"}, {"id": "failed", "name": "Failed"}, {"id": "in_progress", "name": "In-Progress"}, {"id": "not_attempted", "name": "Not Attempted"}, {"id": "not_started", "name": "Not Started"}]'>
+                                                            </smart-input>
+                                                        </td>
 
-                                                    <td>{{ student.score }}</td>
-                                                    <td>{{ student.notes }}</td>
-                                                    <td>No Actions</td>
-                                                </tr>
-                                            {% empty %}
-                                                <tr>
-                                                    <td colspan="5" class="text-center">No student data available</td>
-                                                </tr>
-                                            {% endfor %}
+                                                        <td>{{ student.score }}</td>
+                                                        <td>{{ student.notes }}</td>
+                                                        <td>No Actions</td>
+                                                    </tr>
+                                                {% empty %}
+                                                    <tr>
+                                                        <td colspan="5" class="text-center">No student data available</td>
+                                                    </tr>
+                                                {% endfor %}
+                                            {% endif %}
                                         </tbody>
                                     </table>
                                 </div>
@@ -180,28 +182,28 @@
     </div>
     {% for course in courses %}
     <!-- Vertically centered modal -->
-                    <div class="modal fade" id="courseQRModal{{ course.id }}" tabindex="-1" aria-hidden="true">
-                        <div class="modal-dialog modal-dialog-centered">
-                            <div class="modal-content">
-                                <div class="modal-header">
-                                    <h5 class="modal-title">{{ course.title }}</h5>
-                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                </div>
-                                <div class="modal-body p-3">
-                                    <div class="text-center">
-                                        <img src="{{ course.qr_code.url }}" alt="QR Code for {{ course.title }}" class="img-fluid" style="max-width: 100%; height: auto;">
-                                    </div>
-                                    <p class="text-muted mt-3">Scan this QR code to access the course directly.</p>
-                                    <p class="text-muted">You can also share this QR code with your students.</p>
-                            </div>
-                        </div>
+        <div class="modal fade" id="courseQRModal{{ course.id }}" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">{{ course.title }}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
+                    <div class="modal-body p-3">
+                        <div class="text-center">
+                            <img src="{{ course.qr_code.url }}" alt="QR Code for {{ course.title }}" class="img-fluid" style="max-width: 100%; height: auto;">
+                        </div>
+                        <p class="text-muted mt-3">Scan this QR code to access the course directly.</p>
+                        <p class="text-muted">You can also share this QR code with your students.</p>
+                </div>
+            </div>
+        </div>
     {%endfor%}
     {% else %}
 
     {# =============================================================================== #}
     {# STUDENT DASHBOARD VIEW (DEFAULT)                                                #}
-    {# This section will render for any user role other than 'instructor'.           #}
+    {# This section will render for any user role other than 'instructor'.             #}
     {# =============================================================================== #}
     <div class="content-wrapper">
       <h1 class="fs-1 content-title font-weight-bolder">My Learning Journey</h1>
