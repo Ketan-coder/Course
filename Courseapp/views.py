@@ -21,7 +21,9 @@ from django.shortcuts import get_object_or_404
 from django.core.exceptions import ValidationError
 from django.db.models import Avg
 from django.views.decorators.http import require_POST
-
+from django.db.models import Q, Count
+from difflib import get_close_matches
+import re
 # def course_list(request) -> HttpResponse:
 #     courses: BaseManager[Course] = Course.objects.all()
 #     request.session["page"] = "course"
@@ -401,14 +403,120 @@ def search_article(request) -> JsonResponse:
         return JsonResponse(list(articles), safe=False)
     return JsonResponse([], safe=False)
 
+# def search_courses_htmx(request):
+#     try:
+#         query = request.GET.get("q", "")
+#         courses = Course.objects.filter(Q(title__icontains=query) | Q(description__icontains=query) | Q(language__name__icontains=query) | Q(tags__name__icontains=query) | Q(sections__title__icontains=query) | Q(prerequisites__icontains=query)).distinct()[:10]
+#         html = render_to_string("components/_search_results.html", {"courses": courses})
+#         return HttpResponse(html)
+#     except Exception as e:
+#         return HttpResponse(f"Error: {str(e)}", status=500)
+
 def search_courses_htmx(request):
     try:
-        query = request.GET.get("q", "")
-        courses = Course.objects.filter(Q(title__icontains=query) | Q(description__icontains=query) | Q(language__name__icontains=query) | Q(tags__name__icontains=query) | Q(sections__title__icontains=query) | Q(prerequisites__icontains=query)).distinct()[:10]
-        html = render_to_string("components/_search_results.html", {"courses": courses})
+        query = request.GET.get("q", "").strip().lower()
+        attribute_matches = Course.objects.none()
+        normal_matches = Course.objects.none()
+        suggestion_text = None
+
+        if query:
+            filters = Q()
+
+            # --- Keyword-based attributes ---
+            if "free" in query:
+                filters |= Q(course_type="free")
+            if "paid" in query:
+                filters |= Q(course_type="paid")
+            if "beginner" in query:
+                filters |= Q(course_level="beginner")
+            if "intermediate" in query:
+                filters |= Q(course_level="intermediate")
+            if "advanced" in query:
+                filters |= Q(course_level="advanced")
+            if "all level" in query:
+                filters |= Q(course_level="all")
+            if "classroom" in query:
+                filters |= Q(is_class_room_course=True)
+            if "open" in query:
+                filters |= Q(is_open_to_all=True)
+            if "discount" in query:
+                filters |= Q(discount_price__lt=F('price'))
+
+            # --- Price filter: e.g., "under 50", "less than 100" ---
+            price_match = re.search(r"(under|less than)\s*\$?(\d+)", query)
+            if price_match:
+                max_price = float(price_match.group(2))
+                filters |= Q(price__lte=max_price)
+
+            # --- Price filter: e.g., "over 50", "greater than 100, above 200" ---
+            price_match = re.search(r"(over|greater than|above)\s*\$?(\d+)", query)
+            if price_match:
+                max_price = float(price_match.group(2))
+                filters |= Q(price__gte=max_price)
+
+            # --- Star ratings: "4 star", "5 star rated" ---
+            star_match = re.search(r"(\d)\s*star", query)
+            if star_match:
+                star_value = int(star_match.group(1))
+                filters |= Q(reviews__rating=star_value)
+
+            # --- Points requirement: "under 500 points" ---
+            points_match = re.search(r"(under|less than)\s*(\d+)\s*points?", query)
+            if points_match:
+                max_points = int(points_match.group(2))
+                filters |= Q(required_points__lte=max_points)
+
+            # If we found attribute filters, get distinct results
+            if filters:
+                attribute_matches = Course.objects.filter(filters).annotate(
+                    avg_rating=Avg("reviews__rating")
+                ).distinct()
+
+            # --- Normal keyword search ---
+            normal_matches = Course.objects.filter(
+                Q(title__icontains=query) |
+                Q(description__icontains=query) |
+                Q(language__name__icontains=query) |
+                Q(tags__name__icontains=query) |
+                Q(sections__title__icontains=query) |
+                Q(prerequisites__icontains=query)
+            ).annotate(
+                avg_rating=Avg("reviews__rating")
+            ).distinct()
+
+            # Remove duplicates so attribute results don't repeat
+            if attribute_matches.exists():
+                normal_matches = normal_matches.exclude(id__in=attribute_matches.values_list("id", flat=True))
+
+            # --- Suggestions for typos ---
+            if not attribute_matches.exists() and not normal_matches.exists():
+                all_titles = list(Course.objects.values_list("title", flat=True))
+                close_matches = get_close_matches(query, all_titles, n=5, cutoff=0.6)
+                if close_matches:
+                    suggestion_text = f"You might be looking for: {', '.join(close_matches)}"
+
+        # Merge results with attribute matches on top
+        courses = list(attribute_matches) + list(normal_matches)
+
+        html = render_to_string("components/_search_results.html", {
+            "courses": courses[:10],  # limit top 10
+            "suggestion": suggestion_text
+        })
         return HttpResponse(html)
+
     except Exception as e:
         return HttpResponse(f"Error: {str(e)}", status=500)
+    
+def course_like_htmx(request, course_id):
+    if request.method == "GET":
+        course = get_object_or_404(Course, pk=course_id)
+        if request.user.is_authenticated:
+            if request.user.profile in course.bookmarked_by_users.all():
+                course.bookmarked_by_users.remove(request.user.profile)
+            else:
+                course.bookmarked_by_users.add(request.user.profile)
+            return JsonResponse({"success": True})
+        return JsonResponse({"success": False})
 
 @user_passes_test(lambda u: Instructor.objects.filter(profile=u.profile).exists())
 def course_delete(request, pk) -> HttpResponseRedirect | HttpResponsePermanentRedirect | HttpResponse:
@@ -2053,6 +2161,7 @@ def course_create_step_five(request, course_id=None) -> HttpResponse:
                     course.faqs.set(faqs)
                 course.is_published = 'is_published' in request.POST
                 course.is_open_to_all = 'is_open_to_all' in request.POST
+                course.is_class_room_course = 'is_class_room_course' in request.POST
 
                 course.save(create_qr=create_qr_code)
                 # Log activity

@@ -1,7 +1,71 @@
-{% for course in courses %}
-  <a href="{% url 'course_detail' course.id %}" class="list-group-item list-group-item-action">
+{% comment %} {% for course in courses %}
+  <a href="{% url 'course_detail' course.id %}" onclick="halfmoon.closeModal('#search-modal');" class="list-group-item list-group-item-action">
     {{ course.title }}
   </a>
 {% empty %}
   <div class="text-muted small">No courses found.</div>
-{% endfor %}
+{% endfor %} {% endcomment %}
+{% if courses %}
+  <div class="d-flex flex-wrap gap-3">
+    {% for course in courses %}
+      <a href="{% url 'course_detail' pk=course.id %}"
+         onclick="bootstrap.Modal.getInstance(document.getElementById('searchModal')).hide()"
+         class="card-link-wrapper border rounded-3 border-2"
+         style="width: 18.75rem; text-decoration: none;">
+
+        <div class="card shadow-sm border-0 h-100">
+          {% if course.thumbnail %}
+            <img src="{{ course.thumbnail.url }}" class="card-img-top rounded-top"
+                 style="aspect-ratio: 16/9; object-fit: cover;" alt="{{ course.title }}">
+          {% else %}
+            <svg class="bd-placeholder-img card-img-top"
+                 style="aspect-ratio: 16/9; object-fit: cover;" width="600" height="250"
+                 xmlns="http://www.w3.org/2000/svg" role="img">
+              <rect width="100%" height="100%" fill="#e9ecef"></rect>
+              <text x="50%" y="50%" fill="#6c757d" dy=".3em" text-anchor="middle">No Thumbnail</text>
+            </svg>
+          {% endif %}
+
+          <div class="card-body p-3">
+            <h6 class="card-title mb-1">{{ course.title }}</h6>
+            <div class="small text-muted">
+              {% for tag in course.tags.all %}
+                <span class="badge m-1"
+                      style="background-color: {{ tag.extra_fields.bgColor }}; color: {{ tag.extra_fields.color }}">
+                  <i class="{{ tag.extra_fields.icon }}" style="color: {{ tag.extra_fields.iconColor }}"></i>
+                  {{ tag.name }}
+                </span>
+              {% empty %}
+                <span class="badge bg-secondary m-1">No Tags</span>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+      </a>
+    {% endfor %}
+  </div>
+{% else %}
+  <div class="text-center text-muted py-4">
+    {% if suggestion %}
+      <p class="fw-bold">{{ suggestion }}</p>
+    {% endif %}
+
+    {% if request.GET.q %}
+      {% if "free" in request.GET.q|lower %}
+        <p>Looks like there are no free courses at the moment. Check back soon, we’re always adding more!</p>
+      {% elif "paid" in request.GET.q|lower %}
+        <p>No paid courses available right now — but hey, that means everything is free for you!</p>
+      {% elif "beginner" in request.GET.q|lower %}
+        <p>Couldn’t find beginner-friendly courses. Maybe try “all level” or “intermediate”?</p>
+      {% elif "advanced" in request.GET.q|lower %}
+        <p>No advanced-level courses yet. We’ll get some brain-busters in soon!</p>
+      {% elif "star" in request.GET.q|lower %}
+        <p>Couldn’t find courses matching that rating. How about exploring other ratings?</p>
+      {% else %}
+        <p>No courses match “{{ request.GET.q }}”. Try a different keyword or check spelling.</p>
+      {% endif %}
+    {% else %}
+      <p>Start typing to search for a course.</p>
+    {% endif %}
+  </div>
+{% endif %}

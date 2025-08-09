@@ -9,6 +9,27 @@
           <a href="{% url 'course_detail' pk=course.id %}" class="btn btn-sm btn-secondary"> View </a>
           <a href="{% url 'course_create_step_one' course_id=course.id %}" class="btn btn-sm btn-primary"> Edit </a>
         </div>
+        {% else %}
+        {% comment %} <icon-button
+        size="sm"
+        {% if not request.user.profile in course.bookmarked_by_users.all %}
+          variant="primary"
+          text="Like"
+          icon="heart"
+          class="mb-2"
+          is_ghost
+        {% else %}
+          variant="danger"
+          text="Liked"
+          icon="heart-fill"
+          class="mb-2"
+          {% endif %}
+          post="{% url 'course_like_htmx' course_id=course.id %}"
+          success-message="Course Liked Succesfully!"
+          error-message="Failed to save data"
+          showspinner="true"
+          method="GET"
+        ></icon-button> {% endcomment %}
         {% endif %}
       </div>
       {% else %}

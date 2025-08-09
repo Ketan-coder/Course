@@ -33,13 +33,13 @@
               </div>
             </div>
             <div class="d-flex align-items-center mt-3 font-size-14">
-              <span class="badge {% if request.user.profile.isDarkTheme %}
+              {% comment %} <span class="badge {% if request.user.profile.isDarkTheme %}
                   bg-warning text-light
                 {% else %}
                    bg-warning text-dark
                 {% endif %}  me-2">
                 Bestseller
-              </span>
+              </span> {% endcomment %}
               <span class="me-3">
                 <i class="ph-fill {% if user_review %}
                      ph-star-fill
@@ -423,10 +423,10 @@
     </div>
 
     <div class="container-fluid-horizontal my-4 p-2">
-      <h2 class="font-weight-bold mt-4 mb-3">More Courses from this <b class="text-decoration-underline">{{ course.instructor.profile.user.username }}</b></h2>
-      <div class="horizontal-scroll d-flex flex-nowrap" style="overflow-x: auto; overflow-y: hidden; white-space: nowrap; -webkit-overflow-scrolling: touch;">
+      <h2 class="font-weight-bold mt-4 mb-5">More Courses from this <b class="text-decoration-underline">{{ course.instructor.profile.user.username }}</b></h2>
+      <div class="horizontal-scroll d-flex flex-nowrap m-2 md-3" style="overflow-x: auto; overflow-y: hidden; white-space: nowrap; -webkit-overflow-scrolling: touch;">
         {% for course in instructor_related_courses %}
-          <div class="card m-3" style="min-width: 250px; display: inline-block;">
+          <div class="card border rounded-3 border-2 m-3" style="min-width: 250px; display: inline-block;">
             {% include 'course/components/course_card.html' with course=course %}
           </div>
         {% empty %}
@@ -436,10 +436,10 @@
     </div>
     
     <div class="container-fluid-horizontal my-4 p-2">
-      <h2 class="font-weight-bold mt-4 mb-3">More Courses to Browse</h2>
-      <div class="horizontal-scroll d-flex flex-nowrap" style="overflow-x: auto; overflow-y: hidden; white-space: nowrap; -webkit-overflow-scrolling: touch;">
+      <h2 class="font-weight-bold mt-4 mb-5">More Courses to Browse</h2>
+      <div class="horizontal-scroll d-flex flex-nowrap m-2 md-3" style="overflow-x: auto; overflow-y: hidden; white-space: nowrap; -webkit-overflow-scrolling: touch;">
         {% for course in course_list %}
-          <div class="card m-3" style="min-width: 250px; display: inline-block;">
+          <div class="card border rounded-3 border-2 m-3" style="min-width: 250px; display: inline-block;">
             {% include 'course/components/course_card.html' with course=course %}
           </div>
         {% empty %}

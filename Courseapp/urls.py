@@ -31,6 +31,8 @@ urlpatterns: list[URLPattern] = [
     path('courses/search_articles/', login_required(views.search_article), name='search_articles'),
     path("search-courses-htmx/", views.search_courses_htmx, name="search_courses_htmx"),
 
+    path('like/course/<int:course_id>/', login_required(views.course_like_htmx), name='course_like_htmx'),
+
 
     path("detail/<int:lesson_id>/", login_required(views.video_detail_page), name="video_detail_page"),
     path("article/<int:article_id>/", login_required(views.article_detail), name="article_detail"),

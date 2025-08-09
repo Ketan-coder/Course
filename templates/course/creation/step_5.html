@@ -101,13 +101,13 @@
                   </smart-input>
                 </div>
                 <div class="col-md-6">
-                   {% comment %} <smart-input
-                    label="Enable Ad Revenue?"
-                    name="ad_revenue_enabled"
+                   <smart-input
+                    label="Is Classroom Enabled Course?"
+                    name="is_class_room_course"
                     type="switch"
-                    selected-value="false"
+                    selected-value="{% if course.is_class_room_course %}true{% else %}false{% endif %}"
                     is-big>
-                  </smart-input> {% endcomment %}
+                  </smart-input>
                 </div>
               </div>
             </div>
