@@ -10,26 +10,6 @@
           <a href="{% url 'course_create_step_one' course_id=course.id %}" class="btn btn-sm btn-primary"> Edit </a>
         </div>
         {% else %}
-        {% comment %} <icon-button
-        size="sm"
-        {% if not request.user.profile in course.bookmarked_by_users.all %}
-          variant="primary"
-          text="Like"
-          icon="heart"
-          class="mb-2"
-          is_ghost
-        {% else %}
-          variant="danger"
-          text="Liked"
-          icon="heart-fill"
-          class="mb-2"
-          {% endif %}
-          post="{% url 'course_like_htmx' course_id=course.id %}"
-          success-message="Course Liked Succesfully!"
-          error-message="Failed to save data"
-          showspinner="true"
-          method="GET"
-        ></icon-button> {% endcomment %}
         {% endif %}
       </div>
       {% else %}
@@ -65,8 +45,11 @@
           {% endif %}
         </p>
         {% endif %}
-        <p class="card-text flex-grow-1">{{ course.description|striptags|truncatechars:75 }}</p>
-        <div class="d-flex hstack gap-3">
+        <!-- Clamp the description visually (CSS below) -->
+        <p class="card-text description-clamp mb-2" style="flex: 1 1 auto; min-height: 0;">
+          {{ course.description|striptags|truncatechars:75 }}
+        </p>
+        <div class="d-flex hstack gap-3 mt-auto">
             <div>{{ course.get_course_level_display }}</div>
             <div class="vr"></div>
             <div>{{ course.sections.count }} Sections</div>
