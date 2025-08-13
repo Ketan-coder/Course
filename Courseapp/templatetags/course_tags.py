@@ -37,3 +37,11 @@ def filter_by_section(queryset, section_id):
         QuerySet: Filtered queryset of lessons.
     """
     return queryset.filter(section__id=section_id)
+
+@register.filter(name='ensure_list')
+def ensure_list_filter(input_data):
+    if isinstance(input_data, str):
+        return [input_data]
+    elif isinstance(input_data, (list, tuple)):
+        return input_data
+    return []

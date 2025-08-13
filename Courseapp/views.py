@@ -60,6 +60,7 @@ from collections import defaultdict
 
 def course_list(request) -> HttpResponse:
     courses = Course.objects.all()
+    categories = Tag.objects.all()
     request.session["page"] = "course"
 
     if request.user.is_authenticated:
@@ -104,9 +105,10 @@ def course_list(request) -> HttpResponse:
     grouped_courses = dict(grouped_courses)
 
     print(grouped_courses)
+    print(categories)
 
     return render(request, "course/course_list.html", {
-        "grouped_courses": grouped_courses
+        "grouped_courses": grouped_courses, 'categories' : categories
     })
 
 

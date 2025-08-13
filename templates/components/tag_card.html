@@ -1,19 +1,156 @@
 {% load static %}
-<!-- Card image as background -->
-<div class="card" style="width: 18.75rem; position: relative;">
-  <img src="{% static 'resoures/images/tags_icon/stats.jpg' %}" class="card-img" alt="...">
-  <div class="card-img-overlay d-flex flex-column justify-content-end p-2" style="width: 98%; height: 30%; top: 65%;">
-    <div class="bg-dark bg-opacity-50 text-white p-3" >
-    <h5 class="card-title text-center mb-0">Card title</h5>
-    <p class="card-text text-center">Some quick example content.</p>
+{% load course_tags %}
+{% comment %} <!-- Card image as background Fall Back -->
+ <a href="">
+  <div class="card rounded border border-4 m-3" style="width: 18.75rem; position: relative;">
+    <img src="{% static 'resoures/images/tags_icon/stats.jpg' %}" class="card-img" alt="...">
+    <div class="card-img-overlay d-flex flex-column justify-content-end p-3 rounded-1" style="width: 100%; height: 30%; top: 78%;">
+      <div class="bg-secondary text-white p-3 rounded-2" >
+      <h5 class="card-title text-center mb-0"> <i class="ph ph-heart"></i> Stats</h5>
+      <p class="card-text text-center">Some quick example content.</p>
+      </div>
     </div>
   </div>
-</div>
+</a> {% endcomment %}
 
+{% comment %}
+<!--
+  Interactive Category Card Component v2
+  --------------------------------------
+  - Place this inside a grid container (e.g., a Halfmoon .col div).
+  - Requires the CSS from the 'Category Card CSS' artifact.
 
-<figure class="figure mb-0" style="width: 18.75rem;">
-  <img src="{% static 'resoures/images/tags_icon/stats.jpg' %}" class="figure-img img-fluid rounded" alt="...">
-  <figcaption class="figure-caption text-center">
-    A caption for the above image.
-  </figcaption>
-</figure>
+  Accepts the following context variables:
+  - url: The URL the card links to.
+  - color: The hex color code for the theme.
+  - shape: 'square' or 'rectangle'.
+  - title: The main title of the card.
+  - subtitle: The subtitle text (hidden on square cards).
+  - icon: The name of the Phosphor icon (e.g., 'sparkle').
+  - search_terms: A list or tuple of strings for the related search pills.
+-->
+{% endcomment %}
+<a href="{{ url|default:'#' }}" class="d-block text-decoration-none" style="color: inherit;">
+  <div class="card cc-card border border-2 rounded-3 m-2" style="
+      position: relative; overflow: hidden;
+      border: none; border-radius: 16px;
+      width: 18rem; height: 11rem;
+      background: var(--bs-body-bg, #000);
+      box-shadow: 0 2px 8px rgba(0,0,0,.06);
+      --cc-color: {{ color|default:'#3b82f6' }};
+    ">
+    <div class="card-body" style="
+        height:100%; display:flex; flex-direction:column;
+        justify-content:space-between; padding: 20px;
+      ">
+
+      <!-- Title + subtitle -->
+      <div>
+        <h5 class="card-title" style="margin:0; font-weight:800; color: var(--cc-color);">
+          {{ title|default:'Category' }}
+        </h5>
+        {% if subtitle %}
+        <p class="card-text" style="margin:.35rem 0 0; color:#8a9099; font-size:.925rem;">
+          {{ subtitle }}
+        </p>
+        {% endif %}
+      </div>
+
+      <!-- Pills -->
+      {% if search_term %}
+      <div class="cc-pills" style="
+          display:flex; flex-wrap:wrap; gap:8px;
+          opacity:0; transform: translateY(8px);
+        ">
+        {% for term in search_terms|ensure_list %}
+          <span class="pill rounded-3" style="
+              font-size:.75rem; font-weight:600; padding:6px 10px;
+              color: var(--cc-color);
+              background: color-mix(in srgb, var(--cc-color) 15%, transparent);
+            ">{{ term }}</span>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Decorative icon -->
+    <i class="ph ph-{{ icon|default:'sparkle' }}" aria-hidden="true" style="
+        position:absolute; right:-10px; bottom:-10px;
+        font-size:120px; line-height:1;
+        color: var(--cc-color); opacity:.3;
+        pointer-events:none;
+      "></i>
+  </div>
+</a>
+
+<style>
+  /* Pure CSS fallback hover */
+  :root {
+    --icon-opacity: 0.14;
+    --icon-blend-mode: multiply;
+  }
+  .cc-card:hover { transform: translateY(-4px); box-shadow: 0 10px 24px rgba(0,0,0,.16); }
+  .cc-card:hover .cc-pills { opacity: 1; transform: translateY(0); transition: opacity .25s ease, transform .25s ease; }
+  .cc-card:hover i { transform: scale(1.06); transition: transform .25s ease; }
+</style>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  if (typeof anime !== "undefined") {
+    document.querySelectorAll(".cc-card").forEach(function (card) {
+      let icon = card.querySelector("i");
+      let pills = card.querySelector(".cc-pills");
+
+      card.addEventListener("mouseenter", function () {
+        anime({
+          targets: card,
+          translateY: -4,
+          duration: 250,
+          easing: "easeOutQuad"
+        });
+        if (pills) {
+          anime({
+            targets: pills,
+            opacity: 1,
+            translateY: 0,
+            duration: 250,
+            easing: "easeOutQuad"
+          });
+        }
+        anime({
+          targets: icon,
+          scale: 1.06,
+          opacity: 'var(--icon-opacity)',
+          duration: 250,
+          easing: "easeOutQuad"
+        });
+      });
+
+      card.addEventListener("mouseleave", function () {
+        anime({
+          targets: card,
+          translateY: 0,
+          duration: 200,
+          easing: "easeOutQuad"
+        });
+        if (pills) {
+          anime({
+            targets: pills,
+            opacity: 0,
+            translateY: 8,
+            duration: 200,
+            easing: "easeOutQuad"
+          });
+        }
+        anime({
+          targets: icon,
+          scale: 1,
+          opacity: 'calc(var(--icon-opacity) * 1.5)',
+          duration: 200,
+          easing: "easeOutQuad"
+        });
+      });
+    });
+  }
+});
+</script>

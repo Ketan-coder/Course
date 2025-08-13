@@ -364,13 +364,14 @@ class Tag(models.Model):
         else:
             return self.name
         
-    def save(self, emoji='📊', icon="ph ph-tag", bcColor="#00e5ff", color="#000", iconColor = "#000" ,*args, **kwargs) -> None:
+    def save(self, emoji='📊', icon="chart-line", bcColor="#00e5ff", color="#000", iconColor = "#000" ,*args, **kwargs) -> None:
         self.extra_fields['last_updated'] = str(self.updated_at)
         self.extra_fields['emoji'] = emoji or self.extra_fields.get('emoji', '📊')
-        self.extra_fields['icon'] = icon or self.extra_fields.get('icon', 'ph ph-tag')
+        self.extra_fields['icon'] = icon or self.extra_fields.get('icon', 'chart-line')
         self.extra_fields['bgColor'] = bcColor or self.extra_fields.get('bcColor', '#00e5ff')
         self.extra_fields['color'] = color or self.extra_fields.get('color', '#000000') 
         self.extra_fields['iconColor'] = iconColor or self.extra_fields.get('iconColor', '#000')
+        self.extra_fields['search_terms'] = self.extra_fields.get('search_terms', [self.name, 'Active' if self.is_active else 'Inactive'])
         if self.icon_image and '_resized' not in self.icon_image.name:
             resized_path = MediaHandler.resize_image(self.icon_image, size=(50, 50))
             if resized_path:
