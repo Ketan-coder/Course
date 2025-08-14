@@ -25,7 +25,7 @@
         <div class="row">
           <div class="col-lg-8 text-white">
             <h1 class="fs-1 font-weight-bolder">{{ course.title|default:'Stock Market Basics' }}</h1>
-            <p class="fs-4 text-muted">{{ course.description|safe|default:'A simple and fun way to learn finance.' }}</p>
+            <p class="fs-4 text-muted">{{ course.description|safe|truncatewords:30|default:'A simple and fun way to learn finance.' }}</p>
             <div class="d-flex align-items-center mt-3">
               <img src="{{ course.instructor.profile.avatar.url|default:'https://placehold.co/40x40/EBF1FF/7F9CF5?text=A' }}" alt="Instructor" class="rounded-circle" width="40" height="40" />
               <div class="ms-2">

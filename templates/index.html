@@ -148,11 +148,15 @@
                                                             {% else %}{{ student.status }}{% endif %}
                                                         </td> {% endcomment %}
                                                         <td>
+                                                            {% if student.passed %}
+                                                            <p class="text-success">Passed</p>
+                                                            {% else %}
                                                             <smart-input
-                                                                type="select" name="status" label="Status"
-                                                                value="{{ student.status|default:'pending' }}" required
-                                                                data-options='[{"id": "pending", "name": "Pending"}, {"id": "completed", "name": "Completed"}, {"id": "failed", "name": "Failed"}, {"id": "in_progress", "name": "In-Progress"}, {"id": "not_attempted", "name": "Not Attempted"}, {"id": "not_started", "name": "Not Started"}]'>
+                                                                type="select" name="status" label="Update Status"
+                                                                value="{% if student.passed %}passed{% else %}{{ student.status|default:'pending' }}{% endif %}" required
+                                                                data-options='[{"id": "pending", "name": "Pending"}, {"id": "completed", "name": "Completed"}, {"id": "failed", "name": "Failed"}, {"id": "in_progress", "name": "In-Progress"}, {"id": "not_attempted", "name": "Not Attempted"}, {"id": "not_started", "name": "Not Started"} , {"id": "passed", "name": "Passed"}, {"id": "other", "name": "Other"}]'>
                                                             </smart-input>
+                                                            {% endif %}
                                                         </td>
 
                                                         <td>{{ student.score }}</td>
@@ -373,7 +377,7 @@
 {% block script %}
     <script>
         function copyCourseUrl(courseId) {
-            const courseUrl = window.location.origin + "{% url 'course_detail' 0 %}".replace('0', courseId);
+            const courseUrl = window.location.origin + "{% url 'course_detail' 0 %}?ref={{ request.user.username }}".replace('0', courseId);
             navigator.clipboard.writeText(courseUrl).then(() => {
                 alert('Course URL copied to clipboard!');
             }).catch(err => {

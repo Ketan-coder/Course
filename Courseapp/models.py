@@ -1,4 +1,5 @@
 from typing import Literal
+import uuid
 from django.db import models
 from django.core.exceptions import ValidationError
 from requests import Response

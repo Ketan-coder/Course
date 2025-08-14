@@ -42,6 +42,7 @@ urlpatterns: list[URLPattern] = [
 
     # urls.py
     path("mark/lesson/<int:lesson_id>/<int:user_profile>/complete/", login_required(views.mark_lesson_complete), name="mark_lesson_complete"),
+    path("student/update/status/", login_required(views.student_update_status), name="student_update_status"),
 
     path("create_tag/", login_required(views.create_tag), name="create_tag"),
     path("create_section/", login_required(views.create_section), name="create_section"),

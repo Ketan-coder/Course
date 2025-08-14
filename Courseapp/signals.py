@@ -14,7 +14,7 @@ def quiz_completion(sender, instance, created, **kwargs):
         question_count = len(instance.questions or {})
         completed_count = sum(1 for qid, qdata in (instance.questions or {}).items() if qdata["is_completed"] == True)
         total_earned_points = sum(qdata["score_on_completion"] for qid, qdata in (instance.questions or {}).items() if qdata["is_completed"] == True)
-        if question_count != 0 and question_count == completed_count:
+        if question_count != 0 and question_count == completed_count and total_earned_points > 0:
             with transaction.atomic():
                 profile = User.objects.get(id=request.user.id).profile
                 QuizSubmission.objects.create(
@@ -22,7 +22,7 @@ def quiz_completion(sender, instance, created, **kwargs):
                     user=profile,
                     score=total_earned_points,
                     total=total_earned_points,
-                    passed=True,
+                    passed=True if total_earned_points >= instance.passing_marks else False,
                     answers=instance.questions
                 )
                 for qid, qdata in (instance.questions or {}).items():

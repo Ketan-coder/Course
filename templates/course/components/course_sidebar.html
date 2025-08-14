@@ -37,7 +37,7 @@
     </div>
 
     <!-- Course Info -->
-    <div class="flex-1 p-2 overflow-y-auto">
+    <div class="flex p-2" style="height: 50vh;">
       <h6 class="font-weight-bold fs-3 mb-1">{{ course.title }}</h6>
       <p class="text-muted mb-2">
         {{ course.description|striptags }}
@@ -57,11 +57,12 @@
 
       <!-- Instructors -->
       {% if course.instructor %}
-      <div class="mt-2">
+      <div class="mt-2 mb-2">
         <h6 class="font-weight-semibold">Instructors</h6>
-        <div class="d-flex align-items-center mt-5">
-          <img src="{{ instructor.profile.image.url }}" alt="{{ instructor.name }}" 
+        <div class="d-flex align-items-center">
+          <img src="{{ course.instructor.profile.avatar.url|default:'https://placehold.co/40x40/EBF1FF/7F9CF5?text=A' }}" alt="{{ course.instructor.name }}" 
                class="rounded-circle mr-5" style="width: 36px; height: 36px; object-fit: cover;">
+          <p class="font-weight-semibold  ms-2">{{ course.instructor.profile.user.get_full_name|default:course.instructor.profile.user.username }}</p>
         </div>
       </div>
       {% endif %}
@@ -80,7 +81,7 @@
     </div>
 
     <!-- Footer Button -->
-    <div class="pt-5 border-top">
+    <div class="pt-2 border-top" style="margin-top: 100%;">
       <a href="{% url 'course_detail' pk=course.id %}" class="btn btn-primary w-full font-weight-semibold">
         View Course
       </a>

@@ -2319,3 +2319,36 @@ def submit_quiz_api(request):
         'total_possible_score': total_possible_score,
         'backend_results': backend_results
     })
+
+def student_update_status(request):
+    try:
+        if not request.user.is_authenticated:
+            return JsonResponse({'status': 'error', 'message': 'Authentication required.'}, status=401)
+
+        if request.method != 'POST':
+            return JsonResponse({'status': 'error', 'message': 'Invalid request method.'}, status=405)
+
+        data = json.loads(request.body)
+        quiz_submission_id = data.get('quiz_submission_id')
+        status = data.get('status')
+
+        if not quiz_submission_id or not status:
+            return JsonResponse({'status': 'error', 'message': 'Missing quiz_submission_id or status.'}, status=400)
+        
+        try:
+            quiz_submission = QuizSubmission.objects.get(id=quiz_submission_id)
+        except QuizSubmission.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'Quiz submission not found.'}, status=404)
+
+        if status == 'passed':
+            quiz_submission.passed = True
+            quiz_submission.save()
+            return JsonResponse({'status': 'success', 'message': 'Status marked Passed successfully.'})
+        else:
+            quiz_submission.status = status.lower()
+            quiz_submission.save()
+            return JsonResponse({'status': 'success', 'message': 'Status updated successfully.'}, status=403)
+
+    except Exception as e:
+        print("Error updating status:", str(e))
+        return JsonResponse({'status': 'error', 'message': 'Error updating status: ' + str(e)}, status=500)
