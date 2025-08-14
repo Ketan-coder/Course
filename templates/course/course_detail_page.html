@@ -426,7 +426,7 @@
       <h2 class="font-weight-bold mt-4 mb-5">More Courses from this <b class="text-decoration-underline">{{ course.instructor.profile.user.username }}</b></h2>
       <div class="horizontal-scroll d-flex flex-nowrap m-2 md-3" style="overflow-x: auto; overflow-y: hidden; white-space: nowrap; -webkit-overflow-scrolling: touch;">
         {% for course in instructor_related_courses %}
-          <div class="card border rounded-3 border-2 m-3" style="min-width: 19rem; display: inline-block;">
+          <div class="card border rounded-3 border-2 m-3" style="min-width: 18rem; display: inline-block;">
             {% include 'course/components/course_card.html' with course=course %}
           </div>
         {% empty %}
@@ -439,7 +439,7 @@
       <h2 class="font-weight-bold mt-4 mb-5">More Courses to Browse</h2>
       <div class="horizontal-scroll d-flex flex-nowrap m-2 md-3" style="overflow-x: auto; overflow-y: hidden; white-space: nowrap; -webkit-overflow-scrolling: touch;">
         {% for course in course_list %}
-          <div class="card border rounded-3 border-2 m-3" style="min-width: 19rem; display: inline-block;">
+          <div class="card border rounded-3 border-2 m-3" style="min-width: 18rem; display: inline-block;">
             {% include 'course/components/course_card.html' with course=course %}
           </div>
         {% empty %}

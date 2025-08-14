@@ -90,15 +90,35 @@
             <!-- Uploads -->
             <div class="row g-4 mb-5">
               <div class="col-md-6">
-                <label for="thumbnail-input" class="form-label">Thumbnail <span class="text-danger"> * </span></label>
-                <input type="file" name="thumbnail" id="thumbnail-input" class="form-control" onchange="previewImage(event, 'thumbnail-preview')" required value="{{ course.thumbnail.url|default_if_none:'' }}">
-                <img id="thumbnail-preview" src="{% if course.thumbnail %} {{ course.thumbnail.url|default:'' }} {% else %} {% endif %} " class="img-fluid mt-3 rounded border" style="max-height: 200px; {% if not course.thumbnail %}display:none;{% endif %}" alt="Preview">
+                <label for="thumbnail-input" class="form-label">Thumbnail</label>
+                <input type="file" name="thumbnail" id="thumbnail-input" class="form-control" onchange="previewImage(event, 'thumbnail-preview')">
+                {% if course.thumbnail %}
+                  <div class="mt-2">
+                    <img id="thumbnail-preview" src="{{ course.thumbnail.url }}" class="img-fluid rounded border" style="max-height: 200px;" alt="Current thumbnail">
+                    <div class="form-check mt-2">
+                      <input class="form-check-input" type="checkbox" name="thumbnail-clear" id="thumbnail-clear">
+                      <label class="form-check-label" for="thumbnail-clear">Remove thumbnail</label>
+                    </div>
+                  </div>
+                {% else %}
+                  <img id="thumbnail-preview" src="#" class="img-fluid mt-3 rounded border" style="max-height: 200px; display:none;" alt="Preview">
+                {% endif %}
               </div>
+
               <div class="col-md-6">
-                <label for="intro-video-input" class="form-label">Intro Video <span class="text-danger"> * </span></label>
-                <input type="file" name="intro_video" id="intro-video-input" class="form-control" required value="{{ course.intro_video.url|default_if_none:'' }}">
+                <label for="intro-video-input" class="form-label">Intro Video</label>
+                <input type="file" name="intro_video" id="intro-video-input" class="form-control">
                 {% if course.intro_video %}
-                <p class="form-text mt-2">Current: <a href="{{ course.intro_video.url }}" target="_blank">{{ course.intro_video.name|truncatechars:30 }}</a></p>
+                  <div class="mt-2">
+                    <p class="mb-1">Current video:</p>
+                    <a href="{{ course.intro_video.url }}" target="_blank" class="d-block mb-2">
+                      {{ course.intro_video.name|truncatechars:30 }}
+                    </a>
+                    <div class="form-check">
+                      <input class="form-check-input" type="checkbox" name="intro_video-clear" id="intro_video-clear">
+                      <label class="form-check-label" for="intro_video-clear">Remove video</label>
+                    </div>
+                  </div>
                 {% endif %}
               </div>
             </div>

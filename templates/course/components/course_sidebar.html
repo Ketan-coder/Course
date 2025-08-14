@@ -16,8 +16,8 @@
     <!-- Top Banner / Image -->
     <div class="position-relative">
       {% if course.thumbnail %}
-        <img src="{{ course.thumbnail }}" alt="{{ course.title }}" 
-             class="w-full d-block" style="aspect-ratio: 16/9; object-fit: cover;">
+        <img src="{{ course.thumbnail.url }}" alt="{{ course.title }}" 
+             class="w-full d-block" style="aspect-ratio: 16/9; object-fit: fill; width: 100%; height: auto;">
       {% else %}
         <svg class="bd-placeholder-img card-img-top w-full" style="aspect-ratio: 16/9; object-fit: cover;"
              xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Placeholder: Thumbnail" 
@@ -40,7 +40,7 @@
     <div class="flex-1 p-2 overflow-y-auto">
       <h6 class="font-weight-bold fs-3 mb-1">{{ course.title }}</h6>
       <p class="text-muted mb-2">
-        {{ course.description|striptags|truncatechars:75 }}
+        {{ course.description|striptags }}
       </p>
 
       <!-- Highlights -->
@@ -57,7 +57,7 @@
 
       <!-- Instructors -->
       {% if course.instructor %}
-      <div class="mb-2">
+      <div class="mt-2">
         <h6 class="font-weight-semibold">Instructors</h6>
         <div class="d-flex align-items-center mt-5">
           <img src="{{ instructor.profile.image.url }}" alt="{{ instructor.name }}" 
@@ -67,7 +67,7 @@
       {% endif %}
 
       <!-- Stats -->
-      <div class="d-flex gap-10">
+      {% comment %} <div class="d-flex gap-10">
         <div class="bg-light-dark rounded p-10 text-center flex-1">
           <div class="font-weight-bold">{{ course.sections.count|default:'0' }}</div>
           <small class="text-muted">Sections</small>
@@ -76,13 +76,13 @@
           <div class="font-weight-bold">{{ course.sections.lesson.count|default:'0h' }}</div>
           <small class="text-muted">Practice</small>
         </div>
-      </div>
+      </div> {% endcomment %}
     </div>
 
     <!-- Footer Button -->
     <div class="pt-5 border-top">
-      <a href="{{ course.schedule_url|default:'#' }}" class="btn btn-primary w-full font-weight-semibold">
-        View schedule
+      <a href="{% url 'course_detail' pk=course.id %}" class="btn btn-primary w-full font-weight-semibold">
+        View Course
       </a>
     </div>
 

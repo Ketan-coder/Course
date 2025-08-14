@@ -127,7 +127,7 @@
             <div class="row row-eq-spacing">
                 <div class="horizontal-scroll ms-2 mt-2 d-flex flex-nowrap" style="overflow-x: auto; overflow-y: hidden; white-space: nowrap; -webkit-overflow-scrolling: touch;">
                 {% for category in categories %}
-                    <div class="col-10 col-sm-6 col-md-2 col-lg-2" style="min-width: 10rem; display: inline-block;">
+                    <div class="col-12 col-sm-6 col-md-2 col-lg-2" style="min-width: 10rem; display: inline-block;">
                         {% include "components/tag_card.html" with url="/" title=category.name subtitle=category.description icon=category.extra_fields.icon search_term=category.extra_fields.search_terms  %}
                     </div>
                 {% endfor %}

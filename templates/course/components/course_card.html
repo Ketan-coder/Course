@@ -1,5 +1,5 @@
-<a href="{% url 'course_detail' pk=course.id %}" class="card-link-wrapper" style="width: 17rem; text-decoration: none;">
-  <div class="card" style="width: 17rem;">
+<a href="{% url 'course_detail' pk=course.id %}" class="card-link-wrapper" style="text-decoration: none;">
+  <div class="card" style="width: 17.85rem;">
       <!-- Thumbnail or Placeholder -->
       {% if course.thumbnail %}
       <img src="{{ course.thumbnail.url }}" class="card-img-top" alt="Course Thumbnail" style="aspect-ratio: 16/9; object-fit: cover;" width="600" height="250">
@@ -31,7 +31,7 @@
         <h5 class="card-title mb-2">{{ course.title }}</h5>
         {% if course.course_type == 'free' %}
         <p class="card-text fs-5 d-flex align-items-center">
-          <strong class="text-success-emphasis me-2">Free</strong>
+          <strong class="text-success-emphasis me-2 fs-4">Free</strong>
           <s class="fs-6 text-body-secondary">{% if course.price and course.price != 0 %}{{course.price}}{% endif %}</s>
         </p>
         {% else %}
@@ -47,8 +47,8 @@
         </p>
         {% endif %}
         <!-- Clamp the description visually (CSS below) -->
-        <p class="card-text description-clamp mb-2" style="flex: 1 1 auto; min-height: 0;">
-          {{ course.description|striptags|truncatechars:75 }}
+        <p class="card-text description-clamp mb-2 text-wrap" style="flex: 1 1 auto; min-height: 0;">
+          {{ course.description|striptags|truncatechars:35 }}
         </p>
         <div class="d-flex hstack gap-3 mt-auto">
             <div>{{ course.get_course_level_display }}</div>
