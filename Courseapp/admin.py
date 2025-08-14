@@ -3,7 +3,7 @@ from django.contrib import admin
 from unfold.admin import ModelAdmin as UnfoldModelAdmin
 from .models import Language, Course, Section, Lesson, Quiz, QuizSubmission, Tag
 from .models import CourseComment, CourseSubComment, CourseReview, CourseCertificate, FAQ, Article
-
+from .admin_forms import TagForm
 # Register your models here.
 
 
@@ -18,15 +18,33 @@ class LanguageAdmin(admin.ModelAdmin):
         ("Extra Fields", {"fields": ("extra_fields",)}),
     )
 
+    class Media:
+        css = {
+            'all': ('admin/css/toggle-switch.css',)
+        }
+        js = ('admin/js/toggle-switch.js',)
+
 
 class SectionInline(admin.TabularInline):
     model = Section.courses.through  # For ManyToManyField
     extra = 1
 
+    class Media:
+        css = {
+            'all': ('admin/css/toggle-switch.css',)
+        }
+        js = ('admin/js/toggle-switch.js',)
+
 
 class FAQInline(admin.TabularInline):
     model = FAQ.courses.through
     extra = 1
+
+    class Media:
+        css = {
+            'all': ('admin/css/toggle-switch.css',)
+        }
+        js = ('admin/js/toggle-switch.js',)
 
 
 @admin.register(Course)
@@ -84,6 +102,12 @@ class CourseAdmin(admin.ModelAdmin):
     inlines = [SectionInline, FAQInline]  # To manage related Sections and FAQs
     readonly_fields = ("course_uuid", "created_at", "updated_at")
 
+    class Media:
+        css = {
+            'all': ('admin/css/toggle-switch.css',)
+        }
+        js = ('admin/js/toggle-switch.js',)
+
 
 @admin.register(Section)
 class SectionAdmin(admin.ModelAdmin):
@@ -92,6 +116,13 @@ class SectionAdmin(admin.ModelAdmin):
     list_filter = ("created_at",)
     ordering = ("order",)
     date_hierarchy = "created_at"
+
+    class Media:
+        css = {
+            'all': ('admin/css/toggle-switch.css',)
+        }
+        js = ('admin/js/toggle-switch.js',)
+        
     # fieldsets = (
     #     (None, {
     #         'fields': ('title', 'order', 'is_open')
@@ -109,6 +140,13 @@ class LessonAdmin(admin.ModelAdmin):
     list_filter = ("created_at",)
     ordering = ("-created_at",)
     date_hierarchy = "created_at"
+
+    class Media:
+        css = {
+            'all': ('admin/css/toggle-switch.css',)
+        }
+        js = ('admin/js/toggle-switch.js',)
+
     # fieldsets = (
     #     (None, {
     #         'fields': ('course', 'section', 'title', 'description', 'video', 'content', 'is_open')
@@ -126,6 +164,13 @@ class QuizAdmin(admin.ModelAdmin):
     list_filter = ("course__created_at",)
     ordering = ("-created_at",)
     date_hierarchy = "created_at"
+
+    class Media:
+        css = {
+            'all': ('admin/css/toggle-switch.css',)
+        }
+        js = ('admin/js/toggle-switch.js',)
+
     # fieldsets = (
     #     (None, {
     #         'fields': ('course', 'section', 'lesson', 'title', 'description')
@@ -151,6 +196,12 @@ class QuizSubmissionAdmin(admin.ModelAdmin):
     #     }),
     # )
 
+    class Media:
+        css = {
+            'all': ('admin/css/toggle-switch.css',)
+        }
+        js = ('admin/js/toggle-switch.js',)
+
     def get_quiz_questions(self, obj):
         # Assuming questions is a list of dicts in JSONField
         questions = obj.quiz.questions  # quiz.questions is a JSONField
@@ -161,21 +212,47 @@ class QuizSubmissionAdmin(admin.ModelAdmin):
     get_quiz_questions.short_description = "Quiz Questions"
 
 
+# @admin.register(Tag)
+# class TagAdmin(admin.ModelAdmin):
+#     list_display = ("name", "created_at")
+#     search_fields = ("name",)
+#     ordering = ("name",)
+#     date_hierarchy = "created_at"
+#     fieldsets = (
+#         (None, {
+#             'fields': ('name','description',)
+#         }),
+#         ('Media', {
+#             'fields': ('icon_image','extra_fields["icon"]')
+#         }),
+#         ('Extra Fields', {
+#             'fields': ('is_deleted','is_active','extra_fields',)
+#         }),
+#     )
+
 @admin.register(Tag)
 class TagAdmin(admin.ModelAdmin):
+    form = TagForm
     list_display = ("name", "created_at")
     search_fields = ("name",)
     ordering = ("name",)
     date_hierarchy = "created_at"
-    # fieldsets = (
-    #     (None, {
-    #         'fields': ('name',)
-    #     }),
-    #     ('Extra Fields', {
-    #         'fields': ('extra_fields',)
-    #     }),
-    # )
 
+    class Media:
+        css = {
+            'all': ('admin/css/toggle-switch.css',)
+        }
+        js = ('admin/js/toggle-switch.js',)
+
+    fieldsets = (
+        ("Basic Info", {"fields": ("name", "description")}),
+        ("Media", {"fields": ("icon_image",)}),
+        ("Status", {"fields": ("is_active", "is_deleted")}),
+        ("Extra Fields", {
+            "fields": ("emoji", "icon", "bgColor", "color", "iconColor", "extra_fields"),
+            "classes": ("collapse",)
+        }),
+    )
 
 @admin.register(CourseComment)
 class CourseCommentAdmin(admin.ModelAdmin):
@@ -184,6 +261,12 @@ class CourseCommentAdmin(admin.ModelAdmin):
     list_filter = ("created_at",)
     ordering = ("-created_at",)
     date_hierarchy = "created_at"
+
+    class Media:
+        css = {
+            'all': ('admin/css/toggle-switch.css',)
+        }
+        js = ('admin/js/toggle-switch.js',)
     # fieldsets = (
     #     (None, {
     #         'fields': ('course', 'user', 'comment_text')
@@ -205,6 +288,12 @@ class CourseSubCommentAdmin(admin.ModelAdmin):
     list_filter = ("created_at",)
     ordering = ("-created_at",)
     date_hierarchy = "created_at"
+
+    class Media:
+        css = {
+            'all': ('admin/css/toggle-switch.css',)
+        }
+        js = ('admin/js/toggle-switch.js',)
     # fieldsets = (
     #     (None, {
     #         'fields': ('course_comment_text', 'user', 'comment_text')
@@ -222,6 +311,12 @@ class CourseReviewAdmin(admin.ModelAdmin):
     list_filter = ("created_at",)
     ordering = ("-created_at",)
     date_hierarchy = "created_at"
+
+    class Media:
+        css = {
+            'all': ('admin/css/toggle-switch.css',)
+        }
+        js = ('admin/js/toggle-switch.js',)
     # fieldsets = (
     #     (None, {
     #         'fields': ('user', 'rating', 'review_text')
@@ -239,6 +334,12 @@ class CourseCertificateAdmin(admin.ModelAdmin):
     list_filter = ("issued_at",)
     ordering = ("-issued_at",)
     date_hierarchy = "issued_at"
+
+    class Media:
+        css = {
+            'all': ('admin/css/toggle-switch.css',)
+        }
+        js = ('admin/js/toggle-switch.js',)
     # fieldsets = (
     #     (None, {
     #         'fields': ('user', 'course', 'certificate_code')
@@ -256,6 +357,12 @@ class FAQAdmin(admin.ModelAdmin):
     list_filter = ("created_at",)
     ordering = ("-created_at",)
     date_hierarchy = "created_at"
+
+    class Media:
+        css = {
+            'all': ('admin/css/toggle-switch.css',)
+        }
+        js = ('admin/js/toggle-switch.js',)
     # fieldsets = (
     #     (None, {
     #         'fields': ('course', 'question', 'answer')
@@ -281,3 +388,9 @@ class CourseArticleAdmin(admin.ModelAdmin):
             'fields': ('extra_fields',)
         }),
     )
+
+    class Media:
+        css = {
+            'all': ('admin/css/toggle-switch.css',)
+        }
+        js = ('admin/js/toggle-switch.js',)

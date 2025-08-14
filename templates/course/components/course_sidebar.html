@@ -1,0 +1,90 @@
+<div class="offcanvas offcanvas-end p-3" data-bs-scroll="true" data-bs-backdrop="false"
+     tabindex="-1" style="width: 40vh;"
+     id="course-sidebar-{{course.id}}" aria-labelledby="offcanvas-title-{{course.id}}">
+
+  <!-- Header -->
+  <div class="offcanvas-header border-0 p-1">
+    <h5 class="offcanvas-title font-weight-bold" id="offcanvas-title-{{course.id}}">
+      Preview Details
+    </h5>
+    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+  </div>
+
+  <!-- Body -->
+  <div class="offcanvas-body p-2 d-flex flex-column h-full">
+
+    <!-- Top Banner / Image -->
+    <div class="position-relative">
+      {% if course.thumbnail %}
+        <img src="{{ course.thumbnail }}" alt="{{ course.title }}" 
+             class="w-full d-block" style="aspect-ratio: 16/9; object-fit: cover;">
+      {% else %}
+        <svg class="bd-placeholder-img card-img-top w-full" style="aspect-ratio: 16/9; object-fit: cover;"
+             xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Placeholder: Thumbnail" 
+             preserveAspectRatio="xMidYMid slice" focusable="false">
+          <title>No Thumbnail</title>
+          <rect width="100%" height="100%" fill="#55595c"></rect>
+          <text x="50%" y="50%" fill="#eceeef" dy=".3em" text-anchor="middle">No Thumbnail</text>
+        </svg>
+      {% endif %}
+
+      {% if course.price %}
+      <span class="badge badge-dark font-weight-semibold position-absolute" 
+            style="top: 10px; right: 10px; font-size: 0.9rem; padding: 6px 10px; border-radius: 50px;">
+        ${{ course.price }}
+      </span>
+      {% endif %}
+    </div>
+
+    <!-- Course Info -->
+    <div class="flex-1 p-2 overflow-y-auto">
+      <h6 class="font-weight-bold fs-3 mb-1">{{ course.title }}</h6>
+      <p class="text-muted mb-2">
+        {{ course.description|striptags|truncatechars:75 }}
+      </p>
+
+      <!-- Highlights -->
+      {% if course.learning_objectives %}
+      <ul class="list-unstyled m-0 mb-2">
+        {% for item in course.learning_objectives %}
+        <li class="d-flex align-items-center mb-5">
+          <i class="fa fa-check-circle text-success mr-1"></i>
+          <span>{{ item }}</span>
+        </li>
+        {% endfor %}
+      </ul>
+      {% endif %}
+
+      <!-- Instructors -->
+      {% if course.instructor %}
+      <div class="mb-2">
+        <h6 class="font-weight-semibold">Instructors</h6>
+        <div class="d-flex align-items-center mt-5">
+          <img src="{{ instructor.profile.image.url }}" alt="{{ instructor.name }}" 
+               class="rounded-circle mr-5" style="width: 36px; height: 36px; object-fit: cover;">
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Stats -->
+      <div class="d-flex gap-10">
+        <div class="bg-light-dark rounded p-10 text-center flex-1">
+          <div class="font-weight-bold">{{ course.sections.count|default:'0' }}</div>
+          <small class="text-muted">Sections</small>
+        </div>
+        <div class="bg-light-dark rounded p-10 text-center flex-1">
+          <div class="font-weight-bold">{{ course.sections.lesson.count|default:'0h' }}</div>
+          <small class="text-muted">Practice</small>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer Button -->
+    <div class="pt-5 border-top">
+      <a href="{{ course.schedule_url|default:'#' }}" class="btn btn-primary w-full font-weight-semibold">
+        View schedule
+      </a>
+    </div>
+
+  </div>
+</div>

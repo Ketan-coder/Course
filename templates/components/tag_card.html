@@ -31,13 +31,13 @@
 -->
 {% endcomment %}
 <a href="{{ url|default:'#' }}" class="d-block text-decoration-none" style="color: inherit;">
-  <div class="card cc-card border border-2 rounded-3 m-2" style="
+  <div class="card cc-card border border-2 rounded-3 m-1" style="
       position: relative; overflow: hidden;
       border: none; border-radius: 16px;
-      width: 18rem; height: 11rem;
-      background: var(--bs-body-bg, #000);
+      width: 18rem; height: 12rem;
+      background: var(--cc-bg, var(--bs-body-bg, #000));
       box-shadow: 0 2px 8px rgba(0,0,0,.06);
-      --cc-color: {{ color|default:'#3b82f6' }};
+      --cc-color: {{ color|default:'' }};
     ">
     <div class="card-body" style="
         height:100%; display:flex; flex-direction:column;
@@ -46,12 +46,12 @@
 
       <!-- Title + subtitle -->
       <div>
-        <h5 class="card-title" style="margin:0; font-weight:800; color: var(--cc-color);">
+        <h5 class="card-title fs-3" style="margin:0; font-weight:500; color: var(--cc-color);">
           {{ title|default:'Category' }}
         </h5>
         {% if subtitle %}
         <p class="card-text" style="margin:.35rem 0 0; color:#8a9099; font-size:.925rem;">
-          {{ subtitle }}
+          {{ subtitle|truncatechars:25 }}
         </p>
         {% endif %}
       </div>
@@ -62,7 +62,7 @@
           display:flex; flex-wrap:wrap; gap:8px;
           opacity:0; transform: translateY(8px);
         ">
-        {% for term in search_terms|ensure_list %}
+        {% for term in search_term|ensure_list %}
           <span class="pill rounded-3" style="
               font-size:.75rem; font-weight:600; padding:6px 10px;
               color: var(--cc-color);
@@ -75,7 +75,7 @@
 
     <!-- Decorative icon -->
     <i class="ph ph-{{ icon|default:'sparkle' }}" aria-hidden="true" style="
-        position:absolute; right:-10px; bottom:-10px;
+        position:absolute; right:-15px; bottom:-25px;
         font-size:120px; line-height:1;
         color: var(--cc-color); opacity:.3;
         pointer-events:none;
@@ -84,73 +84,116 @@
 </a>
 
 <style>
-  /* Pure CSS fallback hover */
   :root {
     --icon-opacity: 0.14;
     --icon-blend-mode: multiply;
   }
-  .cc-card:hover { transform: translateY(-4px); box-shadow: 0 10px 24px rgba(0,0,0,.16); }
-  .cc-card:hover .cc-pills { opacity: 1; transform: translateY(0); transition: opacity .25s ease, transform .25s ease; }
-  .cc-card:hover i { transform: scale(1.06); transition: transform .25s ease; }
+  .cc-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 24px rgba(0,0,0,.16);
+  }
+  .cc-card:hover .cc-pills {
+    opacity: 1;
+    transform: translateY(20px) translateX(20px);
+    transition: opacity .25s ease, transform .25s ease;
+  }
+  .cc-card:hover i {
+    transform: scale(1.06);
+    transition: transform .25s ease;
+  }
 </style>
 
 <script>
-document.addEventListener("DOMContentLoaded", function () {
-  if (typeof anime !== "undefined") {
+  document.addEventListener("DOMContentLoaded", function () {
+    const colors = [
+      "#3b82f6", "#10b981", "#f59e0b",
+      "#ef4444", "#8b5cf6", "#14b8a6",
+      "#ec4899", "#f97316", "#22c55e"
+    ];
+  
+    let colorPool = [...colors]; // copy
+  
+    function getUniqueColor() {
+      // Reset pool if empty
+      if (colorPool.length === 0) {
+        colorPool = [...colors];
+      }
+      // Pick random index
+      const index = Math.floor(Math.random() * colorPool.length);
+      const color = colorPool[index];
+      // Remove from pool
+      colorPool.splice(index, 1);
+      return color;
+    }
+  
     document.querySelectorAll(".cc-card").forEach(function (card) {
-      let icon = card.querySelector("i");
-      let pills = card.querySelector(".cc-pills");
-
-      card.addEventListener("mouseenter", function () {
-        anime({
-          targets: card,
-          translateY: -4,
-          duration: 250,
-          easing: "easeOutQuad"
-        });
-        if (pills) {
+      const style = getComputedStyle(card);
+      let currentColor = style.getPropertyValue("--cc-color").trim();
+  
+      if (!currentColor || currentColor === "''" || currentColor === '""') {
+        let randomColor = getUniqueColor();
+        card.style.setProperty("--cc-color", randomColor);
+        card.style.setProperty("--cc-bg", randomColor + "15"); // Light transparent background
+      }
+    });
+  
+    // Hover animations (anime.js)
+    if (typeof anime !== "undefined") {
+      document.querySelectorAll(".cc-card").forEach(function (card) {
+        let icon = card.querySelector("i");
+        let pills = card.querySelector(".cc-pills");
+  
+        card.addEventListener("mouseenter", function () {
           anime({
-            targets: pills,
-            opacity: 1,
-            translateY: 0,
+            targets: card,
+            translateY: -4,
             duration: 250,
             easing: "easeOutQuad"
           });
-        }
-        anime({
-          targets: icon,
-          scale: 1.06,
-          opacity: 'var(--icon-opacity)',
-          duration: 250,
-          easing: "easeOutQuad"
-        });
-      });
-
-      card.addEventListener("mouseleave", function () {
-        anime({
-          targets: card,
-          translateY: 0,
-          duration: 200,
-          easing: "easeOutQuad"
-        });
-        if (pills) {
+          if (pills) {
+            anime({
+              targets: pills,
+              opacity: 1,
+              translateY: 0,
+              duration: 250,
+              easing: "easeOutQuad"
+            });
+          }
           anime({
-            targets: pills,
-            opacity: 0,
-            translateY: 8,
+            targets: icon,
+            scale: 1.06,
+            opacity: 'var(--icon-opacity)',
+            duration: 250,
+            easing: "easeOutQuad"
+          });
+        });
+  
+        card.addEventListener("mouseleave", function () {
+          anime({
+            targets: card,
+            translateY: 0,
             duration: 200,
             easing: "easeOutQuad"
           });
-        }
-        anime({
-          targets: icon,
-          scale: 1,
-          opacity: 'calc(var(--icon-opacity) * 1.5)',
-          duration: 200,
-          easing: "easeOutQuad"
+          if (pills) {
+            anime({
+              targets: pills,
+              opacity: 0,
+              translateY: 8,
+              duration: 200,
+              easing: "easeOutQuad"
+            });
+          }
+          anime({
+            targets: icon,
+            scale: 1,
+            opacity: 'calc(var(--icon-opacity) * 1.5)',
+            duration: 200,
+            easing: "easeOutQuad"
+          });
         });
       });
-    });
-  }
-});
-</script>
+    }
+  });
+  </script>
+  

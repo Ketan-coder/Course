@@ -100,7 +100,7 @@
             <h5 class="text-muted ps-1"> {{ tag_name }} ({{ course_list|length }})</h5>
             <div class="horizontal-scroll d-flex flex-nowrap" style="overflow-x: auto; overflow-y: hidden; white-space: nowrap; -webkit-overflow-scrolling: touch;">
                 {% for course in course_list %}
-                    <div class="card border rounded-3 border-2 m-1" style="min-width: 19rem; display: inline-block;">
+                    <div class="card border rounded-3 border-2 m-1" style="min-width: 18rem; display: inline-block;">
                         {% include "course/components/course_card.html" with course=course %}
                     </div>
                 {% empty %}
@@ -109,42 +109,31 @@
             </div>
         </div>
     {% endfor %}
-    {% comment %} Assume 'categories' is passed from your view.
-        Each 'category' object has attributes like: url, title, color, etc.
-        Example category object in your view:
-        category = {
-            "url": "/courses/services/",
-            "title": "Services",
-            "subtitle": "Find what you need",
-            "color": "#3b82f6",
-            "icon": "sparkle",
-            "shape": "rectangle",
-            "search_terms": ["Hosting", "API", "Support"]
-        }
+        {% comment %} Assume 'categories' is passed from your view.
+            Each 'category' object has attributes like: url, title, color, etc.
+            Example category object in your view:
+            category = {
+                "url": "/courses/services/",
+                "title": "Services",
+                "subtitle": "Find what you need",
+                "color": "#3b82f6",
+                "icon": "sparkle",
+                "shape": "rectangle",
+                "search_terms": ["Hosting", "API", "Support"]
+            }
         {% endcomment %}
-        <div class="content-horizontal m-2 ps-1" style="overflow-x: hidden;">
-        <h5 class="text-muted ps-1">Filter By Category</h5>
-        <div class="row row-eq-spacing">
-            <div class="horizontal-scroll d-flex flex-nowrap" style="overflow-x: auto; overflow-y: hidden; white-space: nowrap; -webkit-overflow-scrolling: touch;">
-            {% for category in categories %}
-                <div class="col-12 col-sm-6 col-md-2 col-lg-2" style="min-width: 19rem; display: inline-block;">
-                    {% include "components/tag_card.html" with url="/" title=category.name subtitle=category.description color=category.extra_fields.bgColor icon=category.extra_fields.icon search_term=category.extra_fields.search_terms  %}
-                </div>
-            {% endfor %}
-            {% comment %} <div class="col-12 col-sm-6 col-md-2 col-lg-2">
-              {% include "components/tag_card.html" with url="/restaurants" title="Restaurants" subtitle="Best places to eat" color="#f59e0b" icon="fork-knife" %}
+        <div class="content-horizontal m-2 mt-2 ms-2 ps-1" style="overflow-x: hidden;">
+            <h5 class="text-muted ps-1">Filter By Category</h5>
+            <div class="row row-eq-spacing">
+                <div class="horizontal-scroll ms-2 mt-2 d-flex flex-nowrap" style="overflow-x: auto; overflow-y: hidden; white-space: nowrap; -webkit-overflow-scrolling: touch;">
+                {% for category in categories %}
+                    <div class="col-10 col-sm-6 col-md-2 col-lg-2" style="min-width: 10rem; display: inline-block;">
+                        {% include "components/tag_card.html" with url="/" title=category.name subtitle=category.description icon=category.extra_fields.icon search_term=category.extra_fields.search_terms  %}
+                    </div>
+                {% endfor %}
+            </div> 
             </div>
-          
-            <div class="col-12 col-sm-6 col-md-2 col-lg-2">
-              {% include "components/tag_card.html" with url="/travel" title="Travel" subtitle="Flights, stays & more" color="#06b6d4" icon="airplane-tilt" %}
-            </div>
-          
-            <div class="col-12 col-sm-6 col-md-2 col-lg-2">
-              {% include "components/tag_card.html" with url="/entertainment" title="Entertainment" subtitle="Movies, music & more" color="#ec4899" icon="popcorn" %}
-            </div> {% endcomment %}
-          </div> 
         </div>
-    </div>
 
 
     {% if is_paginated %}
@@ -238,6 +227,14 @@
         </div>
     </div>
 </div>
+
+{% comment %} Preview Pane for Course {% endcomment %}
+{% for tag_name, course_list in grouped_courses.items %}
+    {% for course in course_list %}
+        {% include "course/components/course_sidebar.html" with course=course %}
+    {% endfor %}
+{% endfor %}
 <footer class="text-center py-3 mt-5 border-top">
-    <p class="mb-0 text-muted">&copy; {% now "Y" %} EduPath. All rights reserved. Partnered with Tiger Brokers.</p> </footer>
+    <p class="mb-0 text-muted">&copy; {% now "Y" %} EduPath. All rights reserved. Partnered with Tiger Brokers.</p> 
+</footer>
 {% endblock %}

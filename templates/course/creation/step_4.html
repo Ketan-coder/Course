@@ -126,7 +126,7 @@
                     </div>
 
                     <div class="text-end pt-4">
-                        <a href="{% url 'course_create_step_five' course_id=course.id %}" class="btn btn-primary btn-lg">
+                        <a href="{% if course %}{% url 'course_create_step_five' course_id=course.id %}{% else %}{% url 'course_create_step_five' %} {% endif %}" class="btn btn-primary btn-lg">
                             Next: Finalize & Publish <i class="ph ph-arrow-right ms-2"></i>
                         </a>
                     </div>
