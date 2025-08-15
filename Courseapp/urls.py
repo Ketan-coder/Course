@@ -6,6 +6,7 @@ from . import views
 urlpatterns: list[URLPattern] = [
     # path("", views.index, name="home"),
     path('courses/', views.course_list, name='course_list'),
+    path('courses/<str:category>/', views.course_list, name='course_list'),
     path("course/<int:pk>/", views.course_detail, name="course_detail"),
     path('courses/new/', login_required(views.course_create), name='course_create'),
 

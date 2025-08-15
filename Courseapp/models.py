@@ -7,6 +7,7 @@ from utils.media_handler import MediaHandler
 from decimal import Decimal
 from utils.utils import generate_quiz_from_content
 from utils.decorators import check_load_time, retry_on_failure
+from .model_manager import *
 
 def validate_discount(value) -> None:
     if value < 0:
@@ -62,6 +63,9 @@ class Course(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     extra_fields = models.JSONField(blank=True, null=True, default=dict)
+
+    objects = CourseManager()  # Default manager
+    all_objects = models.Manager()  # Optional: to access deleted too
 
     class Meta:
         ordering = ['-created_at']
@@ -159,6 +163,9 @@ class Section(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    objects = SectionManager()
+    all_objects = models.Manager()
+
     def __str__(self):
         return self.title + " - Open? " + str(self.is_open)
     
@@ -214,6 +221,9 @@ class Lesson(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    objects = LessonManager()
+    all_objects = models.Manager()
+
     class Meta:
         ordering: list[str] = ['order']
 
@@ -259,6 +269,9 @@ class Quiz(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     extra_fields = models.JSONField(blank=True, null=True, default=dict)
+
+    objects = QuizManager()
+    all_objects = models.Manager()
 
     class Meta:
         ordering: list[str] = ['-created_at'] 
@@ -354,15 +367,13 @@ class Tag(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     extra_fields = models.JSONField(blank=True, null=True, default=dict)
 
+    objects = TagManager()
+    all_objects = models.Manager()
+
     class Meta:
         ordering: list[str] = ['name']
 
     def __str__(self) -> str:
-        if self.extra_fields.get('icon'):
-            return f"{self.name} ({self.extra_fields.get('icon')})"
-        elif self.extra_fields.get('emoji'):
-            return f"{self.name} {self.extra_fields.get('emoji')}"
-        else:
             return self.name
         
     def save(self, emoji='📊', icon="chart-line", bcColor="#00e5ff", color="#000", iconColor = "#000" ,*args, **kwargs) -> None:
@@ -520,6 +531,9 @@ class Article(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     extra_fields = models.JSONField(blank=True, null=True, default=dict)
+
+    objects = ArticleManager()
+    all_objects = models.Manager()
 
     class Meta:
         ordering: list[str] = ['-created_at']

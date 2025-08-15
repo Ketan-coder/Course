@@ -1,3 +1,4 @@
+{% load course_tags %}
 <div class="offcanvas offcanvas-end p-3" data-bs-scroll="true" data-bs-backdrop="false"
      tabindex="-1" style="width: 40vh;"
      id="course-sidebar-{{course.id}}" aria-labelledby="offcanvas-title-{{course.id}}">
@@ -42,27 +43,44 @@
       <p class="text-muted mb-2">
         {{ course.description|striptags }}
       </p>
+      <hr class="my-4"> 
 
       <!-- Highlights -->
       {% if course.learning_objectives %}
-      <ul class="list-unstyled m-0 mb-2">
-        {% for item in course.learning_objectives %}
-        <li class="d-flex align-items-center mb-5">
-          <i class="fa fa-check-circle text-success mr-1"></i>
-          <span>{{ item }}</span>
-        </li>
-        {% endfor %}
+      <h5 class="font-weight-bold mb-2 mt-3">What you'll learn</h5>
+      <ul class="list-unstyled mb-4">
+        {% with objectives=course.learning_objectives %}
+          {% for item in objectives %}
+          <li class="d-flex align-items-center">
+            <i class="ph ph-check text-success me-2"></i>
+            <span>{{ item }}</span>
+          </li>
+          {% endfor %}
+        {% endwith %}
       </ul>
+      <hr class="my-4"> 
       {% endif %}
 
       <!-- Instructors -->
       {% if course.instructor %}
-      <div class="mt-2 mb-2">
+      <div class="mt-2">
         <h6 class="font-weight-semibold">Instructors</h6>
         <div class="d-flex align-items-center">
-          <img src="{{ course.instructor.profile.avatar.url|default:'https://placehold.co/40x40/EBF1FF/7F9CF5?text=A' }}" alt="{{ course.instructor.name }}" 
-               class="rounded-circle mr-5" style="width: 36px; height: 36px; object-fit: cover;">
-          <p class="font-weight-semibold  ms-2">{{ course.instructor.profile.user.get_full_name|default:course.instructor.profile.user.username }}</p>
+          {% with initials=course.instructor.profile|get_initials %}
+            <img
+              src="{% if course.instructor.profile.avatar %}
+                    {{ course.instructor.profile.avatar.url }}
+                  {% else %}
+                    https://placehold.co/40x40/EBF1FF/7F9CF5?text={{ initials }}
+                  {% endif %}"
+              alt="{{ course.instructor.profile.user.get_full_name|default:course.instructor.profile.user.username }}"
+              class="rounded-circle mr-5"
+              style="width:36px;height:36px;object-fit:cover;"
+            >
+          {% endwith %}
+
+
+          <p class="font-weight-semibold ms-2">{{ course.instructor.profile.user.get_full_name|default:course.instructor.profile.user.username }}</p>
         </div>
       </div>
       {% endif %}
@@ -78,10 +96,11 @@
           <small class="text-muted">Practice</small>
         </div>
       </div> {% endcomment %}
+      <hr class="my-4"> 
     </div>
 
     <!-- Footer Button -->
-    <div class="pt-2 border-top" style="margin-top: 100%;">
+    <div class="pt-2 border-top">
       <a href="{% url 'course_detail' pk=course.id %}" class="btn btn-primary w-full font-weight-semibold">
         View Course
       </a>

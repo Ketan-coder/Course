@@ -58,8 +58,18 @@ import re
 
 from collections import defaultdict
 
-def course_list(request) -> HttpResponse:
-    courses = Course.objects.all()
+def course_list(request, category='') -> HttpResponse:
+    category_object = ''
+    if category:
+        try:
+            category_object = Tag.objects.get(name=category)
+            courses = Course.objects.filter(tags=category_object)
+        except Tag.DoesNotExist:
+            courses = Course.objects.none()
+        except:
+            courses = Course.objects.all()
+    else:
+        courses = Course.objects.all()
     categories = Tag.objects.all()
     request.session["page"] = "course"
 
@@ -73,12 +83,6 @@ def course_list(request) -> HttpResponse:
             request.session['current_user_type'] = 'student'
         elif instructor_profile:
             request.session['current_user_type'] = 'instructor'
-
-    if request.method == "POST" and "search_term" in request.POST:
-        search_term = request.POST["search_term"]
-        courses = courses.filter(
-            title__icontains=search_term, language__name__icontains=search_term
-        )
 
     if "course_level" in request.GET:
         filter_by_level = request.GET["course_level"]
@@ -94,10 +98,19 @@ def course_list(request) -> HttpResponse:
     grouped_courses = defaultdict(list)
     seen_courses = set()
 
+    # for course in courses:
+    #     tags = course.tags.values_list('name', flat=True)
+    #     for tag in tags:
+    #         if course.id not in seen_courses:
+    #             grouped_courses[tag].append(course)
+    #             seen_courses.add(course.id)
+    #             break
+
     for course in courses:
-        tags = course.tags.values_list('name', flat=True)
+        tags = course.tags.all() # Get full Tag objects instead of just names
         for tag in tags:
             if course.id not in seen_courses:
+                # Use the tag object as the key to include icon information
                 grouped_courses[tag].append(course)
                 seen_courses.add(course.id)
                 break
@@ -108,7 +121,10 @@ def course_list(request) -> HttpResponse:
     print(categories)
 
     return render(request, "course/course_list.html", {
-        "grouped_courses": grouped_courses, 'categories' : categories
+        "grouped_courses": grouped_courses, 
+        'categories' : categories, 
+        'category' : category if category else '',
+        'category_object' : category_object if category_object else ''
     })
 
 

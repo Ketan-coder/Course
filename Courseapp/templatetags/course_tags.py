@@ -45,3 +45,19 @@ def ensure_list_filter(input_data):
     elif isinstance(input_data, (list, tuple)):
         return input_data
     return []
+
+@register.filter(name='get_initials')
+def get_initials(profile):
+    if profile and profile.user and profile.user.first_name and profile.user.last_name:
+        first_name_initial = profile.user.first_name[0]
+        last_name_initial = profile.user.last_name[0]
+    elif profile and profile.user and profile.user.first_name:
+        first_name_initial = profile.user.first_name[0]
+        last_name_initial = ''
+    elif profile and profile.user and profile.user.last_name:
+        first_name_initial = ''
+        last_name_initial = profile.user.last_name[0]
+    else:
+        first_name_initial = ''
+        last_name_initial = ''
+    return first_name_initial + last_name_initial

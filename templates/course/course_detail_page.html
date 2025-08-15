@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
-
+{% load course_tags %}
 {% block title %}
   {{ course.title|default:'Course Details' }}
 {% endblock %}
@@ -27,7 +27,19 @@
             <h1 class="fs-1 font-weight-bolder">{{ course.title|default:'Stock Market Basics' }}</h1>
             <p class="fs-4 text-muted">{{ course.description|safe|truncatewords:30|default:'A simple and fun way to learn finance.' }}</p>
             <div class="d-flex align-items-center mt-3">
-              <img src="{{ course.instructor.profile.avatar.url|default:'https://placehold.co/40x40/EBF1FF/7F9CF5?text=A' }}" alt="Instructor" class="rounded-circle" width="40" height="40" />
+              {% comment %} <img src="{{ course.instructor.profile.avatar.url|default:'https://placehold.co/40x40/EBF1FF/7F9CF5?text=A' }}" alt="Instructor" class="rounded-circle" width="40" height="40" /> {% endcomment %}
+              {% with initials=course.instructor.profile|get_initials %}
+                <img
+                  src="{% if course.instructor.profile.avatar %}
+                        {{ course.instructor.profile.avatar.url }}
+                      {% else %}
+                        https://placehold.co/40x40/EBF1FF/7F9CF5?text={{ initials }}
+                      {% endif %}"
+                  alt="{{ course.instructor.profile.user.get_full_name|default:course.instructor.profile.user.username }}"
+                  class="rounded-circle mr-5"
+                  style="width:36px;height:36px;object-fit:cover;"
+                >
+              {% endwith %}
               <div class="ms-2">
                 <div class="font-weight-bold">{{ course.instructor.profile.user.get_full_name|default:course.instructor.profile.user.username }}</div>
               </div>
@@ -140,7 +152,7 @@
             <div class="card card-body mb-4">{{ course.description|safe|linebreaksbr }}</div>
           {% endif %}
 
-          <h2 class="font-weight-bold mt-4 mb-3">Syllabus</h2>
+          <h2 class="font-weight-bold mt-4 mb-3 p-2">Syllabus</h2>
           <div class="accordion" id="courseAccordion">
             {% for chapter in course.sections.all %}
               {% if course.course_type == 'free' or course.instructor.profile.user.id == request.user.id or logged_in_profile in course.is_bought_by_users.all or course.is_open_to_all %}
@@ -314,7 +326,19 @@
                 {% for review in all_reviews|slice:':3' %}
                   <div class="border-top pt-3 mt-3">
                     <div class="d-flex align-items-center mb-2">
-                      <img src="{{ review.user.profile.avatar.url|default:'https://placehold.co/40x40/EBF1FF/7F9CF5?text=A' }}" alt="Reviewer" class="rounded-circle" width="40" height="40" />
+                      {% comment %} <img src="{{ review.user.profile.avatar.url|default:'https://placehold.co/40x40/EBF1FF/7F9CF5?text=A' }}" alt="Reviewer" class="rounded-circle" width="40" height="40" /> {% endcomment %}
+                      {% with initials=review.user|get_initials %}
+                        <img
+                          src="{% if review.user.profile.avatar.url %}
+                                {{ review.user.profile.avatar.url }}
+                              {% else %}
+                                https://placehold.co/40x40/EBF1FF/7F9CF5?text={{ initials }}
+                              {% endif %}"
+                          alt="{{ review.user.user.get_full_name|default:review.user.user.username }}"
+                          class="rounded-circle mr-5"
+                          style="width:36px;height:36px;object-fit:cover;"
+                        >
+                      {% endwith %}
                       <div class="ms-2">
                         <div class="font-weight-bold">{{ review.user.user.username }}</div>
                         <div>
@@ -423,7 +447,7 @@
     </div>
 
     <div class="container-fluid-horizontal my-4 p-2">
-      <h2 class="font-weight-bold mt-4 mb-5">More Courses from this <b class="text-decoration-underline">{{ course.instructor.profile.user.username }}</b></h2>
+      <h2 class="font-weight-bold mt-4 mb-2 p-2">More Courses from this <b class="text-decoration-underline">{{ course.instructor.profile.user.username }}</b></h2>
       <div class="horizontal-scroll d-flex flex-nowrap m-2 md-3" style="overflow-x: auto; overflow-y: hidden; white-space: nowrap; -webkit-overflow-scrolling: touch;">
         {% for course in instructor_related_courses %}
           <div class="card border rounded-3 border-2 m-3" style="min-width: 18rem; display: inline-block;">
@@ -436,7 +460,7 @@
     </div>
     
     <div class="container-fluid-horizontal my-4 p-2">
-      <h2 class="font-weight-bold mt-4 mb-5">More Courses to Browse</h2>
+      <h2 class="font-weight-bold mt-4 mb-2 p-2">More Courses to Browse</h2>
       <div class="horizontal-scroll d-flex flex-nowrap m-2 md-3" style="overflow-x: auto; overflow-y: hidden; white-space: nowrap; -webkit-overflow-scrolling: touch;">
         {% for course in course_list %}
           <div class="card border rounded-3 border-2 m-3" style="min-width: 18rem; display: inline-block;">

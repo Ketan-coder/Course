@@ -49,7 +49,7 @@ class FAQInline(admin.TabularInline):
 
 @admin.register(Course)
 class CourseAdmin(admin.ModelAdmin):
-    list_display = ("title", "course_code", "created_at")
+    list_display = ("title", "course_code","is_deleted","created_at")
     search_fields = ("title", "course_code")
     list_filter = ("created_at",)
     ordering = ("-created_at",)
@@ -79,6 +79,7 @@ class CourseAdmin(admin.ModelAdmin):
             {
                 "fields": (
                     "is_open_to_all",
+                    "is_deleted",
                     "is_published",
                     "prerequisites",
                     "circulam",
@@ -102,6 +103,9 @@ class CourseAdmin(admin.ModelAdmin):
     inlines = [SectionInline, FAQInline]  # To manage related Sections and FAQs
     readonly_fields = ("course_uuid", "created_at", "updated_at")
 
+    def get_queryset(self, request):
+        return self.model.all_objects.all()
+
     class Media:
         css = {
             'all': ('admin/css/toggle-switch.css',)
@@ -116,6 +120,9 @@ class SectionAdmin(admin.ModelAdmin):
     list_filter = ("created_at",)
     ordering = ("order",)
     date_hierarchy = "created_at"
+
+    def get_queryset(self, request):
+        return self.model.all_objects.all()
 
     class Media:
         css = {
@@ -141,6 +148,9 @@ class LessonAdmin(admin.ModelAdmin):
     ordering = ("-created_at",)
     date_hierarchy = "created_at"
 
+    def get_queryset(self, request):
+        return self.model.all_objects.all()
+
     class Media:
         css = {
             'all': ('admin/css/toggle-switch.css',)
@@ -164,6 +174,9 @@ class QuizAdmin(admin.ModelAdmin):
     list_filter = ("course__created_at",)
     ordering = ("-created_at",)
     date_hierarchy = "created_at"
+
+    def get_queryset(self, request):
+        return self.model.all_objects.all()
 
     class Media:
         css = {
@@ -237,6 +250,9 @@ class TagAdmin(admin.ModelAdmin):
     search_fields = ("name",)
     ordering = ("name",)
     date_hierarchy = "created_at"
+
+    def get_queryset(self, request):
+        return self.model.all_objects.all()
 
     class Media:
         css = {
@@ -388,6 +404,9 @@ class CourseArticleAdmin(admin.ModelAdmin):
             'fields': ('extra_fields',)
         }),
     )
+
+    def get_queryset(self, request):
+        return self.model.all_objects.all()
 
     class Media:
         css = {
