@@ -223,6 +223,8 @@ def index(request):
                                         'passed': latest_quiz.passed or False,
                                         'answers': latest_quiz.answers or {},
                                         'quiz': latest_quiz.quiz,
+                                        'quiz_submission_id': latest_quiz.pk,
+                                        # 'correct_answers' : latest_quiz.correct_answers,
                                         # 'question_text': latest_quiz.question_text or 'No Question Text',
                                     })
                                 

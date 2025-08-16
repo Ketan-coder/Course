@@ -350,6 +350,89 @@ document.addEventListener("DOMContentLoaded", () => {
     const resultsScreen = document.getElementById('results-screen');
     const completedScreen = document.getElementById('completed-screen');
 
+    function STR(v) {
+        if (v === null || v === undefined) return null;
+        return String(v).trim();
+    }
+    
+    function blankIndices(q) {
+        const parts = Array.isArray(q.sentence_parts) ? q.sentence_parts : [];
+        return parts.map((p, i) => (p === null ? String(i) : null)).filter(v => v !== null);
+    }
+    
+    /**
+     * Turn whatever the quiz author provided into:
+     *   { "<blankIndex>": "<optionId>", ... }
+     * Accepts:
+     *   - q.answer or q.correct_mapping
+     *   - object keyed by actual blank index (e.g., {"1":"A","3":"B"})
+     *   - object keyed 0..n-1 meaning “order of blanks”
+     *   - array of ids in order of blanks  (["A","B"])
+     *   - full sentence array where non-blanks are literals ([null,"A","to","B"])
+     *   - comma string "A,B"
+     */
+    function normalizeCorrectDragMap(q) {
+        const blanks = blankIndices(q); // e.g., ["1","3"]
+        let ans = q.answer ?? q.correct_mapping ?? null;
+    
+        if (ans == null) return {};
+    
+        // "A,B"
+        if (typeof ans === 'string') {
+            const ids = ans.split(',').map(s => STR(s)).filter(Boolean);
+            const map = {};
+            blanks.forEach((idx, pos) => { map[idx] = ids[pos] ?? null; });
+            return map;
+        }
+    
+        // ["A","B"] or full sentence array
+        if (Array.isArray(ans)) {
+            const ids = ans.map(STR);
+            const map = {};
+            if (ids.length === blanks.length) {
+                blanks.forEach((idx, pos) => { map[idx] = ids[pos] ?? null; });
+                return map;
+            }
+            // full sentence array case
+            const parts = Array.isArray(q.sentence_parts) ? q.sentence_parts : [];
+            if (ids.length === parts.length) {
+                parts.forEach((p, i) => {
+                    if (p === null) map[String(i)] = STR(ids[i]);
+                });
+                return map;
+            }
+        }
+    
+        // { "1":"A", "3":"B" } or { "0":"A", "1":"B" } meaning order of blanks
+        if (typeof ans === 'object') {
+            const keys = Object.keys(ans);
+            const map = {};
+            keys.forEach(k => { map[String(k)] = STR(ans[k]); });
+    
+            const zeroToN =
+                keys.every(k => /^\d+$/.test(k)) &&
+                keys.length === blanks.length &&
+                keys.map(Number).sort((a,b)=>a-b).every((v,i)=> v === i);
+    
+            if (zeroToN) {
+                const reordered = {};
+                blanks.forEach((idx, pos) => { reordered[idx] = STR(ans[pos]); });
+                return reordered;
+            }
+            return map; // assume actual indices
+        }
+    
+        return {};
+    }
+    
+    function normalizeUserDragMap(userMap) {
+        if (!userMap || typeof userMap !== 'object') return {};
+        const out = {};
+        Object.keys(userMap).forEach(k => { out[String(k)] = STR(userMap[k]); });
+        return out;
+    }
+    
+
     // --- INITIALIZATION ---
     function initializeQuiz() {
         document.getElementById('quiz-title').textContent = quizData.title;
@@ -679,61 +762,193 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // --- RESULTS & SUBMISSION ---
+    function normalizeId(v) {
+        if (v === null || v === undefined) return null;
+        return String(v).trim();
+    }
+    
     function checkAnswer(question, userAnswer) {
-        const correctAnswer = question.answer;
-        if (!userAnswer) return false;
-
-        if (question.type === 'SINGLE_SELECT' || question.type === 'IMAGE_MC' || question.type === 'TEXT') {
-            return typeof userAnswer === 'string' && typeof correctAnswer === 'string' && userAnswer.toLowerCase().trim() === correctAnswer.toLowerCase().trim();
-        } else if (question.type === 'MULTIPLE_SELECT') {
-            const correctAnswers = correctAnswer.split(',').sort();
-            return Array.isArray(userAnswer) && userAnswer.length === correctAnswers.length && userAnswer.sort().every((val, i) => val === correctAnswers[i]);
-        } else if (question.type === 'DRAG_DROP') {
-            const correctMapping = question.correct_mapping || {};
-            return Object.keys(correctMapping).length > 0 && Object.keys(correctMapping).every(index => correctMapping[index] === userAnswer[index]);
+        if (userAnswer == null) return false;
+    
+        const type = question.type;
+    
+        // SINGLE/IMAGE MC → compare option IDs (stringify both)
+        if (type === 'SINGLE_SELECT' || type === 'IMAGE_MC') {
+            const correct = STR(question.answer);
+            const user = STR(userAnswer);
+            return user !== null && correct !== null && user === correct;
         }
+    
+        // TEXT → case-insensitive exact text
+        if (type === 'TEXT') {
+            const correct = STR(question.answer)?.toLowerCase() ?? '';
+            const user = STR(userAnswer)?.toLowerCase() ?? '';
+            return user !== '' && user === correct;
+        }
+    
+        // MULTIPLE SELECT → accept "a,b,c" or ["a","b","c"]
+        if (type === 'MULTIPLE_SELECT') {
+            const correctArr = Array.isArray(question.answer)
+                ? question.answer.map(STR).filter(Boolean)
+                : String(question.answer ?? '')
+                    .split(',')
+                    .map(s => STR(s))
+                    .filter(Boolean);
+    
+            const userArr = Array.isArray(userAnswer) ? userAnswer.map(STR).filter(Boolean) : [];
+            if (userArr.length !== correctArr.length) return false;
+    
+            correctArr.sort();
+            userArr.sort();
+            return userArr.every((v, i) => v === correctArr[i]);
+        }
+    
+        // DRAG_DROP → normalize both to { "<blankIndex>": "<id>" }
+        if (type === 'DRAG_DROP') {
+            const expected = normalizeCorrectDragMap(question);
+            const user = normalizeUserDragMap(userAnswer);
+            const keys = Object.keys(expected);
+            if (keys.length === 0) return false;
+            return keys.every(k => STR(expected[k]) && STR(expected[k]) === STR(user[k]));
+        }
+    
         return false;
     }
+    
+
+    function getCorrectAnswersText(q) {
+        if (q.type === 'SINGLE_SELECT' || q.type === 'IMAGE_MC') {
+            const id = normalizeId(q.answer);
+            return id ? (q.options.find(o => normalizeId(o.id) === id)?.text || 'No answer') : 'No answer';
+        }
+        if (q.type === 'MULTIPLE_SELECT') {
+            const ids = Array.isArray(q.answer)
+                ? q.answer.map(normalizeId).filter(Boolean)
+                : String(q.answer ?? '').split(',').map(s => s.trim()).filter(Boolean).map(normalizeId);
+            return ids.map(id => q.options.find(o => normalizeId(o.id) === id)?.text).filter(Boolean).join(', ') || 'No answer';
+        }
+        if (q.type === 'TEXT') {
+            return (q.answer ?? 'No answer').toString();
+        }
+        if (q.type === 'DRAG_DROP') {
+            const mapping = q.answer || q.correct_mapping || {};
+            const idsInOrder = Object.keys(mapping).sort((a,b)=>Number(a)-Number(b)).map(k => normalizeId(mapping[k]));
+            return idsInOrder.map(id => q.draggable_options.find(o => normalizeId(o.id) === id)?.text).filter(Boolean).join(', ') || 'No answer';
+        }
+        return 'No answer';
+    }
+    
 
     function finalizeAndSubmitQuiz() {
         const submission = {};
+    
         questions.forEach(q => {
-            const isCorrect = checkAnswer(q, userAnswers[q.id]);
+            const userAns = userAnswers[q.id];
+            const isCorrect = checkAnswer(q, userAns);   // ✅ use single source of truth
+    
+            // ---------- human-readable user answer ----------
             let humanAnswers = '';
             switch (q.type) {
                 case 'SINGLE_SELECT':
                 case 'IMAGE_MC':
-                    humanAnswers = userAnswers[q.id] ? q.options.find(opt => opt.id === userAnswers[q.id])?.text || 'No answer' : 'No answer';
+                    humanAnswers = userAns
+                        ? q.options.find(opt => opt.id == userAns)?.text || 'No answer'
+                        : 'No answer';
                     break;
+    
                 case 'MULTIPLE_SELECT':
-                    humanAnswers = userAnswers[q.id] ? userAnswers[q.id].map(id => q.options.find(opt => opt.id === id)?.text).filter(text => text).join(', ') : 'No answer';
+                    humanAnswers = Array.isArray(userAns)
+                        ? userAns
+                            .map(id => q.options.find(opt => opt.id == id)?.text)
+                            .filter(Boolean)
+                            .join(', ')
+                        : 'No answer';
                     break;
+    
                 case 'TEXT':
-                    humanAnswers = userAnswers[q.id] || 'No answer';
+                    humanAnswers = userAns || 'No answer';
                     break;
+    
                 case 'DRAG_DROP':
-                    humanAnswers = userAnswers[q.id] ? Object.values(userAnswers[q.id]).map(id => q.draggable_options.find(opt => opt.id === id)?.text).filter(text => text).join(', ') : 'No answer';
+                    humanAnswers = userAns
+                        ? Object.values(userAns)
+                            .map(id => q.draggable_options.find(opt => opt.id == id)?.text)
+                            .filter(Boolean)
+                            .join(', ')
+                        : 'No answer';
                     break;
             }
+    
+            // ---------- human-readable correct answer ----------
+            let correct_answers = '';
+            switch (q.type) {
+                case 'SINGLE_SELECT':
+                case 'IMAGE_MC':
+                    correct_answers = q.answer
+                        ? q.options.find(opt => opt.id == q.answer)?.text || 'No answer'
+                        : 'No answer';
+                    break;
+    
+                case 'MULTIPLE_SELECT':
+                    correct_answers = Array.isArray(q.answer)
+                        ? q.answer
+                            .map(id => q.options.find(opt => opt.id == id)?.text)
+                            .filter(Boolean)
+                            .join(', ')
+                        : 'No answer';
+                    break;
+    
+                case 'TEXT':
+                    correct_answers = q.answer || 'No answer';
+                    break;
+    
+                case 'DRAG_DROP':
+                    if (q.answer) {
+                        if (typeof q.answer === 'string') {
+                            // already a text string → just use it
+                            correct_answers = q.answer;
+                        } else {
+                            // object of ids or texts
+                            correct_answers = Object.values(q.answer)
+                                .map(val => {
+                                    // try to resolve as ID
+                                    const match = q.draggable_options.find(opt => opt.id == val);
+                                    return match ? match.text : val; // fallback to raw text
+                                })
+                                .filter(Boolean)
+                                .join(', ');
+                        }
+                    } else {
+                        correct_answers = 'No answer';
+                    }
+                    break;
+                
+                
+                
+                
+            }
+    
+            // ---------- build payload for this question ----------
             submission[q.id] = {
                 type: q.type,
-                user_answer: userAnswers[q.id] || null,
+                user_answer: userAns || null,
                 is_correct: isCorrect,
                 score_awarded: isCorrect ? (q.score_on_completion || 0) : 0,
                 question_text: q.question || 'No question text available',
                 question_type: q.type,
-                human_answers: humanAnswers
+                human_answers: humanAnswers,
+                correct_answers: correct_answers
             };
         });
-
+    
         const finalPayload = {
             quiz_id: quizData.id,
             submission: submission
         };
-
-        //console.log("Final payload to be sent to backend:", JSON.stringify(finalPayload, null, 2));
-
-        // SEND DATA TO YOUR BACKEND
+    
+        console.log("Final payload to be sent to backend:", JSON.stringify(finalPayload, null, 2));
+    
+        // ---------- SEND DATA TO BACKEND ----------
         const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || '';
         fetch(`{% url 'submit_quiz_api' %}`, {
             method: 'POST',
@@ -751,40 +966,40 @@ document.addEventListener("DOMContentLoaded", () => {
             console.error('Error submitting quiz:', error);
         });
     }
+    
 
     function showResults() {
         let score = 0;
-        Object.values(userAnswers).forEach((ans, index) => {
-            if (checkAnswer(questions[index], ans)) {
-                score += questions[index].score_on_completion || 0;
+        questions.forEach(q => {
+            if (checkAnswer(q, userAnswers[q.id])) {
+                score += q.score_on_completion || 0;
             }
         });
-        
+    
         const passed = score >= (quizData.passing_marks || 0);
-
+    
         document.getElementById('quiz-container').classList.add('d-none');
         document.getElementById('quiz-navigation').classList.add('d-none');
         const progressBarContainer = document.getElementById('quiz-progress-bar')?.parentElement;
         if (progressBarContainer) progressBarContainer.classList.add('d-none');
         if (progressText) progressText.classList.add('d-none');
-        
+    
         const resultsScreen = document.getElementById('results-screen');
         const resultsCard = resultsScreen.querySelector('.results-card');
         resultsScreen.classList.remove('d-none');
         resultsCard.classList.add(passed ? 'pass' : 'fail');
-
+    
         document.getElementById('results-icon').className = `results-icon ph ${passed ? 'ph-trophy' : 'ph-x-circle'}`;
         document.getElementById('results-title').textContent = passed ? 'Congratulations, you passed!' : 'Better luck next time!';
         document.getElementById('results-score').textContent = score;
         document.getElementById('results-total-score').textContent = totalPossibleScore;
         document.getElementById('results-message').textContent = `You needed ${quizData.passing_marks || 0} points to pass.`;
-
-        if (passed) {
-            launchConfetti(score, totalPossibleScore);
-        }
-
+    
+        if (passed) launchConfetti(score, totalPossibleScore);
         finalizeAndSubmitQuiz();
     }
+    
+    
 
     function launchConfetti(score, totalScore) {
         const canvas = document.getElementById('confetti-canvas');

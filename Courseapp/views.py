@@ -2309,6 +2309,7 @@ def submit_quiz_api(request):
             "question_text": submitted_answer_details.get("question_text"),
             "human_answers": submitted_answer_details.get("human_answers"),
             "question_type" : submitted_answer_details.get("question_type"),
+            "correct_answers": submitted_answer_details.get("correct_answers"),
         }
 
     # Save attempt
@@ -2340,7 +2341,9 @@ def submit_quiz_api(request):
         'backend_results': backend_results
     })
 
-def student_update_status(request):
+
+
+def student_update_status_api(request):
     try:
         if not request.user.is_authenticated:
             return JsonResponse({'status': 'error', 'message': 'Authentication required.'}, status=401)
@@ -2354,7 +2357,7 @@ def student_update_status(request):
 
         if not quiz_submission_id or not status:
             return JsonResponse({'status': 'error', 'message': 'Missing quiz_submission_id or status.'}, status=400)
-        
+         
         try:
             quiz_submission = QuizSubmission.objects.get(id=quiz_submission_id)
         except QuizSubmission.DoesNotExist:
@@ -2367,8 +2370,7 @@ def student_update_status(request):
         else:
             quiz_submission.status = status.lower()
             quiz_submission.save()
-            return JsonResponse({'status': 'success', 'message': 'Status updated successfully.'}, status=403)
+            return JsonResponse({'status': 'success', 'message': 'Status updated successfully.'}, status=200)
 
     except Exception as e:
-        print("Error updating status:", str(e))
         return JsonResponse({'status': 'error', 'message': 'Error updating status: ' + str(e)}, status=500)

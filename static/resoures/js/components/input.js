@@ -64,6 +64,21 @@ class SmartInput extends HTMLElement {
                 try {
                     const opts = JSON.parse(options);
                     this.renderOptions(input, opts);
+                    // Set the selected value after options are rendered
+                    if (value) {
+                        input.value = value;
+                        // If value still doesn't match, try to find by text content
+                        if (input.value !== value) {
+                            const optionElements = input.querySelectorAll('option');
+                            for (let opt of optionElements) {
+                                if (opt.textContent.toLowerCase() === value.toLowerCase() || 
+                                    opt.value.toLowerCase() === value.toLowerCase()) {
+                                    opt.selected = true;
+                                    break;
+                                }
+                            }
+                        }
+                    }
                 } catch (e) {
                     console.warn('Invalid JSON in data-options:', options);
                 }
@@ -71,7 +86,6 @@ class SmartInput extends HTMLElement {
 
             if (fetchUrl) this.createSearchBox(container, input, fetchUrl);
 
-            input.value = value;
             container.appendChild(input);
         }
 
@@ -708,6 +722,21 @@ class SmartInput extends HTMLElement {
             radios.forEach(radio => {
                 radio.checked = radio.value == val;
             });
+        } else if (type === 'select') {
+            if (this.inputElement) {
+                this.inputElement.value = val;
+                // If value still doesn't match, try to find by text content
+                if (this.inputElement.value !== val) {
+                    const optionElements = this.inputElement.querySelectorAll('option');
+                    for (let opt of optionElements) {
+                        if (opt.textContent.toLowerCase() === val.toLowerCase() || 
+                            opt.value.toLowerCase() === val.toLowerCase()) {
+                            opt.selected = true;
+                            break;
+                        }
+                    }
+                }
+            }
         } else if (this.inputElement) {
             this.inputElement.value = val;
         }
@@ -750,6 +779,21 @@ class SmartInput extends HTMLElement {
             radios.forEach(radio => {
                 radio.checked = radio.value == val;
             });
+        } else if (type === 'select') {
+            if (this.inputElement) {
+                this.inputElement.value = val;
+                // If value still doesn't match, try to find by text content
+                if (this.inputElement.value !== val) {
+                    const optionElements = this.inputElement.querySelectorAll('option');
+                    for (let opt of optionElements) {
+                        if (opt.textContent.toLowerCase() === val.toLowerCase() || 
+                            opt.value.toLowerCase() === val.toLowerCase()) {
+                            opt.selected = true;
+                            break;
+                        }
+                    }
+                }
+            }
         } else if (this.inputElement) {
             this.inputElement.value = val;
         }
