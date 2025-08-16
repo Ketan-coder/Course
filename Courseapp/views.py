@@ -2305,23 +2305,27 @@ def submit_quiz_api(request):
         backend_results[question_id] = {
             "is_correct": is_correct,
             "score_awarded": score_awarded,
-            "user_answer": submitted_answer_details.get("user_answer")
+            "user_answer": submitted_answer_details.get("user_answer"),
+            "question_text": submitted_answer_details.get("question_text"),
+            "human_answers": submitted_answer_details.get("human_answers"),
+            "question_type" : submitted_answer_details.get("question_type"),
         }
 
     # Save attempt
     try:
         profile = request.user.profile
-        QuizSubmission.objects.create(
+        quiz_submission, created = QuizSubmission.objects.get_or_create(
             user=profile,
-            quiz=quiz,
-            score=final_score,
-            total=total_possible_score,
-            passed=bool(final_score >= quiz.passing_score),
-            answers=backend_results  # Save normalized backend-evaluated results
+            quiz=quiz
         )
-        # check if every answer is correct
+        quiz_submission.score = final_score
+        quiz_submission.total = total_possible_score
+        quiz_submission.passed = bool(final_score >= quiz.passing_score)
+        quiz_submission.answers = backend_results
+        quiz_submission.save()
+
         all_correct = all(result['is_correct'] for result in backend_results.values())
-        if all_correct:
+        if all_correct and created:
             quiz.completed_by_users.add(profile)
             quiz.save()
     except Exception as e:

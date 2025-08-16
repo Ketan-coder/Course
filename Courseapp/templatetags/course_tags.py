@@ -61,3 +61,9 @@ def get_initials(profile):
         first_name_initial = ''
         last_name_initial = ''
     return first_name_initial + last_name_initial
+
+@register.filter(name='count_correct')
+def count_correct(answers):
+    if isinstance(answers, dict):
+        return sum(1 for ans in answers.values() if ans.get("is_correct"))
+    return 0

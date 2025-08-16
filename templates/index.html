@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
-
+{% load course_tags %}
 {% block title %}
     {% if user_role == 'instructor' %}
         Instructor Dashboard
@@ -152,7 +152,7 @@
                                                                     <p class="text-success">Passed</p>
                                                                     {% else %}
                                                                     <smart-input
-                                                                        type="select" name="status" label="Update Status"
+                                                                        type="select" name="status" label="Update Status" data-onchange="updateStatus('{{ student.id }}')"
                                                                         value="{% if student.passed %}passed{% else %}{{ student.status|default:'pending' }}{% endif %}" required
                                                                         data-options='[{"id": "pending", "name": "Pending"}, {"id": "completed", "name": "Completed"}, {"id": "failed", "name": "Failed"}, {"id": "in_progress", "name": "In-Progress"}, {"id": "not_attempted", "name": "Not Attempted"}, {"id": "not_started", "name": "Not Started"} , {"id": "passed", "name": "Passed"}, {"id": "other", "name": "Other"}]'>
                                                                     </smart-input>
@@ -162,7 +162,7 @@
                                                                 <td>{{ student.score }}</td>
                                                                 <td>{{ student.notes }}</td>
                                                                 <td>
-                                                                    <button type="button" disabled class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#checkAnswers-{{ course.id }}">
+                                                                    <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#checkAnswers-{{ student.id }}">
                                                                         Check Student Answers
                                                                     </button>
                                                                 </td>
@@ -208,26 +208,52 @@
     </div>
     {% endfor %}
 
-    {% for course in courses %}
-    <!-- Vertically centered modal -->
-        <div class="modal fade" id="checkAnswers-{{ course.id }}" tabindex="-1" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">User Answers</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body p-3">
-                        <div class="text-center">
-                            {% comment %} <img src="{{ course.qr_code.url }}" alt="QR Code for {{ course.title }}" class="img-fluid" style="max-width: 100%; height: auto;"> {% endcomment %}
+    {% if student_data %}
+        {% for student in student_data %}
+            <!-- Modal for each student -->
+            <div class="modal fade" id="checkAnswers-{{ student.id }}" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered modal-lg">
+                    <div class="modal-content shadow-lg border-0">
+                        <div class="modal-header">
+                            <h5 class="modal-title">User Answers - {{ student.user.user.first_name }}</h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
-                        <p class="text-muted mt-3">Scan this QR code to access the course directly.</p>
-                        <p class="text-muted">You can also share this QR code with your students.</p>
+                        <div class="modal-body p-4">
+                            {% if student.answers %}
+                                <div class="list-group">
+                                    {% for question, answer in student.answers.items %}
+                                        <div class="list-group-item">
+                                            <p class="mb-1 fw-bold text-primary">
+                                                Question {{ question }}:
+                                            </p>
+                                            <p class="mb-1">{{ answer.question_type }} - {{ answer.question_text }}</p>
+                                            <p class="mb-0">
+                                                <span class="badge {% if answer.is_correct %}bg-success{% else %}bg-danger{% endif %}">
+                                                    {{ answer.human_answers }}
+                                                </span>
+                                            </p>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <p class="text-muted text-center my-3">No answers submitted.</p>
+                            {% endif %}
+                        </div>
+                        <div class="modal-footer">
+                            {% with correct_count=student.answers|dictsort:"is_correct"|yesno:"1,0" %}
+                                <p class="mb-0 fw-bold">
+                                    Correct Ansers: {{ student.answers|count_correct }}/{{ student.answers|length }}
+                                    <br>
+                                    <span class="text-muted">Score: {{ student.score }}/{{ student.total }}</span>
+                                </p>
+                            {% endwith %}
+                        </div>
+                    </div>
                 </div>
             </div>
-        </div>
-    </div>
-    {% endfor %}
+        {% endfor %}
+    {% endif %}
+
     {% else %}
 
     {# =============================================================================== #}
@@ -311,7 +337,6 @@
 
           </div>
 
-          <!-- Right Column: Tournaments & Leaderboard -->
           <!-- Right Column: Tournaments & Leaderboard -->
             <div class="col-lg-4">
                 <h2 class="content-title font-size-22 mb-3">Trading Tournaments</h2>
@@ -408,6 +433,95 @@
             }).catch(err => {
                 console.error('Failed to copy: ', err);
             });
+        }
+
+        function updateStatus(quizSubmissionId) {
+            // Get the smart-input element for this quiz submission
+            const smartInput = document.querySelector(`smart-input[name="status"][data-onchange="updateStatus('${quizSubmissionId}')"]`);
+            const newStatus = smartInput.value;
+        
+            // Validate the status
+            const validStatuses = [
+                'pending',
+                'completed',
+                'failed',
+                'in_progress',
+                'not_attempted',
+                'not_started',
+                'passed',
+                'other'
+            ];
+            
+            if (!validStatuses.includes(newStatus)) {
+                alert('Invalid status selected');
+                smartInput.value = 'pending'; // Reset to default
+                return;
+            }
+        
+            // Show loading state
+            const container = smartInput.querySelector('.input-container');
+            const spinner = document.createElement('div');
+            spinner.className = 'spinner';
+            spinner.style.display = 'inline-block';
+            container.appendChild(spinner);
+        
+            // Make API request to update status
+            fetch('/student/update/status/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCsrfToken()
+                },
+                body: JSON.stringify({ 
+                    quiz_submission_id: quizSubmissionId, 
+                    status: newStatus 
+                })
+            })
+            .then(response => {
+                spinner.remove();
+                return response.json().then(data => ({ response, data }));
+            })
+            .then(({ response, data }) => {
+                if (data.status === 'error') {
+                    throw new Error(data.message);
+                }
+                
+                // Show success feedback
+                showFeedback(smartInput, data.message, 'success');
+                
+                // If passed status is selected, update the UI to show static text
+                if (newStatus === 'passed') {
+                    const td = smartInput.closest('td');
+                    td.innerHTML = '<p class="text-success">Passed</p>';
+                }
+            })
+            .catch(error => {
+                console.error('Error updating status:', error);
+                spinner.remove();
+                showFeedback(smartInput, error.message || 'Failed to update status', 'error');
+                // Revert to previous value or default
+                smartInput.value = 'pending';
+            });
+        }
+        
+        // Helper function to get CSRF token (Django-specific)
+        function getCsrfToken() {
+            const cookie = document.cookie.match('(^|;)\\s*csrftoken\\s*=\\s*([^;]+)');
+            return cookie ? cookie[2] : '';
+        }
+        
+        // Helper function to show feedback
+        function showFeedback(element, message, type) {
+            const feedback = element.querySelector('.invalid-feedback');
+            feedback.textContent = message;
+            feedback.classList.remove('d-none');
+            feedback.style.color = type === 'success' ? '#28a745' : '#dc3545';
+            
+            // Remove feedback after 3 seconds
+            setTimeout(() => {
+                feedback.classList.add('d-none');
+                feedback.style.color = '';
+            }, 3000);
         }
     </script>
 {% endblock script %}

@@ -157,7 +157,7 @@ def generate_quiz_from_content(section_title :str, lesson_content:str, prompt: s
 
     # for m in models:
     #     print(m.name, m.supported_generation_methods)
-    if prompt is None or prompt.strip() == "" and is_generate_content_using_ai == False:
+    if prompt is None or prompt.strip() == "" and not is_generate_content_using_ai:
         prompt = f'''
 You are an expert quiz creator.
 

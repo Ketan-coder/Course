@@ -219,7 +219,11 @@ def index(request):
                                         'student': student,
                                         'status': latest_quiz.status,
                                         'score': latest_quiz.score or 0,
+                                        'total': latest_quiz.total or 0,
                                         'passed': latest_quiz.passed or False,
+                                        'answers': latest_quiz.answers or {},
+                                        'quiz': latest_quiz.quiz,
+                                        # 'question_text': latest_quiz.question_text or 'No Question Text',
                                     })
                                 
 
@@ -339,7 +343,7 @@ def activity_loader(request):
 def activity_page(request):
     """Fetches activity content asynchronously"""
     request.session["page"] = "activity"
-    logged_in_profile = Profile.objects.get(user=request.user)
+    # logged_in_profile = Profile.objects.get(user=request.user)
     activities = Activity.objects.filter(user=request.user).order_by(
         "-timestamp"
     )

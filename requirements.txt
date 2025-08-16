@@ -131,3 +131,4 @@ google-generativeai
 resend==2.11.0
 django-unfold==0.63.0
 django-money==3.5.4
+djlint

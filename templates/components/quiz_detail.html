@@ -535,10 +535,11 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!input) return;
         const questionId = label.dataset.questionId;
         const question = questions.find(q => q.id == questionId);
+        // console.log('handleOptionSelect triggered for question:', questionId, 'type:', question.type);
 
         if (question.type === 'SINGLE_SELECT' || question.type === 'IMAGE_MC') {
             document.querySelectorAll(`.answer-option[data-question-id="${questionId}"]`).forEach(optLabel => {
-                const isClickedLabel = (optLabel === label);
+                const isClickedLabel = optLabel === label;
                 optLabel.classList.toggle('selected', isClickedLabel);
                 const optInput = optLabel.querySelector('input');
                 if (optInput) optInput.checked = isClickedLabel;
@@ -546,9 +547,9 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (icon) icon.className = `ph ${isClickedLabel ? icon.dataset.iconSelected : icon.dataset.icon}`;
             });
         } else if (question.type === 'MULTIPLE_SELECT') {
-            const isSelected = !label.classList.contains('selected');
-            label.classList.toggle('selected', isSelected);
+            const isSelected = !input.checked; // Toggle based on current input state
             input.checked = isSelected;
+            label.classList.toggle('selected', isSelected);
             const icon = label.querySelector('.ph');
             if (icon) icon.className = `ph ${isSelected ? icon.dataset.iconSelected : icon.dataset.icon}`;
         }
@@ -698,11 +699,30 @@ document.addEventListener("DOMContentLoaded", () => {
         const submission = {};
         questions.forEach(q => {
             const isCorrect = checkAnswer(q, userAnswers[q.id]);
+            let humanAnswers = '';
+            switch (q.type) {
+                case 'SINGLE_SELECT':
+                case 'IMAGE_MC':
+                    humanAnswers = userAnswers[q.id] ? q.options.find(opt => opt.id === userAnswers[q.id])?.text || 'No answer' : 'No answer';
+                    break;
+                case 'MULTIPLE_SELECT':
+                    humanAnswers = userAnswers[q.id] ? userAnswers[q.id].map(id => q.options.find(opt => opt.id === id)?.text).filter(text => text).join(', ') : 'No answer';
+                    break;
+                case 'TEXT':
+                    humanAnswers = userAnswers[q.id] || 'No answer';
+                    break;
+                case 'DRAG_DROP':
+                    humanAnswers = userAnswers[q.id] ? Object.values(userAnswers[q.id]).map(id => q.draggable_options.find(opt => opt.id === id)?.text).filter(text => text).join(', ') : 'No answer';
+                    break;
+            }
             submission[q.id] = {
                 type: q.type,
                 user_answer: userAnswers[q.id] || null,
                 is_correct: isCorrect,
-                score_awarded: isCorrect ? (q.score_on_completion || 0) : 0
+                score_awarded: isCorrect ? (q.score_on_completion || 0) : 0,
+                question_text: q.question || 'No question text available',
+                question_type: q.type,
+                human_answers: humanAnswers
             };
         });
 
@@ -711,7 +731,7 @@ document.addEventListener("DOMContentLoaded", () => {
             submission: submission
         };
 
-        console.log("Final payload to be sent to backend:", JSON.stringify(finalPayload, null, 2));
+        //console.log("Final payload to be sent to backend:", JSON.stringify(finalPayload, null, 2));
 
         // SEND DATA TO YOUR BACKEND
         const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || '';
@@ -730,7 +750,6 @@ document.addEventListener("DOMContentLoaded", () => {
         .catch(error => {
             console.error('Error submitting quiz:', error);
         });
-
     }
 
     function showResults() {
