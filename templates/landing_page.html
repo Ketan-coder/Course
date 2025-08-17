@@ -288,7 +288,7 @@
         
         /* --- Features Section --- */
         #features {
-            background-color: var(--light-blue-bg);
+            background-color: var(--dark-blue);
         }
         
         #features .container {
@@ -640,6 +640,78 @@
             }
         }
 
+        /* Images Section Styling */
+        #images, #innovation, #testimonials {
+            background-color: var(--dark-blue);
+            padding: 80px 0;
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+        }
+
+        #images .container, #innovation .container, #testimonials .container {
+            position: relative;
+            z-index: 1;
+        }
+
+        .workflow-grid, .innovation-grid, .testimonials-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+            margin-top: 40px;
+        }
+
+        .workflow-card, .innovation-card, .testimonial-card {
+            background-color: var(--card-bg);
+            padding: 30px;
+            border-radius: 16px;
+            border: 1px solid var(--card-border);
+            text-align: center;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .workflow-card:hover, .innovation-card:hover, .testimonial-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            border-color: var(--primary-color);
+        }
+
+        .workflow-card i, .innovation-card i, .testimonial-card i {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            transition: transform 0.3s ease;
+        }
+
+        .workflow-card h3, .innovation-card h3, .testimonial-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+            color: var(--text-color-light);
+        }
+
+        .workflow-card p, .innovation-card p, .testimonial-card p {
+            color: var(--text-color-muted);
+        }
+
+        .section-subtitle {
+            color: var(--text-color-muted);
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        #images.is-visible, #innovation.is-visible, #testimonials.is-visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Animation for icons */
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .workflow-card:hover i, .innovation-card:hover i, .testimonial-card:hover i {
+            animation: bounce 0.5s ease-in-out;
+        }
     </style>
 </head>
 <body>
@@ -653,11 +725,12 @@
             <nav class="main-nav">
                 <ul>
                     <li><a href="#hero" class="nav-link">Home</a></li>
-                    <li><a href="{% url 'course_list' %}" class="nav-link">Courses</a></li>
                     <li><a href="#features" class="nav-link">Features</a></li>
-                    <li><a href="#partners" class="nav-link">Partners</a></li>
+                    <li><a href="#images" class="nav-link">How it Works</a></li>
+                    <li><a href="#innovation" class="nav-link">Innovation</a></li>
                     <li><a href="#about" class="nav-link">About</a></li>
                     <li><a href="#contact" class="nav-link">Contact Us</a></li>
+                    <li><a href="{% url 'course_list' %}" class="nav-link">Courses</a></li>
                     {% if user.is_authenticated %}
                     <li><a href="{% url 'home' %}" class="nav-link">Dashboard</a></li>
                     {% else %}
@@ -735,6 +808,83 @@
                 </div>
             </div>
         </section>
+
+        <!-- Images Section -->
+    <section id="images" class="animate-on-scroll">
+        <div class="container">
+            <h2 style="text-align: left;">How It Works</h2>
+            <div class="workflow-grid">
+                <div class="workflow-card">
+                    <i class="ph-duotone ph-upload" style="color: #a100ff;"></i>
+                    <h3>Upload</h3>
+                    <p>Users can easily upload lesson materials for processing</p>
+                </div>
+                <div class="workflow-card">
+                    <i class="ph-duotone ph-shield-check" style="color: #ff4d94;"></i>
+                    <h3>Enforced</h3>
+                    <p>Teachers can monitor student progress through the dashboard</p>
+                </div>
+                <div class="workflow-card">
+                    <i class="ph-duotone ph-check-circle" style="color: #00e5ff;"></i>
+                    <h3>Tasks</h3>
+                    <p>The platform creates tailored tasks for each lesson</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="innovation" class="animate-on-scroll">
+        <div class="container">
+            <h2 style="text-align: left;">Innovation</h2>
+            <p class="section-subtitle">Key features and patented technology driving Calsie's success</p>
+            <div class="innovation-grid">
+                <div class="innovation-card">
+                    <i class="ph-duotone ph-sliders" style="color: #00e5ff;"></i>
+                    <h3>Adaptive Engine</h3>
+                    <p>Tailors learning experiences to individual student needs</p>
+                </div>
+                <div class="innovation-card">
+                    <i class="ph-duotone ph-robot" style="color: #ff4d94;"></i>
+                    <h3>AI Task Generator</h3>
+                    <p>Enhances learning integrity and security measures</p>
+                </div>
+                <div class="innovation-card">
+                    <i class="ph-duotone ph-game-controller" style="color: #a100ff;"></i>
+                    <h3>Gamified Feedback</h3>
+                    <p>Engages students with interactive learning methods</p>
+                </div>
+                <div class="innovation-card">
+                    <i class="ph-duotone ph-lock" style="color: #00e5ff;"></i>
+                    <h3>Learning Locks</h3>
+                    <p>Provides checkpoints for students' progress</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="testimonials" class="animate-on-scroll">
+        <div class="container">
+            <h2 style="text-align: left;">Testimonials</h2>
+            <div class="testimonials-grid">
+                <div class="testimonial-card">
+                    <i class="ph-duotone ph-chart-bar" style="color: #00e5ff;"></i>
+                    <h3>Increase in performance</h3>
+                </div>
+                <div class="testimonial-card">
+                    <i class="ph-duotone ph-clock" style="color: #ff4d94;"></i>
+                    <h3>Retention Rate</h3>
+                </div>
+                <div class="testimonial-card">
+                    <i class="ph-duotone ph-book" style="color: #a100ff;"></i>
+                    <h3>Knowledge base</h3>
+                </div>
+                <div class="testimonial-card">
+                    <i class="ph-duotone ph-arrow-circle-up" style="color: #00e5ff;"></i>
+                    <h3>Progression</h3>
+                </div>
+            </div>
+        </div>
+    </section>
 
         {% comment %} <!-- Partners Section -->
         <section id="partners" class="animate-on-scroll">
