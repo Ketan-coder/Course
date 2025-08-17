@@ -1,10 +1,14 @@
 import datetime
+import uuid
 from django.utils import timezone
 from Users.models import Student
 from django.db import transaction
+from django.db.models import Q
 from Tiers.models import LeaderboardEntry
 from django.contrib import messages
 from utils.models import Activity
+from .models import Course, Lesson, Quiz, QuizSubmission, CourseCertificate
+from Users.models import Profile
 
 @transaction.atomic
 def update_streak(request,profile):
@@ -123,3 +127,62 @@ def update_score(request,profile, increment_score_by=10):
         
     except Student.DoesNotExist:
         messages.error(request, "Instructor Doesn't have scores")
+
+
+def has_completed_course(course: Course, profile: Profile) -> bool:
+    """Check if a Student profile has completed all lessons and quizzes for a course."""
+    student = Student.objects.filter(profile=profile).first()
+
+    if not student:
+        return False
+
+    # 1. Check lessons
+    lessons = Lesson.objects.filter(sections__courses=course).distinct()
+    for lesson in lessons:
+        if profile not in lesson.completed_by_users.all():
+            return False  # found unfinished lesson
+
+    # 2. Check quizzes
+    quizzes = Quiz.objects.filter(
+        Q(course=course) | Q(section__courses=course) | Q(lesson__sections__courses=course)
+    ).distinct()
+
+    for quiz in quizzes:
+        submission = QuizSubmission.objects.filter(quiz=quiz, user=profile, passed=True).first()
+        if not submission:  # No passing attempt
+            return False
+        
+    course.completed_by_users.add(profile)
+    course.save()
+
+    return True
+
+def generate_certificate(course: Course, profile: Profile):
+    # Prevent duplicates
+    if CourseCertificate.objects.filter(course=course, user=profile).exists():
+        return
+    
+    if profile:
+        student = Student.objects.filter(profile=profile).first()
+        if student:
+            certificate = CourseCertificate.objects.create(
+                course=course,
+                user=profile,
+                certificate_code= str(course.pk) + str(student.pk) + '-' + str(uuid.uuid4()),
+                issued_at=timezone.now(),
+            )
+            # certificate.extra_fields['last_updated'] = timezone.now()
+            certificate.save()
+
+            student.extra_fields['has_certificate'] = True
+            student.save()
+            
+            print(f"Certificate generated for {profile} in {course.title}")
+
+            Activity.objects.create(
+                user=profile.user,
+                activity_type="Certificate Issued",
+                description=f"Certificate Issued for {course.title}",
+            )
+
+            return

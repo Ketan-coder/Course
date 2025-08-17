@@ -13,7 +13,7 @@
         <div class="col-lg-4">
             <div class="card shadow-sm p-3">
                 <div class="content text-center">
-                    <img src="https://placehold.co/128x128/EBF1FF/7F9CF5?text={{ user.username.0|upper }}" alt="User Avatar" class="img-fluid rounded-circle mb-3" style="width: 128px; height: 128px;">
+                    <img src="https://placehold.co/128x128/EBF1FF/7F9CF5?text={{ user.first_name.0|upper }}{{ user.last_name.0|upper }}" alt="User Avatar" class="img-fluid rounded-circle mb-3" style="width: 128px; height: 128px;">
                     <h2 class="content-title font-weight-bold">
                         {{ user.first_name }} {{ user.last_name }}
                     </h2>

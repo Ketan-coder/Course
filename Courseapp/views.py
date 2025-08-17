@@ -6,7 +6,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.db.models import Q
 from utils.models import Activity
 from Stock.models import Stock
-from .models import FAQ, Course, Language, Quiz, Section, Tag, Lesson, CourseNotes, Article, QuizSubmission
+from .models import FAQ, Course, Language, Quiz, Section, Tag, Lesson, CourseNotes, Article, QuizSubmission, CourseCertificate
 from Users.models import Instructor, Profile, Student
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
@@ -24,6 +24,10 @@ from django.views.decorators.http import require_POST
 from django.db.models import Q, Count
 from difflib import get_close_matches
 import re
+from weasyprint import HTML, CSS
+from django.templatetags.static import static
+
+
 # def course_list(request) -> HttpResponse:
 #     courses: BaseManager[Course] = Course.objects.all()
 #     request.session["page"] = "course"
@@ -576,6 +580,17 @@ def course_detail(request, pk) -> HttpResponseRedirect | HttpResponsePermanentRe
         instructor_related_courses = Course.objects.none()
         course_list = Course.objects.all()
 
+    student = Student.objects.filter(profile=logged_in_profile).first()
+    if student:
+        # def download_certificate(request, course_id, student_id, certicate_id):
+        student_id = student.pk
+        certificate = CourseCertificate.objects.filter(course=course, user=student.profile).first()
+        if certificate:
+            certificate_id = certificate.pk
+    else:
+        student_id = None
+        certificate_id = None
+
     if ref != 'outside' and ref != None and ref != '':
         referrer = User.objects.filter(username=ref).first()
         if referrer:
@@ -657,6 +672,37 @@ def course_detail(request, pk) -> HttpResponseRedirect | HttpResponsePermanentRe
                 messages.error(request, "All lessons are completed or no lessons are available in this course.")
                 return redirect("course_detail", pk=pk)
     return render(request, "course/course_detail_page.html", locals())
+
+# Generate Certificate on demand
+def download_certificate(request, course_id, student_id, certificate_id):
+    try:
+        course = get_object_or_404(Course, pk=course_id)
+        student = get_object_or_404(Student, pk=student_id)
+        certificate = get_object_or_404(CourseCertificate, pk=certificate_id)
+    except (Course.DoesNotExist, Student.DoesNotExist, CourseCertificate.DoesNotExist):
+        messages.error(request, "Course, student, or certificate not found.")
+        return redirect("course_list")
+    
+    logo_path = request.build_absolute_uri(static('resoures/images/logo.png'))
+
+    # Render HTML template with context
+    html_string = render_to_string("course/certificate_template.html", {
+        "course": course,
+        "student": student,
+        "certificate": certificate,
+        "logo_path": logo_path
+    })
+
+    # Create response object
+    response = HttpResponse(content_type="application/pdf")
+    response["Content-Disposition"] = f'attachment; filename="certificate_{student.profile.user.username}_{course.title}.pdf"'
+
+    # Convert HTML to PDF (landscape)
+    HTML(string=html_string).write_pdf(response, stylesheets=[
+        CSS(string="@page { size: A4 landscape; margin: 1cm; }")
+    ])
+
+    return response
 
 
 def video_detail_page(request,lesson_id) -> HttpResponseRedirect | HttpResponsePermanentRedirect | HttpResponse:
@@ -1078,20 +1124,43 @@ def create_faq(request) -> HttpResponse:
     try:
         faq_id = request.POST.get("id")
         answer = request.POST.get("answer", "")
+        profile = request.POST.get("profile_id", request.user.profile.id)
+        instructor_profile = Instructor.objects.filter(profile=profile).first()
+        
+        if not instructor_profile:
+            return HttpResponse(
+                """<div class="alert alert-danger border-0 rounded-0 d-flex align-items-center" role="alert">
+                    <i class="fa-light fa-exclamation-circle text-danger-emphasis me-2"></i>
+                    <div>Instructor not found.</div>
+                </div>""",
+                status=404
+            )
+
+        course_id = request.POST.get("course_id", None)
+        course = None
+        if course_id:
+            course_obj = Course.objects.filter(id=course_id).first()
+            if course_obj:
+                course = course_obj
 
         if faq_id:
-            faq = get_object_or_404(FAQ, id=faq_id)
+            faq = get_object_or_404(FAQ, id=faq_id, instructor=instructor_profile)
             faq.question = question
             faq.answer = answer
             faq.save()
+            course.faqs.add(faq)
+            course.save()
             return HttpResponse(
                 """<div class="alert alert-success border-0 rounded-0 d-flex align-items-center" role="alert">
                     <i class="fa-light fa-check-circle text-success-emphasis me-2"></i>
                     <div>FAQ <strong>{}</strong> updated successfully.</div>
-                </div>""".format(question)
+                </div>""".format(question),
+                status=200
             )
         else:
-            faq = FAQ.objects.create(question=question, answer=answer)
+            faq = FAQ.objects.create(question=question, answer=answer, instructor=instructor_profile)
+            course.faqs.add(faq)
+            course.save()
             return HttpResponse(
                 """<div class="alert alert-success border-0 rounded-0 d-flex align-items-center" role="alert">
                     <i class="fa-light fa-check-circle text-success-emphasis me-2"></i>

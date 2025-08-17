@@ -42,3 +42,10 @@ class ArticleManager(models.Manager):
     """
     def get_queryset(self):
         return super().get_queryset().filter(is_deleted=False)
+    
+class FaqManager(models.Manager):
+    """
+    Change the queryset to exclude deleted faqs
+    """
+    def get_queryset(self):
+        return super().get_queryset().filter(is_deleted=False)

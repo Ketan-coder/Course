@@ -86,6 +86,7 @@ class CourseAdmin(admin.ModelAdmin):
                     "tags",
                     "is_bought_by_users",
                     "bookmarked_by_users",
+                    "completed_by_users",
                 )  # Added tags here for basic display
             },
         ),

@@ -49,6 +49,9 @@
                   <input type="text" id="id_faqs_search" class="form-control" placeholder="Search and add FAQs">
                   <div id="faqs_search_results" class="list-group mt-2"></div>
                   <div id="selected_faqs" class="mt-2">
+                      <button class="btn btn-outline-warning btn-sm" type="button" data-bs-toggle="modal" data-bs-target="#faq-modal">
+                          <i class="ph ph-plus"></i> Add FAQ
+                      </button>
                       {% for faq in course.faqs.all %}
                       <span class="badge bg-secondary mr-1 selected-faq" data-faq-id="{{ faq.id }}">
                           {{ faq.question }} | <button type="button" class="btn btn-sm btn-outline-light ml-1 p-0 border-0" aria-label="Remove" onclick="removeFaq(this)">&times;</button>
@@ -126,6 +129,36 @@
     </div>
   </div>
 </div>
+
+<!-- faq Modal -->
+<div class="modal fade" id="faq-modal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-xl" role="document">
+        <div class="modal-content">
+            <form id="faq-form" onsubmit="saveFAQ(event)">
+                {% csrf_token %}
+                <input type="hidden" name="course_id" value="{{ course.id }}">
+                <input type="hidden" name="profile_id" value="{{ request.user.profile.id }}">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="faq-modal-title">FAQ Editor</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="form-group mb-3">
+                        <smart-input type="text" name="question" label="FAQ Title" id="article-title-input" required></smart-input>
+                    </div>
+                    <div class="form-group mb-3">
+                        <smart-quill id="faq-content-quill" name="answer" label="FAQ Content"></smart-quill>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save FAQ</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 {% endblock body %}
 
 {% block script %}
@@ -165,7 +198,7 @@
     const resultsDiv = document.getElementById('tags_search_results');
 
     if (searchTerm.length > 1) {
-      fetch(`/course/courses/search_tags/?q=${searchTerm}`)
+      fetch(`/course/tags/search_tags_api/?q=${searchTerm}`)
         .then(response => response.json())
         .then(data => {
           resultsDiv.innerHTML = '';
@@ -222,7 +255,7 @@
     const resultsDiv = document.getElementById('faqs_search_results');
 
     if (searchTerm.length > 1) {
-      fetch(`/course/courses/search_faqs/?q=${searchTerm}`)
+      fetch(`/course/faqs/search_faqs/?q=${searchTerm}`)
         .then(response => response.json())
         .then(data => {
           resultsDiv.innerHTML = '';
@@ -269,6 +302,28 @@
     if (hiddenInput) {
       hiddenInput.remove();
     }
+  }
+
+  function saveFAQ(event) {
+    event.preventDefault();
+    const form = event.target;
+    const formData = new FormData(form);
+    fetch("{% url 'create_faq' %}", {
+      method: 'POST',
+      body: formData
+    })
+    .then(res => {
+      if (res.status === 201 || res.status === 200) {
+        location.reload();
+      } else {
+        return res.text();
+      }
+    })
+    .then(text => {
+      if (text) {
+        alert(`Error saving FAQ. ${text}`);
+      }
+    });
   }
 </script>
 {% endblock script %}

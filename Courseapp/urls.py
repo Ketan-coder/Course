@@ -25,10 +25,10 @@ urlpatterns: list[URLPattern] = [
     path('courses/<int:pk>/edit/', login_required(views.course_update), name='course_update'),
     path('courses/<int:pk>/delete/', login_required(views.course_delete), name='course_delete'),
 
-    path('courses/search_tags/', login_required(views.search_tags), name='search_tags'),
+    path('tags/search_tags_api/', login_required(views.search_tags), name='search_tags'),
     path('courses/search_sections/', login_required(views.search_sections), name='search_sections'),
     path('courses/search_lesson/', login_required(views.search_lessons), name='search_lessons'),
-    path('courses/search_faqs/', login_required(views.search_faqs), name='search_faqs'),
+    path('faqs/search_faqs/', login_required(views.search_faqs), name='search_faqs'),
     path('courses/search_articles/', login_required(views.search_article), name='search_articles'),
     path("search-courses-htmx/", views.search_courses_htmx, name="search_courses_htmx"),
 
@@ -91,4 +91,6 @@ urlpatterns: list[URLPattern] = [
     path('delete_article/<int:article_id>/', login_required(views.delete_article_api), name='delete_article'),
     path('delete_quiz/<int:quiz_id>/', login_required(views.delete_quiz_api), name='delete_quiz'),
     path('delete_article/<int:article_id>/', login_required(views.delete_article_api), name='delete_article'),
+
+    path('download/certificate/<int:course_id>/<int:student_id>/<int:certificate_id>/', views.download_certificate, name='download_certificate'),
 ]

@@ -8,6 +8,7 @@ from decimal import Decimal
 from utils.utils import generate_quiz_from_content
 from utils.decorators import check_load_time, retry_on_failure
 from .model_manager import *
+from django.utils import timezone
 
 def validate_discount(value) -> None:
     if value < 0:
@@ -394,9 +395,15 @@ class Tag(models.Model):
 class FAQ(models.Model):
     question = models.CharField(max_length=200)
     answer = models.TextField()
+    is_active = models.BooleanField(default=True)
+    is_deleted = models.BooleanField(default=False)
+    instructor = models.ForeignKey('Users.Instructor', on_delete=models.SET_NULL, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     extra_fields = models.JSONField(blank=True, null=True, default=dict)
+
+    objects = FaqManager()
+    all_objects = models.Manager()
 
     class Meta:
         ordering: list[str] = ['-created_at']
@@ -503,9 +510,10 @@ class CourseCertificate(models.Model):
         return f"{self.user.username} - {self.course.title} - {self.certificate_code}"
     
     def save(self, *args, **kwargs) -> None:
-        import uuid
-        self.certificate_code = str(uuid.uuid4())
-        self.extra_fields['last_updated'] = str(self.issued_at)
+        if not self.certificate_code:
+            import uuid
+            self.certificate_code = str(uuid.uuid4())
+            self.extra_fields['last_updated'] = timezone.now()
         super().save(*args, **kwargs)
 
 
