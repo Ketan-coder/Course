@@ -304,23 +304,26 @@ document.querySelectorAll(".sortable-lessons").forEach(list => {
 });
 
     // --- UPPY INITIALIZATION ---
-    const uppy = new Uppy.Uppy({
-        debug: true,
-        autoProceed: false,
-        restrictions: { maxNumberOfFiles: 1, allowedFileTypes: ['video/*'] }
-    }).use(Uppy.Dashboard, {
-        inline: true,
-        target: '#lesson-video-uploader',
-        proudlyDisplayPoweredByUppy: false,
-        height: 300,
-        width: '100%',
-        theme: 'dark',
-        note: 'Video files only'
-    }).use(Uppy.XHRUpload, {
-        endpoint: "{% url 'upload_video' %}",
-        fieldName: 'video',
-        headers: { 'X-CSRFToken': csrfToken }
-    });
+    // Initialize Uppy only if it hasn't been already
+    if (!window.uppyInstance) {
+        const uppy = new Uppy.Uppy({
+            debug: true,
+            autoProceed: false,
+            restrictions: { maxNumberOfFiles: 1, allowedFileTypes: ['video/*'] }
+        }).use(Uppy.Dashboard, {
+            inline: true,
+            target: '#lesson-video-uploader',
+            proudlyDisplayPoweredByUppy: false,
+            height: 300,
+            width: '100%',
+            theme: 'dark',
+            note: 'Video files only'
+        }).use(Uppy.XHRUpload, {
+            endpoint: "{% url 'upload_video' %}",
+            fieldName: 'video',
+            headers: { 'X-CSRFToken': csrfToken }
+        });
+    }
 
     uppy.on('upload-success', (file, response) => {
         document.getElementById('video-path-input').value = response.body.video_path;
