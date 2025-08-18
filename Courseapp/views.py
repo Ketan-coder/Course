@@ -2030,7 +2030,8 @@ def course_create_step_one(request, course_id=None) -> HttpResponse:
                     course_type=course_type,
                     course_level=course_level,
                     price=price,
-                    discount_price=discount_price
+                    discount_price=discount_price,
+                    is_deleted=True
                 )
                 if thumbnail:
                     course.thumbnail = thumbnail
@@ -2249,7 +2250,7 @@ def course_create_step_five(request, course_id=None) -> HttpResponse:
                 course.is_published = 'is_published' in request.POST
                 course.is_open_to_all = 'is_open_to_all' in request.POST
                 course.is_class_room_course = 'is_class_room_course' in request.POST
-
+                course.is_deleted = False
                 course.save(create_qr=create_qr_code)
                 # Log activity
                 Activity.objects.create(
@@ -2265,7 +2266,7 @@ def course_create_step_five(request, course_id=None) -> HttpResponse:
                 request.session['step_five_done'] = False
                 return redirect("course_list")
             else:
-                return HttpResponse("Course ID is required to create a section.", status=400)
+                return HttpResponse("Course ID is required to update this step.", status=400)
         except Exception as e:
             return HttpResponse(f"Error creating section: {str(e)}", status=500)
     return render(request, "course/creation/step_5.html", locals())

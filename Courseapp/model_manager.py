@@ -5,7 +5,7 @@ class CourseManager(models.Manager):
     Change the queryset to exclude deleted courses
     """
     def get_queryset(self):
-        return super().get_queryset().filter(is_deleted=False)
+        return super().get_queryset().filter(is_deleted=False, is_published=True)
 
 class SectionManager(models.Manager):
     """

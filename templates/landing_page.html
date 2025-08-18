@@ -21,6 +21,141 @@
     <!-- Anime.js for animations -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
     <style>
+        /* Lufga Thin */
+        @font-face {
+            font-family: 'Lufga';
+            src: url('{% static "resoures/fonts/lufga/LufgaThin.ttf" %}') format('truetype');
+            font-weight: 100;
+            font-style: normal;
+        }
+
+        @font-face {
+            font-family: 'Lufga';
+            src: url('{% static "resoures/fonts/lufga/LufgaThinItalic.ttf" %}') format('truetype');
+            font-weight: 100;
+            font-style: italic;
+        }
+
+        /* Lufga ExtraLight */
+        @font-face {
+            font-family: 'Lufga';
+            src: url('{% static "resoures/fonts/lufga/LufgaExtraLight.ttf" %}') format('truetype');
+            font-weight: 200;
+            font-style: normal;
+        }
+
+        @font-face {
+            font-family: 'Lufga';
+            src: url('{% static "resoures/fonts/lufga/LufgaExtraLightItalic.ttf" %}') format('truetype');
+            font-weight: 200;
+            font-style: italic;
+        }
+
+        /* Lufga Light */
+        @font-face {
+            font-family: 'Lufga';
+            src: url('{% static "resoures/fonts/lufga/LufgaLight.ttf" %}') format('truetype');
+            font-weight: 300;
+            font-style: normal;
+        }
+
+        @font-face {
+            font-family: 'Lufga';
+            src: url('{% static "resoures/fonts/lufga/LufgaLightItalic.ttf" %}') format('truetype');
+            font-weight: 300;
+            font-style: italic;
+        }
+
+        /* Lufga Regular */
+        @font-face {
+            font-family: 'Lufga';
+            src: url('{% static "resoures/fonts/lufga/LufgaRegular.ttf" %}') format('truetype');
+            font-weight: 400;
+            font-style: normal;
+        }
+
+        @font-face {
+            font-family: 'Lufga';
+            src: url('{% static "resoures/fonts/lufga/LufgaItalic.ttf" %}') format('truetype');
+            font-weight: 400;
+            font-style: italic;
+        }
+
+        /* Lufga Medium */
+        @font-face {
+            font-family: 'Lufga';
+            src: url('{% static "resoures/fonts/lufga/LufgaMedium.ttf" %}') format('truetype');
+            font-weight: 500;
+            font-style: normal;
+        }
+
+        @font-face {
+            font-family: 'Lufga';
+            src: url('{% static "resoures/fonts/lufga/LufgaMediumItalic.ttf" %}') format('truetype');
+            font-weight: 500;
+            font-style: italic;
+        }
+
+        /* Lufga SemiBold */
+        @font-face {
+            font-family: 'Lufga';
+            src: url('{% static "resoures/fonts/lufga/LufgaSemiBold.ttf" %}') format('truetype');
+            font-weight: 600;
+            font-style: normal;
+        }
+
+        @font-face {
+            font-family: 'Lufga';
+            src: url('{% static "resoures/fonts/lufga/LufgaSemiBoldItalic.ttf" %}') format('truetype');
+            font-weight: 600;
+            font-style: italic;
+        }
+
+        /* Lufga Bold */
+        @font-face {
+            font-family: 'Lufga';
+            src: url('{% static "resoures/fonts/lufga/LufgaBold.ttf" %}') format('truetype');
+            font-weight: 700;
+            font-style: normal;
+        }
+
+        @font-face {
+            font-family: 'Lufga';
+            src: url('{% static "resoures/fonts/lufga/LufgaBoldItalic.ttf" %}') format('truetype');
+            font-weight: 700;
+            font-style: italic;
+        }
+
+        /* Lufga ExtraBold */
+        @font-face {
+            font-family: 'Lufga';
+            src: url('{% static "resoures/fonts/lufga/LufgaExtraBold.ttf" %}') format('truetype');
+            font-weight: 800;
+            font-style: normal;
+        }
+
+        @font-face {
+            font-family: 'Lufga';
+            src: url('{% static "resoures/fonts/lufga/LufgaExtraBoldItalic.ttf" %}') format('truetype');
+            font-weight: 800;
+            font-style: italic;
+        }
+
+        /* Lufga Black */
+        @font-face {
+            font-family: 'Lufga';
+            src: url('{% static "resoures/fonts/lufga/LufgaBlack.ttf" %}') format('truetype');
+            font-weight: 900;
+            font-style: normal;
+        }
+
+        @font-face {
+            font-family: 'Lufga';
+            src: url('{% static "resoures/fonts/lufga/LufgaBlackItalic.ttf" %}') format('truetype');
+            font-weight: 900;
+            font-style: italic;
+        }
+
         /* --- General Styling & Resets --- */
         :root {
             /* Updated 'cool, modern tech-vibe' color palette */
@@ -47,7 +182,7 @@
         }
 
         body {
-            font-family: 'Nunito', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            font-family: 'Lufga','Nunito', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
             background-color: var(--dark-blue);
             color: var(--text-color-dark);
             line-height: 1.6;
@@ -188,7 +323,8 @@
             height: 100vh;
             display: flex;
             align-items: flex-end;
-            justify-content: flex-start;
+            justify-content: center;
+            //justify-content: flex-start;
             position: relative;
             overflow: hidden;
             padding: 0;
@@ -223,14 +359,16 @@
 
         .hero-content {
             max-width: 800px;
-            padding: 0 0 10vh 5vw;
-            text-align: left;
+            padding: 0 0 10vh 0vw;
+            //padding: 0 0 10vh 5vw;
+            text-align: center;
         }
 
         .hero-content h1 {
             font-size: clamp(3rem, 10vw, 7rem);
             margin-bottom: 10px;
-            font-weight: 800;
+            font-weight: 500;
+            font-family: 'Lufga';
             text-shadow: 2px 2px 15px rgba(0,0,0,0.7);
         }
 

@@ -7,7 +7,7 @@
   <div class="d-flex flex-column gap-2">
     <smart-list-tile
       leading-icon= {% if request.session.step_one_done %}"ph ph-check-fill"{% else %} "ph ph-identification-card-fill"{% endif %}
-      title="Step 1: Core course details"
+      title="Step 1: Basic details"
       subtitle="Set the basic information for your course"
       active-color="primary"
       {% if step != '1' %}  background-color="#2c3e50" {% else %}{% endif %} 

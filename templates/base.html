@@ -24,6 +24,7 @@
   <script src="https://unpkg.com/phosphor-icons"></script>
 
   <!-- Styles -->
+  {% comment %} <link href="{% static 'resoures/css/lufga_font.css' %}" rel="stylesheet" /> {% endcomment %}
   <link href="{% static 'vendors/css/halfmoon.css' %}" rel="stylesheet" />
   <link href="{% static 'vendors/css/halfmoon.modern.css' %}" rel="stylesheet" />
   <link href="{% static 'vendors/css/halfmoon.elegant.css' %}" rel="stylesheet" />
@@ -42,6 +43,7 @@
   <script src="https://unpkg.com/gsap@latest/dist/gsap.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
   <style>
+    // body {--bs-body-font-family: 'Lufga';}
     @font-face {
       font-family: 'Gucina';
       src: url('{% static 'resoures/fonts/Gucina-Bold.woff' %}') format('woff'),
@@ -67,36 +69,36 @@
       animation: fadeIn 0.3s ease;
 }
 
-.reward-text {
-    font-size: 4rem;
-    color: gold;
-    text-shadow: 0 0 10px white, 0 0 20px gold;
-    animation: popUp 0.8s ease forwards;
-    font-weight: bold;
-    transform: scale(0);
-}
+  .reward-text {
+      font-size: 4rem;
+      color: gold;
+      text-shadow: 0 0 10px white, 0 0 20px gold;
+      animation: popUp 0.8s ease forwards;
+      font-weight: bold;
+      transform: scale(0);
+  }
 
-@keyframes popUp {
-    0% { transform: scale(0); }
-    60% { transform: scale(1.2); }
-    100% { transform: scale(1); }
-}
+  @keyframes popUp {
+      0% { transform: scale(0); }
+      60% { transform: scale(1.2); }
+      100% { transform: scale(1); }
+  }
 
-@keyframes fadeIn {
-   from { opacity: 0; }
-    to  { opacity: 1; }
-}
+  @keyframes fadeIn {
+    from { opacity: 0; }
+      to  { opacity: 1; }
+  }
 
-.hidden {
-  display: none !important;
-}
-#result {
-    font-size: 2rem;
-    font-weight: bold;
-    color: #2ecc71;
-    text-align: center;
-    margin-top: 20px;
-} 
+  .hidden {
+    display: none !important;
+  }
+  #result {
+      font-size: 2rem;
+      font-weight: bold;
+      color: #2ecc71;
+      text-align: center;
+      margin-top: 20px;
+  } 
   /* Ensure the container-fluid doesn't cause page-wide overflow */
   .container-fluid-horizontal {
       overflow-x: hidden;
