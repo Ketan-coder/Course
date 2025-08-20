@@ -377,12 +377,12 @@ class Tag(models.Model):
     def __str__(self) -> str:
             return self.name
         
-    def save(self, emoji='📊', icon="chart-line", bcColor="#00e5ff", color="#000", iconColor = "#000" ,*args, **kwargs) -> None:
-        self.extra_fields.setdefault('emoji', '📊')
-        self.extra_fields.setdefault('icon', 'chart-line')
-        self.extra_fields.setdefault('bgColor', '#00e5ff')
-        self.extra_fields.setdefault('color', '#000000')
-        self.extra_fields.setdefault('iconColor', '#000000')
+    def save(self, emoji='📊', icon="chart-line", bgColor="#00e5ff", color="#000", iconColor = "#000" ,*args, **kwargs) -> None:
+        self.extra_fields.setdefault('emoji', emoji)
+        self.extra_fields.setdefault('icon', icon)
+        self.extra_fields.setdefault('bgColor', bgColor)
+        self.extra_fields.setdefault('color', color)
+        self.extra_fields.setdefault('iconColor', iconColor)
         self.extra_fields['last_updated'] = str(self.updated_at)
         self.extra_fields.setdefault('search_terms', [self.name, 'Active' if self.is_active else 'Inactive'])
         if self.icon_image and '_resized' not in self.icon_image.name:

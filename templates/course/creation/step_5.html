@@ -32,6 +32,9 @@
                   <input type="text" id="id_tags_search" class="form-control" placeholder="Search and add Categories">
                   <div id="tags_search_results" class="list-group mt-2"></div>
                   <div id="selected_tags" class="mt-2">
+                    <button class="btn btn-outline-warning btn-sm" type="button" data-bs-toggle="modal" data-bs-target="#tag-modal">
+                        <i class="ph ph-plus"></i> Add Tag
+                    </button>
                       {% for tag in course.tags.all %}
                       <span class="badge mr-1 pt-1 selected-tag" style="background-color: {{ tag.extra_fields.bgColor }};color: {{ tag.extra_fields.color }};" data-tag-id="{{ tag.id }}">
                          <i class="{{ tag.extra_fields.icon }} mt-1" style="color: {{ tag.extra_fields.iconColor }}"></i> {{ tag.name }} | <button type="button" class="btn btn-sm btn-outline-light ml-1 p-0 ps-1 pe-1 border-0" aria-label="Remove" onclick="removeTag(this)">&times;</button>
@@ -128,6 +131,67 @@
       </main>
     </div>
   </div>
+</div>
+
+
+<!-- Tag Modal -->
+<div class="modal fade" id="tag-modal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-xl" role="document">
+        <div class="modal-content">
+          <form id="tag-form">
+            {% csrf_token %}
+            <input type="hidden" id="tag-id" name="id"> <!-- used for edit -->
+            <div class="modal-header">
+                <h5 class="modal-title" id="faq-modal-title">Tag Editor</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="model-body p-4">
+              <div class="mb-3">
+                <smart-input type="text" name="name" label="Tag Title" id="article-title-input" required></smart-input>
+              </div>
+              <div class="mb-3">
+                <smart-quill
+                name="description"
+                label="Tag Description"
+                placeholder="Describe the tag here..." required>
+              </smart-quill>
+              </div>
+
+              <div class="row">
+                <div class="col-md-6">
+                  <smart-input type="text" name="icon" label="Icon" id="article-title-input" value="chart-line" required></smart-input>
+                </div>
+                <div class="col-md-6">
+                  <smart-input type="color" name="bgColor" label="Background Color" id="article-title-input" required></smart-input>
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-md-6">
+                  <smart-input type="color" name="color" label="Text Color" id="article-title-input" required></smart-input>
+                </div>
+                <div class="col-md-6">
+                  <smart-input type="color" name="iconColor" label="Icon Color" id="article-title-input" required></smart-input>
+                </div>
+              </div>
+  
+              <custom-button
+                  label="Save Tag"
+                  form-id="tag-form"
+                  post="{% url 'create_tag' %}"
+                  method="POST"
+                  showspinner="true"
+                  buttontype="success"
+                  class="my-3 text-end"
+                  target="#tag-select"
+                  confirm-title="Save Tag"
+                  confirm-text="Are you sure you want to save this tag? No Updates can be Made!"
+              ></custom-button>
+            </div>
+        </form>
+        <div id="tag-select"></div>
+        </div>
+    </div>
 </div>
 
 <!-- faq Modal -->

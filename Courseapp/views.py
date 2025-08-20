@@ -859,13 +859,19 @@ def create_tag(request) -> HttpResponse:
             </div>""",
             status=400
         )
+    icon = request.POST.get("icon",'chart-line')
+    bgColor = request.POST.get("bgColor", "#00e5ff")
+    color = request.POST.get("color", "#000")
+    iconColor = request.POST.get("iconColor", "#000")
+    description = request.POST.get("description", "")
 
     try:
         tag_id = request.POST.get("id")
         if tag_id:
             tag = get_object_or_404(Tag, id=tag_id)
             tag.name = name
-            tag.save()
+            tag.description = description
+            tag.save(icon=icon,bgColor=bgColor,color=color,iconColor=iconColor)
             
             Activity.objects.create(
                 user=request.user,
@@ -879,7 +885,10 @@ def create_tag(request) -> HttpResponse:
                 </div>""".format(name)
             )
         else:
-            tag = Tag.objects.create(name=name)
+            tag = Tag()
+            tag.name = name
+            tag.description = description
+            tag.save(icon=icon,bgColor=bgColor,color=color,iconColor=iconColor)
             
             Activity.objects.create(
                 user=request.user,
