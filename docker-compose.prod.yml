@@ -8,7 +8,7 @@ services:
     command: >
       bash -c "python manage.py collectstatic --noinput &&
                python manage.py migrate &&
-               gunicorn -k uvicorn.workers.UvicornWorker Course.wsgi:application --bind 0.0.0.0:8000 --workers 3 --timeout 120"
+               gunicorn -k uvicorn.workers.UvicornWorker Course.asgi:application --bind 0.0.0.0:8000 --workers 3 --timeout 120"
     container_name: sajan_giri_app
     volumes:
       - .:/app
