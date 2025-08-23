@@ -208,6 +208,15 @@
                                 <smart-input label="Phone Number" name="phone_no" type="tel" required></smart-input>
                             </div>
                         </div>
+                        <div class="form-group p-2">
+                            <smart-input
+                                type="select" name="currency" label="Preferred Currency" required
+                                data-options='[{% for currency in currencies %}{"id": "{{ currency.pk }}", "name": "{{ currency.symbol }} - {{ currency.name }}"}{% if not forloop.last %},{% endif %}{% endfor %}]'>
+                            </smart-input>
+                        </div>
+                        <div class="form-group p-2">
+                            <smart-input label="Address" name="address" type="text"></smart-input>
+                        </div>
                         
                         <div class="form-navigation">
                             <button type="button" class="btn btn-secondary" onclick="goToStep(1)"><i class="ph ph-arrow-left me-2"></i> Previous</button>
@@ -235,6 +244,30 @@
                                 label="Profile Bio"
                                 placeholder="Tell us a little about yourself...">
                             </smart-quill>
+                        </div>
+                        <hr>
+                        <div class="form-group p-2">
+                            <smart-input
+                                label="Are you an Instructor?"
+                                name="is_instructor"
+                                type="switch"
+                                id="id_is_instructor_switch"
+                                data-onchange="handleChange"
+                                is-big>
+                            </smart-input>
+
+                        </div>
+
+                        <div class="form-group d-none p-3" id="instructorFields" >
+                            <div class="row">
+                                {% comment %} <div class="col-md-6">
+                                </div>
+                                <div class="col-md-6">
+                                    
+                                    <smart-input label="Classroom Instructor" name="is_classroom_instructor" type="switch" is-big></smart-input>
+                                </div> {% endcomment %}
+                                <smart-input label="Experience (in Years)" name="experience" type="number"></smart-input>
+                            </div>
                         </div>
                         
                         <div class="form-navigation">
@@ -273,12 +306,12 @@
                 // Active Step
                 tile.active = true;
                 tile.leadingIcon = `ph ph-${tile.id.split('-')[2]}`; // Reset to original icon
-                tile.setColors('', '', ''); // Reset to default active colors
+                //tile.setColors('', '', ''); // Reset to default active colors
             } else {
                 // Future Step
                 tile.active = false;
                 tile.leadingIcon = `ph ph-${tile.id.split('-')[2]}`; // Reset to original icon
-                tile.setColors('', '', ''); // Reset to default colors
+                //tile.setColors('', '', ''); // Reset to default colors
             }
         });
     }
@@ -327,5 +360,10 @@
 
     // Initial UI setup
     updateStepperUI(1);
+
+function handleChange(event) {
+    const quillEditorElement = document.getElementById('instructorFields');
+    quillEditorElement.classList.toggle('d-none'); // Assuming you have a CSS class named 'hidden'
+}
 </script>
 {% endblock script %}

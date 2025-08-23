@@ -248,7 +248,7 @@ def registeration_form(request):
 
 def register_view(request):
     if request.method == "POST":
-        email = request.POST.get("email")
+        email = request.POST.get("email").lower()
         password = request.POST.get("password1")
         confirm_password = request.POST.get("password2")
 
@@ -368,10 +368,12 @@ def email_confirmation_view(request, token):
 @login_required
 def profile_setup_view(request):
     phone_no_prefixes = PhoneNoPrefix.objects.all().order_by('-created_at')
+    currencies = Currency.objects.all()
     if not request.user.is_authenticated:
         return redirect("login")
 
     if request.method == "POST":
+        print("POST DATA==> " + str(request.POST))
         username = request.POST.get("username", "").strip()
         first_name = request.POST.get("first_name", "").strip()
         last_name = request.POST.get("last_name", "").strip()
@@ -380,6 +382,10 @@ def profile_setup_view(request):
         phone_no = request.POST.get("phone_no", "").strip()
         address = request.POST.get("address", "").strip()
         date_of_birth_raw = request.POST.get("date_of_birth", "").strip()
+        is_instructor = request.POST.get("is_instructor", "off") == "on"
+        experience = request.POST.get("experience", "").strip()
+        currency = request.POST.get("currency", "").strip()
+        is_classroom_instructor = request.POST.get("is_classroom_instructor", "off") == "on"
         profile_pic = request.FILES.get("profile_pic")
 
         # Validate required fields
@@ -399,6 +405,12 @@ def profile_setup_view(request):
                 return render(request, "user/profile_setup_new.html", {"title": "Complete Profile"})
         else:
             date_of_birth = None
+
+        if is_instructor or experience:
+            if not experience.isdigit() or int(experience) < 0:
+                messages.error(request, "Experience must be a non-negative number.")
+            if currency and not Currency.objects.filter(id=currency).exists():
+                messages.error(request, "Selected currency is invalid.")
 
         # Validate image file if uploaded
         # profile_pic_path = None
@@ -432,12 +444,25 @@ def profile_setup_view(request):
             "phone_no": phone_no,
             "address": address,
             "date_of_birth": date_of_birth,
+            "currency_id": currency if currency else None,
         }
 
         # if profile_pic_path:
         #     profile_data["image"] = profile_pic_path
 
         Profile.objects.update_or_create(user=user, defaults=profile_data)
+        
+
+        if is_instructor or experience:
+            Instructor.objects.update_or_create(
+                profile=user.profile,
+                defaults={"experience": experience or "0", 
+                          "is_classroom_instructor": is_classroom_instructor or False},
+            )
+            Student.objects.filter(profile=user.profile).delete()
+        else:
+            Student.objects.get_or_create(profile=user.profile)
+            Instructor.objects.filter(profile=user.profile).delete()
 
         Activity.objects.create(
             user=user,
@@ -448,7 +473,7 @@ def profile_setup_view(request):
         messages.success(request, "Profile updated successfully.")
         return redirect("home")
 
-    return render(request, "user/profile_setup_new.html", {"title": "Complete Profile", "phone_no_prefixes": phone_no_prefixes})
+    return render(request, "user/profile_setup_new.html", {"title": "Complete Profile", "phone_no_prefixes": phone_no_prefixes, "currencies": currencies})
 
 
 def check_username(request):

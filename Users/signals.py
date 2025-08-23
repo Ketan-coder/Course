@@ -61,7 +61,7 @@ def create_instructor_on_user_save(sender, instance, created, **kwargs):
     if created:
         try:
             Profile.objects.get(user=instance)
-            Student.objects.create(profile=Profile.objects.get(user=instance))
+            # Student.objects.create(profile=Profile.objects.get(user=instance))
         except Profile.DoesNotExist:
             pass # Profile will be created by its own signal
 
