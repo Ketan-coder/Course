@@ -114,3 +114,34 @@ class Activity(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.activity_type} at {self.timestamp}"
+    
+
+
+class SecurityEvent(models.Model):
+    created_at = models.DateTimeField(auto_now_add=True)
+    ip = models.GenericIPAddressField(null=True, blank=True)
+    path = models.CharField(max_length=512)
+    method = models.CharField(max_length=10)
+    user_agent = models.TextField(blank=True)
+    note = models.CharField(max_length=256)   # e.g., "Possible scan", "Blocked" etc.
+    severity = models.CharField(
+        max_length=10,
+        choices=[("low","low"),("med","med"),("high","high")],
+        default="low",
+    )
+
+    class Meta:
+        indexes = [models.Index(fields=["created_at", "path"])]
+        ordering = ["-created_at"]
+
+class LiveRecord(models.Model):
+    ip_address = models.GenericIPAddressField()
+    country = models.CharField(max_length=100, blank=True, null=True)
+    city = models.CharField(max_length=100, blank=True, null=True)
+    referrer = models.URLField(blank=True, null=True)
+    user_agent = models.TextField(blank=True, null=True)
+    path = models.CharField(max_length=255, blank=True, null=True)
+    hit_count = models.IntegerField(default=1)
+    first_seen = models.DateTimeField(auto_now_add=True)
+    last_seen = models.DateTimeField(auto_now=True)
+    status = models.CharField(max_length=50, default="active")

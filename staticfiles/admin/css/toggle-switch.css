@@ -1,0 +1,41 @@
+/* Boolean field wrapper */
+.field-is_active, .field-is_deleted {
+    display: flex;
+    align-items: center;
+}
+
+/* Hide the default checkbox */
+input[type=checkbox] {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 40px;
+    height: 20px;
+    background: #888;
+    border-radius: 20px;
+    position: relative;
+    cursor: pointer;
+    outline: none;
+    transition: background 0.3s cubic-bezier(.38,.24,.28,1.17);
+    margin-right: 8px;
+}
+
+/* The circle */
+input[type=checkbox]::after {
+    content: "";
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: white;
+    top: 1px;
+    left: 1px;
+    transition: transform 0.3s cubic-bezier(.38,.24,.28,1.17);
+}
+
+/* Checked state */
+input[type=checkbox]:checked {
+    background: #4caf50;
+}
+input[type=checkbox]:checked::after {
+    transform: translateX(20px);
+}

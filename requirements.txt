@@ -133,3 +133,10 @@ django-unfold==0.63.0
 django-money==3.5.4
 djlint
 weasyprint
+python-json-logger
+django-ratelimit
+django-axes 
+django-csp
+sentry-sdk
+daphne
+django-ipware

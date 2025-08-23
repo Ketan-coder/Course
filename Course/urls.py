@@ -6,7 +6,12 @@ from django.conf import settings
 handler404 = 'utils.views.custom_404'
 handler500 = 'utils.views.custom_500'
 
+def trigger_error(request):
+    division_by_zero = 1 / 0
+    return division_by_zero
+
 urlpatterns = [
+	path('sentry-debug/', trigger_error),
 	path('admin/', admin.site.urls),
 	path('accounts/', include('Users.urls')),
 	path('stock/', include('Stock.urls')),

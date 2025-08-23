@@ -12,7 +12,9 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 from dotenv import load_dotenv
-import os
+import os, uuid
+import core.logging_setup
+
 load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -47,7 +49,10 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    "core.middleware.request_id.RequestIDMiddleware",
+    "utils.middleware.metrics.MetricsMiddleware",
     'middleware.custom_debug.CustomDebugMiddleware',
+    'middleware.live_record.LiveTrackingMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -261,3 +266,123 @@ DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 TRANSACTIONAL_EMAIL = os.getenv("TRANSACTIONAL_EMAIL")
 # # For Testing
 # EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+
+
+# ========================= LOGGING =============================================
+# Make sure you set this in env for email & DEBUG False in prod
+ADMINS = [("DevOps", EMAIL_HOST_USER)]
+SERVER_EMAIL = TRANSACTIONAL_EMAIL   # from address for error emails
+
+# === Request ID (to correlate logs) ===
+def _request_id():
+    # Fallback for non-request contexts
+    return uuid.uuid4().hex
+
+REQUEST_ID_HEADER = "HTTP_X_REQUEST_ID"  # if behind proxy that injects it
+
+# === LOGGING ===
+LOG_DIR = BASE_DIR / "logs"
+LOG_DIR.mkdir(exist_ok=True)
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "filters": {
+        "require_debug_false": {"()": "django.utils.log.RequireDebugFalse"},
+    },
+    "formatters": {
+        "verbose": {
+            "format": (
+                "%(asctime)s | %(levelname)s | %(name)s | req_id=%(request_id)s | "
+                "%(pathname)s:%(lineno)d | %(message)s"
+            )
+        },
+        "json": {
+            "()": "pythonjsonlogger.jsonlogger.JsonFormatter",
+            "fmt": "%(asctime)s %(levelname)s %(name)s %(message)s %(request_id)s",
+        },
+        "simple": {"format": "%(levelname)s | %(message)s"},
+    },
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "verbose",
+        },
+        "file": {
+            "class": "logging.handlers.TimedRotatingFileHandler",
+            "filename": str(LOG_DIR / "app.log"),
+            # "maxBytes": 10 * 1024 * 1024,  # 10MB
+            "backupCount": 5,
+            "when": "midnight",   # rotate daily
+            "interval": 1,
+            "formatter": "verbose",
+        },
+        "mail_admins": {
+            "level": "ERROR",
+            "class": "django.utils.log.AdminEmailHandler",
+            "filters": ["require_debug_false"],
+        },
+    },
+    "loggers": {
+        "django": {
+            "handlers": ["file"],
+            "level": "INFO",
+            "propagate": True,
+        },
+        "django.request": {
+            "handlers": ["file", "mail_admins"],
+            "level": "ERROR",
+            "propagate": False,
+        },
+        "security": {  # we’ll use this for security events
+            "handlers": ["console", "file", "mail_admins"],
+            "level": "WARNING",
+            "propagate": False,
+        },
+        "Course": {
+            "handlers": ["file"],
+            "level": "INFO",
+            "propagate": False,
+        },
+    },
+}
+
+# Middleware to attach request_id to logging records
+LOGGING_REQUEST_ID_VAR = "request_id"
+
+# ============================== END LOGGING ===================================
+
+
+# ============================== Sentry ===================================
+# For Error Tracking - set SENTRY_DSN in env to enable
+SENTRY_DSN = os.getenv("SENTRY_DSN")
+if SENTRY_DSN:
+    import sentry_sdk
+
+    sentry_sdk.init(
+        dsn=SENTRY_DSN,
+        # Add data like request headers and IP for users,
+        # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
+        send_default_pii=True,
+        # Set traces_sample_rate to 1.0 to capture 100%
+        # of transactions for tracing.
+        traces_sample_rate=1.0,
+        # Set profile_session_sample_rate to 1.0 to profile 100%
+        # of profile sessions.
+        profile_session_sample_rate=1.0,
+        # Set profile_lifecycle to "trace" to automatically
+        # run the profiler on when there is an active transaction
+        profile_lifecycle="trace",
+    )
+# ============================== END Sentry ===================================
+
+# ============================ Channels Setup ==============================
+ASGI_APPLICATION = "Course.asgi.application"
+
+REDIS_URL = os.getenv("REDIS_URL", "redis://127.0.0.1:6379/1")
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {"hosts": [REDIS_URL]},
+    }
+}

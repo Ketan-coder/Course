@@ -23,4 +23,6 @@ urlpatterns: list[URLPattern] = [
 
     path('upload-video/', views.upload_video, name='upload_video'),
     path('update-quiz-submission-status/', views.update_quiz_submission_status, name='update_quiz_submission_status'),
+
+    path("admin-dashboard/", views.admin_dashboard, name="admin_dashboard"),
 ]

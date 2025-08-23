@@ -36,7 +36,10 @@ EXPOSE 8000
 RUN python manage.py collectstatic --noinput
 
 # Run the Django server
-CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+# CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+
+# Run ASGI server (daphne)
+CMD ["daphne", "-b", "0.0.0.0", "-p", "8000", "project.asgi:application"]
 
 # For Production
 # CMD ["gunicorn", "--workers=3", "--bind=0.0.0.0:8000", "Course.wsgi:application"]

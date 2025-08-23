@@ -14,9 +14,14 @@ services:
       - .:/app
       - static_volume:/app/staticfiles
       - media_volume:/app/media
+    environment:
+      - DEBUG=0
+      - REDIS_URL=redis://redis:6379/1
     depends_on:
       db:
         condition: service_healthy
+      redis:
+        condition: service_started
     env_file:
       - .env
 
@@ -62,6 +67,12 @@ services:
     entrypoint: "/bin/sh -c 'trap exit TERM; while :; do sleep 12h & wait $${!}; certbot renew; done'"
     depends_on:
       - nginx
+
+  redis:
+    image: redis:7
+    container_name: sajan_giri_redis
+    ports:
+      - "6379:6379"
 
 volumes:
   sajan_giri_db:

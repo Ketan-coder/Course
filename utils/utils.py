@@ -260,3 +260,9 @@ def generate_unique_code():
     characters = string.ascii_letters + string.digits
     code = ''.join(random.choice(characters) for _ in range(6))
     return code
+
+def client_ip(request):
+    xff = request.META.get("HTTP_X_FORWARDED_FOR")
+    if xff:
+        return xff.split(",")[0].strip()
+    return request.META.get("REMOTE_ADDR")

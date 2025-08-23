@@ -18,6 +18,7 @@ from django.http import JsonResponse
 from django.core.files.storage import FileSystemStorage
 from django.conf import settings
 import os
+from django.contrib.admin.views.decorators import staff_member_required
 
 # Create your views here.
 def quiz_helper(request) -> HttpResponse:
@@ -392,3 +393,7 @@ def upload_video(request):
 
         return JsonResponse({'success': True, 'video_path': f'lesson_videos/{filename}'})
     return JsonResponse({'success': False, 'error': 'No video uploaded.'}, status=400)
+
+@staff_member_required
+def admin_dashboard(request):
+    return render(request, "misc/admin_dashboard.html")

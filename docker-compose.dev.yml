@@ -6,15 +6,23 @@ services:
       context: .
       dockerfile: Dockerfile.dev
     command: bash -c 'python manage.py makemigrations && python manage.py migrate && python manage.py runserver 0.0.0.0:8000'
+    # command: bash -c 'python manage.py makemigrations && python manage.py migrate && daphne -b 0.0.0.0 -p 8000 Course.asgi:application'
     container_name: sajan_giri_app
     volumes:
       - .:/app
+      - ./static:/app/static
+      - ./staticfiles:/app/staticfiles
     ports:
       - "8000:8000"
+    environment:
+      - DEBUG=1
+      - REDIS_URL=redis://redis:6379/1
     depends_on:
       db:
         condition: service_healthy
         restart: true
+      redis:
+        condition: service_started
     env_file:
       - .env
 
@@ -33,6 +41,12 @@ services:
       timeout: 10s
       retries: 5
       start_period: 30s
+  
+  redis:
+    image: redis:7
+    container_name: sajan_giri_redis
+    ports:
+      - "6379:6379"
 
 volumes:
   sajan_giri_db:
