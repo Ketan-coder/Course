@@ -45,3 +45,4 @@ media/
 
 # Ignore internal files
 internal_readme.md
+logs/

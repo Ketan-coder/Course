@@ -166,9 +166,11 @@
             --text-color-dark: #ccd6f6;
             --text-color-light: #ffffff;
             --text-color-muted: #8892b0;
-            --card-bg: #113255;
+            --card-bg-hover: #113255;
+            --card-bg: #000;
             --card-border: #234b75;
             --footer-bg: #0a192f;
+            --pitch-black: #000000;
         }
 
         * {
@@ -426,7 +428,7 @@
         
         /* --- Features Section --- */
         #features {
-            background-color: var(--dark-blue);
+            background-color: var(--pitch-black);
         }
         
         #features .container {
@@ -464,6 +466,9 @@
             transform: translateY(-8px);
             box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
             border-color: var(--primary-color);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            background-color: var(--card-bg-hover);
         }
 
         .feature-card:hover .icon {
@@ -532,7 +537,7 @@
         /* --- About Us Section --- */
         #about {
              text-align: center;
-             background-color: var(--dark-blue);
+             background-color: var(--pitch-black);
         }
         #about h2 {
             display: inline-block;
@@ -545,7 +550,7 @@
 
         /* --- Contact Us Section --- */
         #contact {
-             background-color: var(--light-blue-bg);
+             background-color: var(--pitch-black);
         }
         .contact-wrapper {
             display: grid;
@@ -626,6 +631,9 @@
             transform: translateY(-5px);
             box-shadow: 0 5px 15px rgba(0,0,0,0.1);
             border-color: var(--primary-color);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            background-color: var(--card-bg-hover);
         }
 
         .social-card .icon {
@@ -780,7 +788,7 @@
 
         /* Images Section Styling */
         #images, #innovation, #testimonials {
-            background-color: var(--dark-blue);
+            background-color: var(--pitch-black);
             padding: 80px 0;
             opacity: 0;
             transform: translateY(30px);
@@ -812,6 +820,9 @@
             transform: translateY(-8px);
             box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
             border-color: var(--primary-color);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            background-color: var(--card-bg-hover);
         }
 
         .workflow-card i, .innovation-card i, .testimonial-card i {
@@ -898,7 +909,7 @@
                 <div class="vip-input-group">
                     <input type="text" placeholder="Enter VIP Code">
                     {% comment %} <button>CONTINUE</button> {% endcomment %}
-                    <form method="get" action="{% url 'quiz_warmup_start' %}">
+                    <form method="get" action="{% url 'course_list' %}">
                         <button type="submit">CONTINUE</button>
                     </form>
 

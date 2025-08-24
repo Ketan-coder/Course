@@ -36,7 +36,7 @@
 
 
 {% block body %}
-<div class="container-fluid p-3">
+<div class="container-fluid pt-2 pb-3 ps-4 pe-4">
     <div class="mt-4 mb-4 text-start"> 
       <h1 class="fw-bold">{% if category %} <i class="ph ph-{{ category_object.extra_fields.icon|default:'sparkle' }}" aria-hidden="true"></i> {{category}} {% else %} Explore Courses {% endif %}</h1>
         {% if not category %}<p class="text-muted">Browse our extensive catalog of courses designed to enhance your skills and knowledge.</p>{% endif %} 
