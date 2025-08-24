@@ -126,9 +126,15 @@
                     </div>
 
                     <div class="text-end pt-4">
-                        <a href="{% if course %}{% url 'course_create_step_five' course_id=course.id %}{% else %}{% url 'course_create_step_five' %} {% endif %}" class="btn btn-primary btn-lg">
+                        {% comment %} <a href="{% if course %}{% url 'course_create_step_five' course_id=course.id %}{% else %}{% url 'course_create_step_five' %} {% endif %}" class="btn btn-primary btn-lg">
                             Next: Finalize & Publish <i class="ph ph-arrow-right ms-2"></i>
-                        </a>
+                        </a> {% endcomment %}
+                        <form method="post" action="{% if course %}{% url 'course_create_step_four' course_id=course.id %}{% else %}{% url 'course_create_step_four' %} {% endif %}" class="d-inline">
+                            {% csrf_token %}
+                        <button type="submit" class="btn {% if course %} btn-primary {% else %} btn-primary-outline {% endif %}  btn-lg" {% if not course %}disabled{% endif %}>
+                            Next: Finalize & Publish <i class="ph ph-arrow-right ms-2"></i>
+                          </button>
+                        </form>
                     </div>
                 </div>
             </main>
@@ -378,9 +384,9 @@ function saveQuiz(event) {
     });
     formData.append('questions_json', JSON.stringify(questions));
 
-    fetch("{% url 'create_quiz' %}", { method: 'POST', body: formData })
-        .then(res => res.json()).then(data => {
-            if (data.success) location.reload(); else alert('Error saving quiz.');
+    fetch("{% url 'create_quiz_ajax' %}", { method: 'POST', body: formData })
+        .then(res => res.text()).then(data => {
+            if (data.includes('success')) location.reload(); else alert('Error saving quiz. ' + data.message);
         });
 }
 
@@ -388,9 +394,9 @@ function saveArticle(event) {
     event.preventDefault();
     const form = event.target;
     const formData = new FormData(form);
-    fetch("{% url 'create_article' %}", { method: 'POST', body: formData })
-        .then(res => res.json()).then(data => {
-            if (data.success) location.reload(); else alert('Error saving article.');
+    fetch("{% url 'create_article_ajax' %}", { method: 'POST', body: formData })
+        .then(res => res.text()).then(data => {
+            if (data.includes('success')) location.reload(); else alert('Error saving article.' + data.message);
         });
 }
 

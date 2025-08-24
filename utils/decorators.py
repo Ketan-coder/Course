@@ -1,9 +1,12 @@
 import time
+import logging
 from django.http import HttpResponseForbidden, JsonResponse
 from functools import wraps
 from django.core.cache import cache
 from django.shortcuts import redirect
 # from Users.models import Instructor, Student, Profile
+
+logger = logging.getLogger(__name__)
 
 # Timer Decorator
 def check_load_time(func):
@@ -76,6 +79,9 @@ def retry_on_failure(retries=3, delay=2):
                     return func(*args, **kwargs)
                 except Exception as e:
                     print(f"Retry {i+1}/{retries} failed: {e}")
+                    import traceback 
+                    traceback.print_exc()
+                    logger.error(f"Retry {i+1}/{retries} failed: {e} ERROR: {traceback.format_exc()}")
                     time.sleep(delay)
             raise Exception("All retries failed.")
         return wrapper

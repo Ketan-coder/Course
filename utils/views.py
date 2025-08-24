@@ -173,6 +173,10 @@ def index(request):
                 enrolled_students = 0
                 total_earnings = 0
                 total_bookmarked_by_students = 0
+                student_growth_this_month = 0
+                total_revenue_this_month = 0
+                total_bookmarked_this_month = 0
+                total_courses_created_this_month = 0
                 student_data = []
                 if course.exists():
                     course_count = course.count()
@@ -182,18 +186,19 @@ def index(request):
                         users_who_bought_courses = course.filter(is_open_to_all=False, course_type='paid')
                         if users_who_bought_courses.exists():
                             for c in course:
-                                total_earnings += users_who_bought_courses.count() * c.price
+                                total_earnings += c.is_bought_by_users.count() * c.price
                     total_bookmarked_by_students = sum(c.bookmarked_by_users.count() for c in course)
                     student_growth_this_month = sum(c.is_bought_by_users.filter(
                         user__is_active=True,
                         created_at__month=datetime.now().month,
                         created_at__year=datetime.now().year
                     ).count() for c in course) or 0
-                    total_revenue_this_month = sum(c.is_bought_by_users.filter(
-                        user__is_active=True,
-                        created_at__month=datetime.now().month,
-                        created_at__year=datetime.now().year
-                    ).count() * c.price for c in course if c.is_open_to_all is False and c.course_type == 'paid') or 0
+                    if enrolled_students > 0:
+                        total_revenue_this_month = sum(c.is_bought_by_users.filter(
+                            user__is_active=True,
+                            created_at__month=datetime.now().month,
+                            created_at__year=datetime.now().year
+                        ).count() * c.price for c in course if c.is_open_to_all is False and c.course_type == 'paid' and c.is_bought_by_users.exists()) or 0
                     total_bookmarked_this_month = sum(c.bookmarked_by_users.filter(
                         user__is_active=True,
                         created_at__month=datetime.now().month,

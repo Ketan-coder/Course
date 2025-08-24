@@ -80,24 +80,25 @@ class Course(models.Model):
         import qrcode
         from io import BytesIO
         from django.core.files.base import ContentFile
-        from django.conf import settings
 
         if self.instructor:
-            ref = self.instructor.profile.user.username
+            ref = str(self.instructor.profile.user.username)  # force string
 
-        # if settings.DEBUG:
-        #     url = f"http://127.0.0.1/courses/{self.pk}/?ref={ref}"
-        # else:
-        # https://calsie.com.au/course/course/1/?ref=sajan_giri
         url = f"https://calsie.com.au/course/course/{self.pk}/?ref={ref}"
+
         qr = qrcode.make(url)
         buffer = BytesIO()
         qr.save(buffer, format="PNG")
-        filename = f"{self.title[:10]}-qr.png"
+
+        # Ensure title is string before slicing
+        title_str = str(self.title) if self.title else "course"
+        filename = f"{title_str[:10]}-qr.png"
+
         self.qr_code.save(filename, ContentFile(buffer.getvalue()), save=False)
 
         if auto_save:
             super(Course, self).save(update_fields=['qr_code'])
+
 
     def get_absolute_url(self):
         from django.urls import reverse
@@ -106,9 +107,18 @@ class Course(models.Model):
 
     @check_load_time
     @retry_on_failure(retries=3, delay=2)
-    def save(self, create_qr=False, enable_ad_revenue = False,*args, **kwargs):
+    def save(self, create_qr=False, enable_ad_revenue = False, *args, **kwargs):
         self.extra_fields['last_updated'] = str(self.updated_at)
         self.extra_fields['is_active'] = self.is_published
+
+        is_new_or_changed = False
+
+        if self.pk:
+            old = type(self).objects.filter(pk=self.pk).first()
+            if old and old.intro_video != self.intro_video:
+                is_new_or_changed = True
+        else:
+            is_new_or_changed = bool(self.intro_video)
 
         try:
             price = Decimal(self.price)
@@ -122,21 +132,35 @@ class Course(models.Model):
             print(f"Error calculating discount percentage: {e}")
             self.extra_fields['discount_percentage'] = 0  # Or handle it as needed
 
-        if self.intro_video and ('_resized' not in self.intro_video.name or '_optimized' not in self.intro_video.name):
-            resized_path = MediaHandler.optimize_video(self.intro_video)
-            if resized_path:
-                self.intro_video = resized_path
+        # if self.intro_video and not (
+        #     self.intro_video.name.endswith("_optimized.mp4")
+        #     or self.intro_video.name.endswith("_resized.mp4")
+        # ):
+        #     optimized_path = MediaHandler.optimize_video(self.intro_video)
+        #     if optimized_path:
+        #         MediaHandler.delete_media_file(self.intro_video.name)
+        #         self.intro_video = optimized_path
 
         # Removed MediaHandler import and usage to fix circular import issue
         # from utils.media_handler import MediaHandler
+
+        if not self.qr_code and create_qr:
+            self.generate_qr(auto_save=False)
+        super().save(*args, **kwargs)
+
         if self.thumbnail and '_resized' not in self.thumbnail.name:
             resized_path = MediaHandler.resize_image(self.thumbnail, size=(150, 150))
             if resized_path:
                 self.thumbnail = resized_path
 
-        if not self.qr_code and create_qr:
-            self.generate_qr(auto_save=False)
-        super().save(*args, **kwargs)
+        if is_new_or_changed and self.intro_video:
+            if not self.intro_video.name.endswith("_optimized.mp4") or '_optimized' not in self.intro_video.name:
+                optimized_path = MediaHandler.optimize_video(self.intro_video)
+                if optimized_path:
+                    # delete original unoptimized file
+                    MediaHandler.delete_media_file(self.intro_video.name)
+                    self.intro_video = optimized_path
+                    super().save(update_fields=["intro_video","thumbnail"])
 
     def delete(self, *args, **kwargs):
         # Delete the associated media files when the model instance is deleted
@@ -144,8 +168,8 @@ class Course(models.Model):
         # from utils.media_handler import MediaHandler
         if self.thumbnail:
             MediaHandler.delete_media_file(self.thumbnail.name)
-        if self.video:
-            MediaHandler.delete_media_file(self.video.name)
+        if self.intro_video:
+            MediaHandler.delete_media_file(self.intro_video.name)
         if self.qr_code:
             MediaHandler.delete_media_file(self.qr_code.name)
         super().delete(*args, **kwargs)
@@ -237,11 +261,14 @@ class Lesson(models.Model):
         self.extra_fields['last_updated'] = str(self.updated_at)
         if not self.instructor:
             raise ValueError("Instructor is required")
-        if self.video and '_resized' not in self.video.name:
+        super().save(*args, **kwargs)
+
+        if self.video and '_optimized' not in self.video.name:
             resized_path = MediaHandler.optimize_video(self.video)
             if resized_path:
+                MediaHandler.delete_media_file(self.video.name)
                 self.video = resized_path
-        super().save(*args, **kwargs)
+                super().save(update_fields=["video"])
 
     def delete(self, *args, **kwargs):
         # Delete the associated media files when the model instance is deleted

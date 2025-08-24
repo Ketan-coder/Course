@@ -44,7 +44,7 @@ def update_earn_points(sender, instance, created, **kwargs):
     for quiz in linked_quizzes:
         if isinstance(quiz.questions, dict):
             for q_id, q_data in quiz.questions.items():
-                total_score += q_data.get('score_on_completion', 0)
+                total_score += int(q_data.get('score_on_completion', 0) or 0)
 
     if instance.is_class_room_course:
         instance.course_code = generate_unique_code()

@@ -194,7 +194,9 @@
                           </div>
                           <div>
                             {% if logged_in_profile.id == course.instructor.profile.id %}
-                              <a href="{% url 'course_create_step_three' course_id=course.id %}" class="btn btn-sm">Edit</a>
+                            <a href="{% url 'video_detail_page' lesson_id=lesson.id %}" class="btn btn-sm">Watch</a>
+                            <div class="vr mx-3"></div>  
+                            <a href="{% url 'course_create_step_three' course_id=course.id %}" class="btn btn-sm">Edit</a>
                             {% endif %}
                             {% if logged_in_profile in course.is_bought_by_users.all or course.is_open_to_all and logged_in_profile in course.is_bought_by_users.all %}
                               <a href="{% url 'video_detail_page' lesson_id=lesson.id %}" class="btn btn-sm">Watch</a>

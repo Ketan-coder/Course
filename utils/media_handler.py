@@ -103,42 +103,54 @@ class MediaHandler:
         Optimizes a video file using ffmpeg.
         Requires ffmpeg to be installed on the system.
 
-        Args:
-            video_file: A Django FileField or a path to the video file.
-            output_format (str, optional): The desired output format (e.g., 'mp4', 'webm'). Defaults to 'mp4'.
-            resolution (str, optional): The desired resolution (e.g., '1280x720', '640x480'). Defaults to None (keeps original).
-            bitrate (str, optional): The desired video bitrate (e.g., '1000k', '500k'). Defaults to None (keeps original).
-
         Returns:
-            The path to the optimized video file in storage, or None if an error occurs.
+            The relative path to the optimized video file in storage, or None if an error occurs.
         """
         if not MediaHandler.is_video(video_file.name):
             print(f"Error: {video_file.name} is not a recognized video format.")
             return None
 
         try:
-            input_path = video_file.temporary_file_path() if hasattr(video_file, 'temporary_file_path') else video_file.path
-            name, ext = os.path.splitext(video_file.name)
-            optimized_name = f"{name}_optimized.{output_format.lower()}"
-            optimized_path_relative = os.path.join(os.path.dirname(video_file.name), optimized_name)
+            # Get absolute input path
+            if hasattr(video_file, "temporary_file_path"):
+                input_path = video_file.temporary_file_path()
+            elif hasattr(video_file, "path") and os.path.exists(video_file.path):
+                input_path = video_file.path
+            else:
+                # Ensure file is saved locally before optimization
+                with default_storage.open(video_file.name, "wb+") as f:
+                    for chunk in video_file.chunks():
+                        f.write(chunk)
+                input_path = default_storage.path(video_file.name)
+
+            # Build clean relative + full paths
+            base, ext = os.path.splitext(os.path.basename(video_file.name))
+            dir_name = os.path.dirname(video_file.name)
+            optimized_name = f"{base}_optimized.{output_format.lower()}"
+            optimized_path_relative = os.path.join(dir_name, optimized_name)
             optimized_path_full = default_storage.path(optimized_path_relative)
 
-            command = ['ffmpeg', '-i', input_path]
+            # Build ffmpeg command
+            command = ['ffmpeg', '-y', '-i', input_path]  # -y to overwrite if exists
             if resolution:
                 command.extend(['-vf', f'scale={resolution}'])
             if bitrate:
                 command.extend(['-b:v', bitrate])
-            command.extend(['-c:a', 'aac', '-strict', '-2', optimized_path_full])  # Common audio encoding for MP4
+            command.extend(['-c:v', 'libx264', '-preset', 'fast', '-c:a', 'aac', optimized_path_full])
 
+            print("Running ffmpeg:", " ".join(command))
+
+            # Run ffmpeg
             process = subprocess.run(command, capture_output=True, text=True, check=True)
             print("Video optimization successful:", process.stdout)
 
-            # Open the optimized file and save it to Django's storage
+            # Save optimized file back to storage
             with open(optimized_path_full, 'rb') as f:
                 optimized_file = default_storage.save(optimized_path_relative, f)
 
-            # Clean up the temporary optimized file
-            os.remove(optimized_path_full)
+            # Cleanup temp file
+            if os.path.exists(optimized_path_full):
+                os.remove(optimized_path_full)
 
             return optimized_file
 
@@ -151,4 +163,4 @@ class MediaHandler:
         except Exception as e:
             print(f"An unexpected error occurred during video optimization: {e}")
             return None
-        
+            
