@@ -4,6 +4,9 @@ from django.http import HttpResponseForbidden, JsonResponse
 from functools import wraps
 from django.core.cache import cache
 from django.shortcuts import redirect
+import warnings
+from django.contrib import messages
+import functools
 # from Users.models import Instructor, Student, Profile
 
 logger = logging.getLogger(__name__)
@@ -87,6 +90,32 @@ def retry_on_failure(retries=3, delay=2):
         return wrapper
     return decorator
 
+def deprecated(new_view: str = None):
+    """
+    Marks a Django view as deprecated.
+    - Shows a DeprecationWarning in Python.
+    - Displays a message to the user on the page.
+
+    Args:
+        new_view (str, optional): The replacement page/view name.
+    """
+    def decorator(func):
+        @functools.wraps(func)
+        def wrapper(request, *args, **kwargs):
+            # Developer warning
+            if new_view:
+                warning_msg = f"{func.__name__} is deprecated and will be removed in a future version. Use {new_view} instead."
+                user_msg = f"This page will be removed in upcoming versions. Please use the new page: {new_view}."
+            else:
+                warning_msg = f"{func.__name__} is deprecated and will be removed in a future version without replacement."
+                user_msg = "This page will be removed in upcoming versions and will not be available anymore."
+
+            warnings.warn(warning_msg, DeprecationWarning, stacklevel=2)
+            messages.warning(request, user_msg)
+
+            return func(request, *args, **kwargs)
+        return wrapper
+    return decorator
 
 # def only_instructor(request):
 #     @wraps(func)

@@ -140,3 +140,4 @@ django-csp
 sentry-sdk
 daphne
 django-ipware
+django-axes

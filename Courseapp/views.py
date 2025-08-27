@@ -26,40 +26,7 @@ from difflib import get_close_matches
 import re
 from weasyprint import HTML, CSS
 from django.templatetags.static import static
-
-
-# def course_list(request) -> HttpResponse:
-#     courses: BaseManager[Course] = Course.objects.all()
-#     request.session["page"] = "course"
-#     if request.user.is_authenticated:
-#         profile = Profile.objects.filter(user=request.user).first()
-#         student_profile = Student.objects.filter(profile=profile).first() or None
-#         instructor_profile = Instructor.objects.filter(profile=profile).first() or None
-#         if student_profile:
-#             request.session['streak'] = student_profile.streak
-#             request.session['score'] = student_profile.score
-#             request.session['current_user_type'] = 'student'
-#         elif instructor_profile:
-#             request.session['current_user_type'] = 'instructor'
-
-#     if request.method == "POST" and "search_term" in request.POST:
-#         search_term = request.POST["search_term"]
-#         courses = courses.filter(
-#             title__icontains=search_term, language__name__icontains=search_term
-#         ) # Suggested code may be subject to a license. Learn more: ~LicenseLog:1606362085.
-#     if "course_level" in request.GET:
-#         filter_by_level = request.GET["course_level"]
-#         if filter_by_level != "any":
-#             courses = courses.filter(course_level=filter_by_level)
-
-#     if "course_type" in request.GET:
-#         filter_by_type = request.GET["course_type"]
-#         if filter_by_type == "any":
-#             courses = Course.objects.all()
-#         else:
-#             courses = courses.filter(course_type=filter_by_type)
-#     return render(request, "course/course_list.html", locals())
-
+from utils.decorators import deprecated
 from collections import defaultdict
 
 def course_list(request, category='') -> HttpResponse:
@@ -102,14 +69,6 @@ def course_list(request, category='') -> HttpResponse:
     grouped_courses = defaultdict(list)
     seen_courses = set()
 
-    # for course in courses:
-    #     tags = course.tags.values_list('name', flat=True)
-    #     for tag in tags:
-    #         if course.id not in seen_courses:
-    #             grouped_courses[tag].append(course)
-    #             seen_courses.add(course.id)
-    #             break
-
     for course in courses:
         tags = course.tags.all() # Get full Tag objects instead of just names
         for tag in tags:
@@ -132,31 +91,9 @@ def course_list(request, category='') -> HttpResponse:
     })
 
 
-# @user_passes_test(lambda u: Instructor.objects.filter(profile=u.profile).exists())
-# def course_create(request):
-#     if request.method == 'POST':
-#         form = CourseForm(request.POST)
-#         if form.is_valid():
-#             form.save()
-#             return redirect('course_list')
-#     else:
-#         form = CourseForm()
-#     return render(request, 'course/course_form.html', {'form': form})
-
-# @user_passes_test(lambda u: Instructor.objects.filter(profile=u.profile).exists())
-# def course_update(request, pk):
-#     course = get_object_or_404(Course, pk=pk)
-#     if request.method == 'POST':
-#         form = CourseForm(request.POST, instance=course)
-#         if form.is_valid():
-#             form.save()
-#             return redirect('course_list')
-#     else:
-#         form = CourseForm(instance=course)
-#     return render(request, 'course/course_form.html', {'form': form})
-
 @login_required
 @user_passes_test(lambda u: Instructor.objects.filter(profile=u.profile).exists())
+@deprecated(new_view="course_step_one")
 def course_create(request) -> HttpResponseRedirect | HttpResponsePermanentRedirect | HttpResponse:
     instructors = Instructor.objects.all()
     logined_profile = Profile.objects.get(user=request.user)
@@ -239,6 +176,7 @@ def course_create(request) -> HttpResponseRedirect | HttpResponsePermanentRedire
 
 
 @user_passes_test(lambda u: Instructor.objects.filter(profile=u.profile).exists())
+@deprecated
 def course_update(request, pk) -> HttpResponseRedirect | HttpResponsePermanentRedirect | HttpResponse:
     course: Course = get_object_or_404(Course, pk=pk)
     instructors: BaseManager[Instructor] = Instructor.objects.all()
@@ -308,6 +246,7 @@ def course_update(request, pk) -> HttpResponseRedirect | HttpResponsePermanentRe
         )
 
 # @user_passes_test(lambda u: Instructor.objects.filter(profile=u.profile).exists())
+@deprecated
 def create_quiz(request) -> HttpResponse:
     request.session["page"] = "course"
 
@@ -1594,6 +1533,7 @@ def submit_quiz(request, quiz_id):
             return JsonResponse({"error": str(e)}, status=400)
         
 @csrf_exempt
+@deprecated
 def submit_drag_and_drop_quiz(request, quiz_id):
     if request.method != "POST":
         return JsonResponse({"error": "Only POST allowed."}, status=405)
@@ -1649,6 +1589,7 @@ def submit_drag_and_drop_quiz(request, quiz_id):
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=400)
     
+@deprecated
 def quiz_warmup_start(request):
     quiz = Quiz.objects.filter(course__isnull=True, section__isnull=True, lesson__isnull=True).first()  # or filter by course/lesson if needed
     if not quiz:
@@ -1657,6 +1598,7 @@ def quiz_warmup_start(request):
     return redirect("quiz_warmup_question", quiz_id=quiz.pk, qid=1)
 
 # views.py
+@deprecated
 def quiz_warmup_question(request, quiz_id, qid):
     quiz = get_object_or_404(Quiz, id=quiz_id)
     questions = quiz.questions or {}
@@ -1702,7 +1644,8 @@ def create_or_edit_article(request):
     user = request.user
     instructor = Instructor.objects.filter(profile__user=user).first() or None
     if not instructor:
-        return HttpResponse("You must be an instructor to create or edit articles.", status=403)
+        messages.error(request, "You must be an instructor to create or edit articles.")
+        return redirect("course_list")
     
     if request.method == "POST":
         title = request.POST.get("title")
@@ -1747,6 +1690,7 @@ def article_detail(request, article_id):
 
     return render(request, "course/article_detail.html", locals())
 
+@deprecated
 def lesson_form(request, lesson_id=None) -> HttpResponseRedirect | HttpResponsePermanentRedirect | HttpResponse:
     request.session["page"] = "course"
     if not request.user.is_authenticated:
@@ -2102,11 +2046,13 @@ def course_create_step_two(request, course_id=None) -> HttpResponse:
     #     "Reflect on learning outcomes and areas for improvement"
     # ]
     if not instructor:
-        return HttpResponse("You must be an instructor to create a course.", status=403)
+        messages.error(request, "You must be an instructor to create a course.")
+        return redirect("course_list")
     if course_id:
         course = get_object_or_404(Course.all_objects, id=course_id)
         if course.instructor_id != instructor.id:
-            return HttpResponse("You are not authorized to edit this course.", status=403)
+            messages.error(request, "You are not authorized to edit this course.")
+            return redirect("course_list")
     else:
         course = None
     if request.method == "POST":
@@ -2115,7 +2061,8 @@ def course_create_step_two(request, course_id=None) -> HttpResponse:
         circulam = request.POST.get("circulam", "").strip()
         objectives_json = request.POST.get('learning_objectives', '[]')
         if not circulam and not prerequisites:
-            return HttpResponse("Prerequisites or circulam is required.", status=400)
+            messages.error(request, "Prerequisites or circulam is required.")
+            return render(request, 'course/step_2.html', {'course': course, 'step': 2})
         
         try:
             if course_id:
@@ -2137,13 +2084,14 @@ def course_create_step_two(request, course_id=None) -> HttpResponse:
                 except json.JSONDecodeError:
                     request.session['step_two_done'] = step_two_done
                     messages.error(request, "Invalid learning objectives format.")
-                    return render(request, 'course/step_2.html', {'course': course, 'step': 2})
-                
+                    return render(request, 'course/step_2.html', {'course': course, 'step': 2})  
             else:
-                return HttpResponse("Course ID is required to create a section.", status=400)
-            return redirect("course_create_step_three", course_id=course.id)
+                messages.error(request, "Course ID is required to create a section.")
+                return render(request, 'course/step_2.html', {'course': course, 'step': 2})
+
         except Exception as e:
-            return HttpResponse(f"Error creating section: {str(e)}", status=500)
+            messages.error(request, f"Error creating section: {str(e)}")
+            return render(request, 'course/step_2.html', {'course': course, 'step': 2})
     return render(request, "course/creation/step_2.html", locals())
 
 
@@ -2161,11 +2109,13 @@ def course_create_step_three(request, course_id=None) -> HttpResponse:
     user = request.user
     instructor = Instructor.objects.filter(profile__user=user).first()
     if not instructor:
-        return HttpResponse("You must be an instructor to create a course.", status=403)
+        messages.error(request, "You must be an instructor to create a course.")
+        return redirect("course_list")
     if course_id and course_id != "":
         course = get_object_or_404(Course.all_objects, id=course_id)
         if course.instructor_id != instructor.id:
-            return HttpResponse("You are not authorized to edit this course.", status=403)
+            messages.error(request, "You are not authorized to edit this course.")
+            return redirect("course_list")
     else:
         course = None
     if request.method == "POST":
@@ -2174,19 +2124,15 @@ def course_create_step_three(request, course_id=None) -> HttpResponse:
             if course_id and course_id != "":
                 course = get_object_or_404(Course.all_objects, id=course_id)
                 course.save()
-                # Log activity
-                # Activity.objects.create(
-                #     user=user,
-                #     activity_type="Course Update",
-                #     description=f"Updated course sections for: {course.title}"
-                # )
                 step_three_done = True
                 request.session['step_three_done'] = step_three_done
                 return redirect("course_create_step_four", course_id=course.id)
             else:
-                return HttpResponse("Course ID is required to create a section.", status=400)
+                messages.error(request, "Course ID is required to create a section.")
+                return render(request, 'course/step_3.html', {'course': course, 'step': 3})
         except Exception as e:
-            return HttpResponse(f"Error creating section: {str(e)}", status=500)
+            messages.error(request, f"Error creating section: {str(e)}")
+            return render(request, 'course/step_3.html', {'course': course, 'step': 3})
     return render(request, "course/creation/step_3.html", locals())
 
 
@@ -2206,11 +2152,13 @@ def course_create_step_four(request, course_id=None) -> HttpResponse:
     instructor = Instructor.objects.filter(profile__user=user).first()
 
     if not instructor:
-        return HttpResponse("You must be an instructor to create a course.", status=403)
+        messages.error(request, "You must be an instructor to create a course.")
+        return redirect("course_list")
     if course_id:
         course = get_object_or_404(Course.all_objects, id=course_id)
         if course.instructor_id != instructor.id:
-            return HttpResponse("You are not authorized to edit this course.", status=403)
+            messages.error(request, "You are not authorized to edit this course.")
+            return redirect("course_list")
     else:
         course = None
 
@@ -2225,19 +2173,15 @@ def course_create_step_four(request, course_id=None) -> HttpResponse:
             if course_id:
                 course = get_object_or_404(Course.all_objects, id=course_id)
                 course.save()
-                # Log activity
-                # Activity.objects.create(
-                #     user=user,
-                #     activity_type="Course Update",
-                #     description=f"Updated course sections for: {course.title}"
-                # )
                 step_four_done = True
                 request.session['step_four_done'] = step_four_done
                 return redirect("course_create_step_five", course_id=course.id)
             else:
-                return HttpResponse("Course ID is required to create a section.", status=400)
+                messages.error(request, "Course ID is required to create a section.")
+                return render(request, 'course/step_4.html', {'course': course, 'step': 4})
         except Exception as e:
-            return HttpResponse(f"Error saving section: {str(e)}", status=500)
+            messages.error(request, f"Error creating section: {str(e)}")
+            return render(request, 'course/step_4.html', {'course': course, 'step': 4})
     return render(request, "course/creation/step_4.html", locals())
 
 def course_create_step_five(request, course_id=None) -> HttpResponse:
@@ -2254,11 +2198,13 @@ def course_create_step_five(request, course_id=None) -> HttpResponse:
     user = request.user
     instructor = Instructor.objects.filter(profile__user=user).first()
     if not instructor:
-        return HttpResponse("You must be an instructor to create a course.", status=403)
+        messages.error(request, "You must be an instructor to create a course.")
+        return redirect("course_list")
     if course_id:
         course = get_object_or_404(Course.all_objects, id=course_id)
         if course.instructor_id != instructor.id:
-            return HttpResponse("You are not authorized to edit this course.", status=403)
+            messages.error(request, "You are not authorized to edit this course.")
+            return redirect("course_list")
     else:
         course = None
     if request.method == "POST":
@@ -2297,9 +2243,11 @@ def course_create_step_five(request, course_id=None) -> HttpResponse:
                 request.session['step_five_done'] = False
                 return redirect("course_list")
             else:
-                return HttpResponse("Course ID is required to update this step.", status=400)
+                messages.error(request, "Course ID is required to create a section.")
+                return render(request, 'course/step_5.html', {'course': course, 'step': 5})
         except Exception as e:
-            return HttpResponse(f"Error creating section: {str(e)}", status=500)
+            messages.error(request, f"Error creating course: {str(e)}")
+            return render(request, 'course/step_5.html', {'course': course, 'step': 5})
     return render(request, "course/creation/step_5.html", locals())
 
 def get_quiz_questions(request, quiz_id):
@@ -2317,17 +2265,21 @@ def quiz_detail(request, quiz_id):
     # This logic seems correct
     profile = request.user.profile
     if Instructor.objects.filter(profile=profile).exists():
-        return HttpResponse("Instructors cannot take quizzes.", status=403)
+        messages.error(request, "Instructors cannot take quizzes.")
+        return redirect("course_list")
     
     #  Ensure the quiz is linked to a section/course/lesson
     if not (quiz.section or quiz.course or quiz.lesson):
-        return HttpResponse("This quiz is not linked to any section, course, or lesson.", status=404)
+        messages.error(request, "This quiz is not linked to any section, course, or lesson.")
+        return redirect("course_list")
     
     if not quiz.questions:
-        return HttpResponse("This quiz has no questions.", status=404)
+        messages.error(request, "This quiz has no questions.")
+        return redirect("course_list")
     
     if quiz.is_deleted:
-        return HttpResponse("This quiz has been deleted.", status=404)
+        messages.error(request, "This quiz has been deleted.")
+        return redirect("course_list")
     
     if quiz.course:
         rediect_url = quiz.course.get_absolute_url()

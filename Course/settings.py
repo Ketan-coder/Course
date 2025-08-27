@@ -49,6 +49,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    "axes.middleware.AxesMiddleware",
     "core.middleware.request_id.RequestIDMiddleware",
     "utils.middleware.metrics.MetricsMiddleware",
     'middleware.custom_debug.CustomDebugMiddleware',
@@ -198,7 +199,8 @@ INSTALLED_APPS = [
     "Tiers.apps.TiersConfig",
     "Rewards.apps.RewardsConfig",
     "utils",
-    "channels"
+    "channels",
+    "axes"
 ]
 
 
@@ -386,3 +388,15 @@ CHANNEL_LAYERS = {
         "CONFIG": {"hosts": [REDIS_URL]},
     }
 }
+# ========================== Channels Setup End ==================================
+
+# ========================== Axes Setup ==========================================
+AXES_FAILURE_LIMIT = 5
+AXES_COOLOFF_TIME = 1  # in hours
+AXES_LOCK_OUT_AT_FAILURE = True
+
+AUTHENTICATION_BACKENDS = [
+    'axes.backends.AxesStandaloneBackend',   # New name since v5.0
+    'django.contrib.auth.backends.ModelBackend',  # default Django backend
+]
+# =================================================================================
