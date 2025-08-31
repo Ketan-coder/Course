@@ -6,7 +6,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.db.models import Q
 from utils.models import Activity
 from Stock.models import Stock
-from .models import FAQ, Course, Language, Quiz, Section, Tag, Lesson, CourseNotes, Article, QuizSubmission, CourseCertificate
+from .models import FAQ, Course, Language, Quiz, Section, Tag, Lesson, CourseNotes, Article, QuizSubmission, CourseCertificate, LiveClass
 from Users.models import Instructor, Profile, Student
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
@@ -28,6 +28,7 @@ from weasyprint import HTML, CSS
 from django.templatetags.static import static
 from utils.decorators import deprecated
 from collections import defaultdict
+from django.utils.timezone import now
 
 def course_list(request, category='') -> HttpResponse:
     category_object = ''
@@ -2427,3 +2428,33 @@ def student_update_status_api(request):
 
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': 'Error updating status: ' + str(e)}, status=500)
+
+
+@login_required
+def live_classes_list(request, course_id):
+    course = get_object_or_404(Course, id=course_id)
+    
+    # Check access → only bought users or free courses
+    if not course.is_open_to_all and request.user.profile not in course.is_bought_by_users.all():
+        return redirect('course_list')  # make a "no access" page
+
+    upcoming_classes = course.live_classes.filter(start_time__gte=now()).order_by('start_time')
+    past_classes = course.live_classes.filter(end_time__lt=now()).order_by('-start_time')
+
+    return render(request, "course/live_classes_list.html", {
+        "course": course,
+        "upcoming_classes": upcoming_classes,
+        "past_classes": past_classes,
+    })
+
+@login_required
+def join_live_class(request, pk):
+    live_class = get_object_or_404(LiveClass, pk=pk)
+    course = live_class.course
+
+    # check if user allowed
+    if not course.is_open_to_all and request.user.profile not in course.is_bought_by_users.all():
+        return redirect('course_list')
+
+    # just redirect to the meeting link
+    return redirect(live_class.meeting_url)

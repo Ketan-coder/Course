@@ -2,7 +2,7 @@ from typing import Literal
 from django.contrib import admin
 from unfold.admin import ModelAdmin as UnfoldModelAdmin
 from .models import Language, Course, Section, Lesson, Quiz, QuizSubmission, Tag
-from .models import CourseComment, CourseSubComment, CourseReview, CourseCertificate, FAQ, Article
+from .models import CourseComment, CourseSubComment, CourseReview, CourseCertificate, FAQ, Article, LiveClass
 from .admin_forms import TagForm
 # Register your models here.
 
@@ -414,3 +414,5 @@ class CourseArticleAdmin(admin.ModelAdmin):
             'all': ('admin/css/toggle-switch.css',)
         }
         js = ('admin/js/toggle-switch.js',)
+
+admin.site.register(LiveClass)

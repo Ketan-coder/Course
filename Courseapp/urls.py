@@ -93,4 +93,7 @@ urlpatterns: list[URLPattern] = [
     path('delete_article/<int:article_id>/', login_required(views.delete_article_api), name='delete_article'),
 
     path('download/certificate/<int:course_id>/<int:student_id>/<int:certificate_id>/', views.download_certificate, name='download_certificate'),
+
+    path('<int:course_id>/live-classes/', views.live_classes_list, name='live_classes_list'),
+    path('live-class/<int:pk>/join/', views.join_live_class, name='join_live_class'),
 ]

@@ -112,11 +112,11 @@
                         
                         <!-- Professional Information Section -->
                         <h4 class="mt-4 mb-3 font-weight-bold border-bottom pb-2">Professional Information</h4>
-                        {% if not is_student or instuructor %}
+                        {% if not is_student or instructor %}
                         <div class="mb-3">
                             {% comment %} <label for="experience" class="form-label">Experience (in years)</label>
                             <input type="number" id="experience" name="experience" value="{{ user.experience }}" class="form-control"> {% endcomment %}
-                            <smart-input label="Experience (in years)" id="experience" name="experience" type="number" value="{{ user.experience|default:0 }}" required></smart-input>
+                            <smart-input label="Experience (in years)" id="experience" name="experience" type="number" value="{{ instructor.experience|default:0 }}" required></smart-input>
                         </div>
                         {% endif %}
                         <div class="mb-3">
@@ -126,6 +126,7 @@
                             <smart-quill
                                 name="bio"
                                 label="Profile Bio"
+                                value="{{ profile.bio|safe }}"
                                 placeholder="Tell us a little about yourself...">
                             </smart-quill>
                         </div>
@@ -164,27 +165,4 @@
     </div>
   </div>
 </div>
-
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    // Initialize Quill Editor for the 'bio' field
-    const bioTextArea = document.getElementById('id_bio');
-    if (bioTextArea) {
-        const quill = new Quill('#editor_bio', {
-            theme: 'snow',
-            placeholder: 'Write your bio here...',
-            modules: { toolbar: globalToolbarOptions, 
-                history: globalHistoryForQuill }
-        });
-        
-        // Set initial content from the hidden textarea
-        quill.root.innerHTML = bioTextArea.value;
-
-        // Update the hidden textarea on text change
-        quill.on('text-change', () => {
-            bioTextArea.value = quill.root.innerHTML;
-        });
-    }
-});
-</script>
 {% endblock body %}

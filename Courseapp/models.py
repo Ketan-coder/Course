@@ -575,3 +575,35 @@ class Article(models.Model):
 
     def __str__(self) -> str:
         return self.title
+    
+
+class LiveClass(models.Model):
+    course = models.ForeignKey('Course', on_delete=models.CASCADE, related_name='live_classes')
+    section = models.ForeignKey('Section', on_delete=models.CASCADE, related_name='live_classes', blank=True, null=True)
+
+    instructor = models.ForeignKey('Users.Instructor', on_delete=models.CASCADE, related_name='live_classes')
+    
+    title = models.CharField(max_length=200)
+    description = models.TextField(blank=True, null=True)
+
+    start_time = models.DateTimeField()
+    end_time = models.DateTimeField()
+
+    meeting_url = models.URLField(max_length=500, blank=True, null=True)
+    meeting_id = models.CharField(max_length=100, blank=True, null=True)
+    passcode = models.CharField(max_length=50, blank=True, null=True)
+
+    is_recurring = models.BooleanField(default=False)
+    recurrence_rule = models.JSONField(blank=True, null=True, default=dict)  # e.g. {"repeat":"weekly","days":["mon","wed"]}
+
+    recording_url = models.URLField(max_length=500, blank=True, null=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    extra_fields = models.JSONField(blank=True, null=True, default=dict)
+
+    class Meta:
+        ordering = ['start_time']
+
+    def __str__(self):
+        return f"{self.title} ({self.course.title})"

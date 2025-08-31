@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block body %}
+<div class="container mt-4">
+    <h2>{{ course.title }} – Live Classes</h2>
+
+    <!-- Upcoming Classes -->
+    <h3 class="mt-3">Upcoming Live Classes</h3>
+    {% if upcoming_classes %}
+        <ul class="list-group">
+        {% for lc in upcoming_classes %}
+            <li class="list-group-item">
+                <strong>{{ lc.title }}</strong> <br>
+                {{ lc.start_time|date:"M d, Y H:i" }} – {{ lc.end_time|date:"H:i" }} <br>
+                Instructor: {{ lc.instructor }} <br>
+                <a href="{% url 'join_live_class' lc.id %}" class="btn btn-primary btn-sm mt-2">Join</a>
+            </li>
+        {% endfor %}
+        </ul>
+    {% else %}
+        <p>No upcoming classes scheduled.</p>
+    {% endif %}
+
+    <!-- Past Classes -->
+    <h3 class="mt-4">Past Classes</h3>
+    {% if past_classes %}
+        <ul class="list-group">
+        {% for lc in past_classes %}
+            <li class="list-group-item">
+                <strong>{{ lc.title }}</strong> <br>
+                {{ lc.start_time|date:"M d, Y H:i" }} <br>
+                {% if lc.recording_url %}
+                    <a href="{{ lc.recording_url }}" class="btn btn-secondary btn-sm mt-2">Watch Recording</a>
+                {% else %}
+                    <span class="text-muted">No recording available</span>
+                {% endif %}
+            </li>
+        {% endfor %}
+        </ul>
+    {% else %}
+        <p>No past classes.</p>
+    {% endif %}
+</div>
+{% endblock %}

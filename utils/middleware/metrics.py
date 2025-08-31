@@ -52,7 +52,7 @@ class MetricsMiddleware:
         if any(request.path.startswith(p) for p in SUSPICIOUS_PATHS):
             ip = client_ip(request)
             note = f"suspicious path hit: {request.path}"
-            security_logger.warning(note, extra={"request_id": getattr(request, "request_id", "-")})
+            security_logger.warning(note, extra={"req_id": getattr(request, "request_id", "-")})
             try:
                 async_to_sync(self.channel_layer.group_send)(
                     "security",

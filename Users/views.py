@@ -164,7 +164,7 @@ def login_form(request):
         password = request.POST.get("password")
         user = authenticate(request, username=username, password=password)
         if user is not None and user.is_active:
-            login(request, user)
+            login(request, user, backend='django.contrib.auth.backends.ModelBackend')
             if project_settings.DEBUG is False:
                 try:
                     print("user.email", user.email)
@@ -361,7 +361,7 @@ def email_confirmation_view(request, token):
 
     # Student.objects.create(profile=profile)
 
-    login(request, profile.user)
+    login(request, profile.user, backend='django.contrib.auth.backends.ModelBackend')
     messages.success(request, "Email confirmed! Complete your profile.")
     return redirect("profile_setup")
 
