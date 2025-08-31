@@ -1,0 +1,53 @@
+{% load static %}
+
+<style>
+.hover-wrapper {
+    position: relative;
+    display: inline-block;
+}
+
+/* Button */
+.hover-button {
+    background-color: #e63946;
+    color: #fff;
+    font-weight: 600;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 15px;
+    transition: background 0.25s ease;
+}
+
+.hover-button:hover {
+    background-color: #d62828;
+}
+
+/* Card */
+.hover-card {
+    opacity: 0;
+    visibility: hidden;
+    position: absolute;
+    bottom: 115%; /* show above button */
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 2000;
+    width: 320px;
+    transition: opacity 0.2s ease, visibility 0.2s ease;
+}
+
+/* Keep open if hovering wrapper (button or card) */
+.hover-wrapper:hover .hover-card {
+    opacity: 1;
+    visibility: visible;
+}
+</style>
+
+<div class="hover-wrapper">
+    <button class="hover-button">
+        {{ title|default:"Hover Me" }}
+    </button>
+    <div class="hover-card">
+        {% include html_path with object=object %}
+    </div>
+</div>

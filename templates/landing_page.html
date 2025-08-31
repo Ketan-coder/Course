@@ -912,8 +912,8 @@
                     <form method="get" action="{% url 'course_list' %}">
                         <button type="submit">CONTINUE</button>
                     </form>
-
                 </div>
+                {% comment %} {% include 'components/hover_button.html' with html_path='components/card/join_live_class.html' title='Join Live Class' object=object_for_live_class %} {% endcomment %}
             </div>
         </section>
 

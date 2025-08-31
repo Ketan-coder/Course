@@ -294,6 +294,13 @@ def landing_page(request) -> HttpResponse:
         HttpResponse: The rendered html page.
     """
     request.session["page"] = "home"
+    object_for_live_class = {
+        'title': 'LIVE NOW',
+        'subtitle': 'Advanced Calculus - Derivatives & Applications',
+        'students_count': '25',
+        'started': '25 min ago',
+        'button_text': 'Join Live Class'
+    }
     if request.method == "POST":
         print(request.POST)
         name: str = request.POST.get("name")
@@ -305,7 +312,7 @@ def landing_page(request) -> HttpResponse:
                 FeedBack.objects.create(name=name, email=email, message=message, user=user.first())
             else:
                 FeedBack.objects.create(name=name, email=email, message=message)
-    return render(request, 'landing_page.html')
+    return render(request, 'landing_page.html', context=object_for_live_class)
 
 def custom_404(request, exception):
     return render(request, 'middleware/custom_debug.html', {

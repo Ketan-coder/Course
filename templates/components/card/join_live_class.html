@@ -1,0 +1,73 @@
+<style>
+  .live-card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+      font-family: "Segoe UI", sans-serif;
+      color: #222;
+  }
+  
+  .live-card .live-status {
+      color: #e63946;
+      font-weight: 700;
+      margin-bottom: 8px;
+      font-size: 14px;
+  }
+  
+  .live-card h3 {
+      margin: 6px 0;
+      font-size: 20px;
+      font-weight: 700;
+      color: #111;
+  }
+  
+  .live-card p.subtitle {
+      margin: 8px 0;
+      font-size: 15px;
+      color: #555;
+      text-shadow: none;
+  }
+  
+  .live-card p.meta {
+      margin: 8px 0 16px;
+      font-size: 13px;
+      color: #777;
+      text-shadow: none;
+  }
+  
+  .live-card .join-btn {
+      background: #e63946;
+      border: none;
+      color: #fff;
+      font-weight: 600;
+      font-size: 15px;
+      padding: 10px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.25s ease;
+      width: 100%;
+  }
+  
+  .live-card .join-btn:hover {
+      background: #d62828;
+  }
+  </style>
+  
+  {% comment %} <div class="live-card">
+      <div class="live-status">● LIVE NOW</div>
+      <h3>Join Live Class</h3>
+      <p class="subtitle">Advanced Calculus - Derivatives & Applications</p>
+      <p class="meta">45 students joined • Started 15 min ago</p>
+      <button class="join-btn">▶ Join Live Class</button>
+  </div> {% endcomment %}
+
+  <div class="live-card">
+    <div class="live-status">● {{ object.status|default:'LIVE NOW' }}</div>
+    {% comment %} <h3>{{ live.title }}</h3> {% endcomment %}
+    <p class="subtitle">{{ object.subtitle|default:'Advanced Calculus - Derivatives & Applications' }}</p>
+    <p class="meta">{{ object.students_count|default:'45' }} students joined • Started {{ object.started|default:'15 min ago' }}</p>
+    <button class="join-btn">▶ {{ object.button_text|default:'Join Live Class' }}</button>
+</div>
+
+  
