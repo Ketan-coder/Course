@@ -227,6 +227,51 @@
         <!-- Right Column: FAQs and Reviews -->
         <div class="col-lg-4">
           <div class="sticky-top" style="top: 1.25rem;">
+            <h2 class="font-weight-bold mt-4 mb-3">
+              Upcoming Live Classes
+            </h2>
+            <div class="card card-body mb-4">
+              {% if upcoming_classes %}
+                <ul class="list-unstyled">
+                  {% for live_class in upcoming_classes %}
+                  <smart-list-tile
+                    leading-icon="ph ph-link"
+                    title="{{ live_class.title }}"
+                    subtitle="{{ live_class.start_time|date:'F j, Y, g:i a' }}"
+                    active-color="primary"
+                    {% if not foorloop.counter == "1" %} background-color="#2c3e50" {% else %}{% endif %} 
+                    text-color={% if foorloop.counter == "1" %}"primary" {% else %}"#ecf0f1" {% endif %}
+                    icon-color={% if foorloop.counter == "1" %}"primary" {% else %}"#000" {% endif %}
+                    {% if foorloop.counter == "1" %} active {% endif %}
+                    clickable
+                    trailing-icon="ph ph-caret-right"
+                    onclick="location.href='{{ live_class.meeting_link }}'">
+                  </smart-list-tile>
+                  {% endfor %}
+                </ul>
+              {% else %}
+                
+                {% if past_classes %}
+                  <p class="text-muted">Past Live Classes</p>
+                  <ul class="list-unstyled">
+                    {% for live_class in past_classes %}
+                    <smart-list-tile
+                      leading-icon="ph ph-link"
+                      title="{{ live_class.title }}"
+                      subtitle="{{ live_class.description|safe|linebreaksbr }}<br> {{ live_class.start_time|date:'F j, Y, g:i a' }}"
+                      active-color="primary"
+                      background-color="#2c3e50" 
+                      text-color="#ecf0f1"
+                      icon-color="#000"
+                      trailing-icon="ph ph-caret-right"
+                      onclick="location.href='{{ live_class.meeting_link }}'">
+                    </smart-list-tile>
+                    {% endfor %}
+                  </ul>
+                {% endif %}
+                <p class="text-muted">No upcoming live classes scheduled.</p>
+              {% endif %}
+            </div>
             <h2 class="font-weight-bold mb-3">FAQs</h2>
             <div class="accordion mb-4" id="faqAccordion">
               {% for faq in course.faqs.all %}

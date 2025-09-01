@@ -516,6 +516,8 @@ def course_detail(request, pk) -> HttpResponseRedirect | HttpResponsePermanentRe
     reviews_count = course.reviews.count()
     avg_reviews =  course.reviews.all().aggregate(Avg('rating'))['rating__avg'] or 0
     ref = request.GET.get('ref', 'outside')
+    upcoming_classes = course.live_classes.filter(start_time__gte=now()).order_by('start_time')
+    past_classes = course.live_classes.filter(end_time__lt=now()).order_by('-start_time')
 
     if course:
         instructor_related_courses = Course.objects.filter(instructor=course.instructor, is_published=True, is_deleted=False)
