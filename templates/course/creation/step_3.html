@@ -68,6 +68,58 @@
                             </div>
                         </div>
                         <div class="p-3">
+                            <ul>
+                                {% for live_class in section.live_classes.all %}
+                                <li class="list-group-item d-flex justify-content-between align-items-center" data-live-class-id="{{ live_class.id }}">
+                                    <span class="d-flex align-items-center">
+                                        <i class="ph ph-video-camera me-2"></i>{{ live_class.title }} - <small class="text-muted"> {{ live_class.start_time|date:"M d, Y H:i" }} to {{ live_class.end_time|date:"M d, Y H:i" }}</small>
+                                    </span>
+                                    <div>
+                                        {% if live_class.meeting_url %}
+                                        {% comment %} TODO: FIX {% endcomment %}
+                                            {% if live_class.end_time > now %}
+                                                <a href="{{ live_class.meeting_url }}" class="btn btn-sm edit-live-class-btn" target="_blank" rel="noopener noreferrer">
+                                                    Join Live Class Now
+                                                </a>
+                                            {% else %}
+                                                {% if live_class.recording_url %}
+                                                    <a href="{{ live_class.recording_url }}" class="btn btn-sm btn-secondary" target="_blank" rel="noopener noreferrer">
+                                                        Watch Recording
+                                                    </a>
+                                                {% else %}
+                                                    <span class="text-muted">Recording not available</span>
+                                                {% endif %}
+                                            {% endif %}
+                                        {% else %}
+                                            <span class="text-muted">No Meeting URL</span>
+                                        {% endif %}
+
+                                                
+                                        <button class="btn btn-sm edit-live-class-btn" type="button" 
+                                                data-bs-toggle="modal" data-bs-target="#live-class-modal"
+                                                data-section-id="{{ section.id }}" 
+                                                data-live-class-id="{{ live_class.id }}">Edit</button>
+                                        <form method="post" action="{% url 'delete_live_class' live_class_id=live_class.id %}" class="d-inline" id="live_class_delete_form_{{ live_class.id }}">
+                                            {% csrf_token %}
+                                            <custom-button
+                                                label="Delete"
+                                                class="btn btn-sm"
+                                                post="{% url 'delete_live_class' live_class_id=live_class.id %}"
+                                                method="POST"
+                                                form-id="live_class_delete_form_{{ live_class.id }}"
+                                                showspinner
+                                                buttontype="danger"
+                                                target="#live_class_select"
+                                                ask-before-action
+                                            ></custom-button>
+                                        </form>
+                                    </div>
+                                </li>
+                                {% empty %}
+                                <li class="list-group-item text-muted text-center">No live classes in this section yet.</li>
+                                {% endfor %}
+                            </ul>
+                            <hr>
                             <ul class="list-group list-group-flush sortable-lessons" data-section-id="{{ section.id }}">
                                 {% for lesson in section.lesson.all %}
                                 <li class="list-group-item d-flex justify-content-between align-items-center" data-lesson-id="{{ lesson.id }}">
@@ -99,8 +151,12 @@
                                 <li class="list-group-item text-muted text-center">No lessons in this section yet.</li>
                                 {% endfor %}
                             </ul>
+                           
                             <button class="btn btn-link mt-2 add-lesson-btn" type="button" data-bs-toggle="modal" data-bs-target="#lesson-modal" data-section-id="{{ section.id }}" {% if not course %}disabled{% endif %}>
                                 <i class="ph ph-plus"></i> Add Lesson
+                            </button>
+                            <button class="btn btn-link mt-2 add-live-class-btn" type="button" data-bs-toggle="modal" data-bs-target="#live-class-modal" data-section-id="{{ section.id }}" {% if not course %}disabled{% endif %}>
+                                <i class="ph ph-plus"></i> Add Live Class
                             </button>
                         </div>
                     </div>
@@ -175,6 +231,60 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                     <button type="submit" class="btn btn-primary">Save Section</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<!-- Live Class Modal -->
+<div class="modal fade" id="live-class-modal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-xl" role="document">
+        <div class="modal-content">
+            <form id="live-class-form" onsubmit="handleLiveClassSubmit(event)">
+                {% csrf_token %}
+                <div class="modal-header">
+                    <h5 class="modal-title" id="live-class-modal-title">Add New Live Class</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="live_class_id" id="live-class-id-input">
+                    <input type="hidden" name="section_id" id="live-class-section-id-input">
+                    <input type="hidden" name="course_id" value="{{ course.id }}">
+                    <div class="mb-3">
+                        <smart-input label="Live Class Title" name="title" id="live-class-title-input" required></smart-input>
+                    </div>
+                    <div class="mb-3">
+                        <smart-quill name="description" id="live-class-description-quill" label="Description (Optional)"></smart-quill>
+                    </div>
+                    <div class="mb-3 row">
+                        <div class="col-md-6">
+                            <smart-input type="datetime-local" label="Start Date & Time" name="start_time" id="live-class-start-time-input" required></smart-input>
+                        </div>
+                        <div class="col-md-6">
+                            <smart-input type="datetime-local" label="End Date & Time" name="end_time" id="live-class-end-time-input" required></smart-input>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <smart-input label="Live Class URL (e.g., Zoom, Google Meet)" name="meeting_url" id="live-class-url-input" placeholder="https://..." required></smart-input>
+                    </div>
+                    <div class="mb-3 row">
+                        <div class="col-md-6">
+                            <smart-input type="text" label="Meeting Id" name="meeting_id" id="live-class-meeting-id-input" required></smart-input>
+                        </div>
+                        <div class="col-md-6">
+                            <smart-input type="text" label="Meeting Passcode" name="passcode" id="live-class-passcode-input" required></smart-input>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <smart-input label="Recorded URL" name="recording_url" id="live-class-recording-url-input" placeholder="https://..." required></smart-input>
+                    </div>
+                    {% comment %} <div class="mb-3">
+                        <smart-input type="switch" is-big label="Repeat it?" name="is_recurring" id="live-class-is-recurring-input" required></smart-input>
+                    </div> {% endcomment %}
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Save Live Class</button>
                 </div>
             </form>
         </div>
@@ -334,6 +444,7 @@ document.querySelectorAll(".sortable-lessons").forEach(list => {
     // --- MODAL HANDLING LOGIC ---
     const sectionModalEl = document.getElementById('section-modal');
     const lessonModalEl = document.getElementById('lesson-modal');
+    const liveClassModalEl = document.getElementById('live-class-modal');
 
     sectionModalEl.addEventListener('show.bs.modal', function (event) {
         const button = event.relatedTarget;
@@ -399,6 +510,39 @@ document.querySelectorAll(".sortable-lessons").forEach(list => {
             document.querySelector('#lesson-content-quill').editor.root.innerHTML = '';
         }
     });
+
+    liveClassModalEl.addEventListener('show.bs.modal', function (event) {
+        const button = event.relatedTarget;
+        const form = document.getElementById('live-class-form');
+        form.reset();
+        const sectionId = button.getAttribute('data-section-id');
+        const liveClassId = button.getAttribute('data-live-class-id');
+        const modalTitle = document.getElementById('live-class-modal-title');
+
+        document.getElementById('live-class-section-id-input').value = sectionId;
+
+        if (liveClassId) { // Editing: Fetch data from backend
+            modalTitle.textContent = 'Edit Live Class';
+            document.getElementById('live-class-id-input').value = liveClassId;
+            fetch(`{% url 'get_live_class_details' 999 %}`.replace('999', liveClassId))
+                .then(res => res.json())
+                .then(data => {
+                    document.getElementById('live-class-title-input').value = data.title;
+                    document.querySelector('#live-class-description-quill').editor.root.innerHTML = data.description;
+                    document.getElementById('live-class-start-time-input').value = data.start_time;
+                    document.getElementById('live-class-end-time-input').value = data.end_time;
+                    document.getElementById('live-class-url-input').value = data.meeting_url;
+                    document.getElementById('live-class-meeting-id-input').value = data.meeting_id;
+                    document.getElementById('live-class-passcode-input').value = data.passcode;
+                    document.getElementById('live-class-recording-url-input').value = data.recording_url;
+                    document.getElementById('live-class-is-recurring-input').setAttribute('value', data.is_recurring);
+                });
+        } else { // Adding new
+            modalTitle.textContent = 'Add New Live Class';
+            document.getElementById('live-class-id-input').value = '';
+            document.querySelector('#live-class-description-quill').editor.root.innerHTML = '';
+        }
+    });
 });
 
 // --- FORM SUBMISSION ---
@@ -437,6 +581,45 @@ async function saveSection(event) {
             }
             else {
                 alert('Error saving section.');
+            }
+        });
+}
+
+async function handleLiveClassSubmit(event) {
+    event.preventDefault();
+    const form = event.target;
+    const formData = new FormData(form);
+    const button = form.querySelector('button[type="submit"]');
+    const spinner = document.createElement('div');
+    spinner.classList.add('spinner-border', 'text-primary', 'mx-2');
+    spinner.setAttribute('role', 'status');
+    const spinnerText = document.createElement('span');
+    spinnerText.classList.add('visually-hidden');
+    spinnerText.textContent = 'Saving...';
+    spinner.appendChild(spinnerText);
+    button.parentNode.insertBefore(spinner, button);
+    button.style.display = 'none';
+
+    setTimeout(() => {
+        spinnerText.textContent = 'Saving Live Class...';
+    }, 1000);
+
+    // IMPORTANT: Create this endpoint to handle live class creation/updates
+    const url = "{% url 'create_live_class' %}";
+
+    fetch(url, { method: 'POST', body: formData })
+        .then(res => res.text())
+        .then(data => {
+            if (data.includes('success')) {
+                button.style.display = 'initial';
+                spinner.remove();
+                const modal = bootstrap.Modal.getInstance(document.getElementById('live-class-modal'));
+                modal.hide();
+                alert(`Live Class ${data.title} has been saved.`);
+                location.reload(); // Reload to see changes
+            }
+            else {
+                alert('Error saving live class.');
             }
         });
 }

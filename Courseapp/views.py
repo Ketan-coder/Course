@@ -29,6 +29,8 @@ from django.templatetags.static import static
 from utils.decorators import deprecated
 from collections import defaultdict
 from django.utils.timezone import now
+from django.utils import timezone as django_timezone
+from datetime import datetime
 
 def course_list(request, category='') -> HttpResponse:
     category_object = ''
@@ -1054,6 +1056,134 @@ def create_lesson(request) -> HttpResponse:
             </div>""".format(str(e)),
             status=500
         )
+    
+def create_live_class(request) -> HttpResponse:
+    if request.method != "POST":
+        return HttpResponse(
+            """<div class="alert alert-danger border-0 rounded-0 d-flex align-items-center" role="alert">
+                <i class="fa-light fa-exclamation-circle text-danger-emphasis me-2"></i>
+                <div>Invalid request method.</div>
+            </div>""",
+            status=405
+        )
+    try:
+        title = request.POST.get("title")
+        if not title:
+            return HttpResponse(
+                """<div class="alert alert-danger border-0 rounded-0 d-flex align-items-center" role="alert">
+                    <i class="fa-light fa-exclamation-circle text-danger-emphasis me-2"></i>
+                    <div>Title is required.</div>
+                </div>""",
+                status=400
+            )
+        live_class_id = request.POST.get("live_class_id")
+        description = request.POST.get("description", "")
+        start_time_str = request.POST.get("start_time")
+        end_time_str = request.POST.get("end_time")
+        course_id = request.POST.get("course_id")
+        section_id = request.POST.get("section_id")
+        meeting_url = request.POST.get("meeting_url", "")
+        meeting_id = request.POST.get("meeting_id", "")
+        passcode = request.POST.get("passcode", "")
+        is_recurring = request.POST.get("is_recurring", "off") == "on"
+        recording_url = request.POST.get("recording_url", "")
+        recurrence_rule = request.POST.get("recurrence_rule", "")
+        profile = request.user.profile
+        instructor = Instructor.objects.filter(profile=profile).first()
+        if not instructor:
+            return HttpResponse(
+                """<div class="alert alert-danger border-0 rounded-0 d-flex align-items-center" role="alert">
+                    <i class="fa-light fa-exclamation-circle text-danger-emphasis me-2"></i>
+                    <div>Instructor profile not found.</div>
+                </div>""",
+                status=404
+            )
+        course = get_object_or_404(Course.all_objects, pk=course_id)
+        section = get_object_or_404(Section.all_objects, pk=section_id)
+
+        if not course or not section:
+            return HttpResponse(
+                """<div class="alert alert-danger border-0 rounded-0 d-flex align-items-center" role="alert">
+                    <i class="fa-light fa-exclamation-circle text-danger-emphasis me-2"></i>
+                    <div>Course or section not found.</div>
+                </div>""",
+                status=404
+            )
+        
+        if not start_time_str or not end_time_str:
+            return HttpResponse(
+                """<div class="alert alert-danger border-0 rounded-0 d-flex align-items-center" role="alert">
+                    <i class="fa-light fa-exclamation-circle text-danger-emphasis me-2"></i>
+                    <div>Start time and end time are required.</div>
+                </div>""",
+                status=400
+            )
+        
+        start_time = datetime.strptime(start_time_str, "%Y-%m-%dT%H:%M")
+        end_time = datetime.strptime(end_time_str, "%Y-%m-%dT%H:%M")
+        start_time = django_timezone.make_aware(start_time, django_timezone.get_default_timezone())
+        end_time = django_timezone.make_aware(end_time, django_timezone.get_default_timezone())
+        if live_class_id:
+            live_class = LiveClass.objects.filter(id=live_class_id).first()
+            if not live_class:
+                return HttpResponse(
+                    """<div class="alert alert-danger border-0 rounded-0 d-flex align-items-center" role="alert">
+                        <i class="fa-light fa-exclamation-circle text-danger-emphasis me-2"></i>
+                        <div>Live class not found.</div>
+                    </div>""",
+                    status=404
+                )
+            
+            live_class.title = title
+            live_class.description = description
+            live_class.start_time = start_time
+            live_class.end_time = end_time
+            live_class.course = course if course else live_class.course
+            live_class.section = section
+            live_class.instructor = instructor
+            live_class.meeting_url = meeting_url
+            live_class.meeting_id = meeting_id
+            live_class.passcode = passcode
+            live_class.is_recurring = is_recurring
+            live_class.recording_url = recording_url
+            live_class.updated_at = now()
+            live_class.save()
+            return HttpResponse(
+                """<div class="alert alert-success border-0 rounded-0 d-flex align-items-center" role="alert">
+                    <i class="fa-light fa-check-circle text-success-emphasis me-2"></i>
+                    <div>Live class <strong>{}</strong> updated successfully.</div>
+                </div>""".format(title)
+            )
+        else:
+            live_class = LiveClass.objects.create(
+                title=title,
+                description=description,
+                start_time=start_time,
+                end_time=end_time,
+                course=course,
+                section=section,
+                instructor=instructor,
+                meeting_url=meeting_url,
+                meeting_id=meeting_id,
+                passcode=passcode,
+                is_recurring=is_recurring,
+                recording_url=recording_url
+            )
+            return HttpResponse(
+                """<div class="alert alert-success border-0 rounded-0 d-flex align-items-center" role="alert">
+                    <i class="fa-light fa-check-circle text-success-emphasis me-2"></i>
+                    <div>Live class <strong>{}</strong> created successfully.</div>
+                </div>""".format(title)
+            )
+    except Exception as e:
+        print("Error creating/updating live class:", e)
+        return HttpResponse(
+            """<div class="alert alert-danger border-0 rounded-0 d-flex align-items-center" role="alert">
+                <i class="fa-light fa-exclamation-circle text-danger-emphasis me-2"></i>
+                <div>Error: {}</div>
+            </div>""".format(str(e)),
+            status=500
+        )
 
 
 def create_faq(request) -> HttpResponse:
@@ -1388,6 +1518,30 @@ def get_article_details(request, article_id):
         return JsonResponse(data)
     except Article.DoesNotExist:
         return JsonResponse({"error": "Article not found"}, status=404)
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
+    
+def get_live_class_details(request, live_class_id):
+    try:
+        live_class = get_object_or_404(LiveClass, id=live_class_id)
+        data = {
+            "id": live_class.id,
+            "title": live_class.title,
+            "description": live_class.description,
+            "start_time": live_class.start_time.strftime("%Y-%m-%dT%H:%M"),
+            "end_time": live_class.end_time.strftime("%Y-%m-%dT%H:%M"),
+            "course_id": live_class.course.id if live_class.course else None,
+            "section_id": live_class.section.id if live_class.section else None,
+            "instructor": live_class.instructor.profile.user.username if live_class.instructor else None,
+            "meeting_url": live_class.meeting_url,
+            "meeting_id": live_class.meeting_id,
+            "passcode": live_class.passcode,
+            "is_recurring": live_class.is_recurring,
+            "recording_url": live_class.recording_url,
+        }
+        return JsonResponse(data)
+    except LiveClass.DoesNotExist:
+        return JsonResponse({"error": "Live class not found"}, status=404)
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
     
@@ -1908,7 +2062,27 @@ def delete_article_api(request, article_id):
     article.delete()
     return JsonResponse({"success": True})
 
-
+def delete_live_class_api(request, live_class_id):
+    """
+    API endpoint to delete a live class.
+    """
+    if not request.user.is_authenticated:
+        return JsonResponse({"error": "You must be logged in to delete a live class."}, status=403)
+    if live_class_id is None:
+        return JsonResponse({"error": "Live class ID is required."}, status=400)
+    profile = request.user.profile
+    instructor = Instructor.objects.filter(profile=profile).first()
+    if not instructor:
+        return JsonResponse({"error": "You must be an instructor to delete a live class."}, status=403)
+    live_class = get_object_or_404(LiveClass, id=live_class_id)
+    if not live_class:
+        return JsonResponse({"error": "Live class not found."}, status=404)
+    if live_class.instructor_id != instructor.id:
+        return JsonResponse({"error": "You must be the instructor of the live class to delete it."}, status=403)
+    # live_class.is_deleted = True
+    # live_class.save()
+    live_class.delete()
+    return JsonResponse({"success": True})
 
 def course_create_step_one(request, course_id=None) -> HttpResponse:
     """
@@ -2121,6 +2295,7 @@ def course_create_step_three(request, course_id=None) -> HttpResponse:
             return redirect("course_list")
     else:
         course = None
+    now = django_timezone.now()
     if request.method == "POST":
         print("Creating or updating course sections..." + str(request.POST))
         try:

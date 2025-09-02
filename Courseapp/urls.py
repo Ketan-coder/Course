@@ -53,6 +53,7 @@ urlpatterns: list[URLPattern] = [
     path("create_article/", login_required(views.create_or_edit_article), name="create_article"),
     path("create_article/ajax/", login_required(views.create_article_ajax), name="create_article_ajax"),
     path("create_quiz/ajax/", login_required(views.create_quiz_ajax), name="create_quiz_ajax"),
+    path("create_live_class/", login_required(views.create_live_class), name="create_live_class"),
 
     path("tags/edit/<int:tag_id>/", views.edit_tag, name="edit_tag"),
 
@@ -72,6 +73,7 @@ urlpatterns: list[URLPattern] = [
     path('fetch/section/<int:section_id>/', login_required(views.get_section_details), name='get_section_details'),
     path('fetch/quiz/<int:quiz_id>/', login_required(views.get_quiz_details), name='get_quiz_details'),
     path('fetch/article/<int:article_id>/', login_required(views.get_article_details), name='get_article_details'),
+    path('fetch/live-class/<int:live_class_id>/', login_required(views.get_live_class_details), name='get_live_class_details'),
     # path('fetch/course/<int:course_id>/', login_required(views.fetch_course_api), name='fetch_course_api'),
     # path('fetch/course-notes/<int:course_id>/', login_required(views.fetch_course_notes_api), name='fetch_course_notes_api'),
 
@@ -91,6 +93,7 @@ urlpatterns: list[URLPattern] = [
     path('delete_article/<int:article_id>/', login_required(views.delete_article_api), name='delete_article'),
     path('delete_quiz/<int:quiz_id>/', login_required(views.delete_quiz_api), name='delete_quiz'),
     path('delete_article/<int:article_id>/', login_required(views.delete_article_api), name='delete_article'),
+    path('delete_live_class/<int:live_class_id>/', login_required(views.delete_live_class_api), name='delete_live_class'),
 
     path('download/certificate/<int:course_id>/<int:student_id>/<int:certificate_id>/', views.download_certificate, name='download_certificate'),
 

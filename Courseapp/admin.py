@@ -415,4 +415,24 @@ class CourseArticleAdmin(admin.ModelAdmin):
         }
         js = ('admin/js/toggle-switch.js',)
 
-admin.site.register(LiveClass)
+@admin.register(LiveClass)
+class LiveClassAdmin(admin.ModelAdmin):
+    list_display = ("title", "course", "section", "instructor", "start_time", "end_time", "created_at")
+    search_fields = ("title", "description", "instructor__username", "course__title")
+    list_filter = ("start_time", "created_at")
+    ordering = ("-start_time",)
+    date_hierarchy = "created_at"
+    fieldsets = (
+        (None, {
+            'fields': ('title', 'description', 'course', 'section', 'instructor', 'start_time', 'end_time', 'meeting_url')
+        }),
+        ('Extra Fields', {
+            'fields': ('extra_fields',)
+        }),
+    )
+
+    class Media:
+        css = {
+            'all': ('admin/css/toggle-switch.css',)
+        }
+        js = ('admin/js/toggle-switch.js',)
