@@ -77,9 +77,15 @@
                                     <div>
                                         {% if live_class.meeting_url %}
                                         {% comment %} TODO: FIX {% endcomment %}
-                                            {% if live_class.end_time > now %}
-                                                <a href="{{ live_class.meeting_url }}" class="btn btn-sm edit-live-class-btn" target="_blank" rel="noopener noreferrer">
+                                            {% if live_class.end_time < now < live_class.start_time %}
+                                                <span class="text-muted">Live Class Not Started</span>
+                                            {% elif live_class.start_time < now < live_class.end_time %}
+                                                <a href="{{ live_class.meeting_url }}" class="btn btn-sm btn-success" target="_blank" rel="noopener noreferrer">
                                                     Join Live Class Now
+                                                </a>
+                                            {% elif live_class.end_time > now %}
+                                                <a href="{{ live_class.meeting_url }}" class="btn btn-sm edit-live-class-btn" target="_blank" rel="noopener noreferrer">
+                                                    Join Upcoming Live Class
                                                 </a>
                                             {% else %}
                                                 {% if live_class.recording_url %}

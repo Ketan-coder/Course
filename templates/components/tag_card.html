@@ -51,7 +51,7 @@
         </h5>
         {% if subtitle %}
         <p class="card-text" style="margin:.35rem 0 0; color:#8a9099; font-size:.925rem;">
-          {{ subtitle|truncatechars:25 }}
+          {{ subtitle|safe|truncatechars:25 }}
         </p>
         {% endif %}
       </div>
