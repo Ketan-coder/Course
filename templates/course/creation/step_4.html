@@ -83,7 +83,7 @@
                             <div class="p-3">
                                 <!-- Quizzes List -->
                                 <h6 class="font-weight-bold"><i class="ph ph-question me-2"></i>Quizzes</h6>
-                                <ul class="list-group list-group-flush mb-3">
+                                <ul class="list-group list-group-flush mb-3 ms-4">
                                     {% for quiz in section.quizzes.all %}
                                     <li class="list-group-item d-flex justify-content-between align-items-center ps-0">
                                         <span><i class="ph ph-radio-button me-2"></i>{{ quiz.title }}</span>
@@ -97,7 +97,7 @@
 
                                 <!-- Articles List -->
                                 <h6 class="font-weight-bold mt-3"><i class="ph ph-file-text me-2"></i>Article</h6>
-                                <ul class="list-group list-group-flush mb-2">
+                                <ul class="list-group list-group-flush mb-2 ms-4">
                                     {% if section.article %}
                                     <li class="list-group-item d-flex justify-content-between align-items-center ps-0">
                                         <span><i class="ph ph-newspaper me-2"></i>{{ section.article.title }}</span>

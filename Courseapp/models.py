@@ -597,6 +597,11 @@ class LiveClass(models.Model):
     recurrence_rule = models.JSONField(blank=True, null=True, default=dict)  # e.g. {"repeat":"weekly","days":["mon","wed"]}
 
     recording_url = models.URLField(max_length=500, blank=True, null=True)
+    
+    qr_code = models.ImageField(upload_to='qr_codes_classes/', blank=True, null=True)
+    is_deleted = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
+    attendees = models.ManyToManyField('Users.Profile', related_name='live_classes', blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
