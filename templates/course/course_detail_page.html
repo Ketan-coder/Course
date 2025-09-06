@@ -200,8 +200,13 @@
         </div>
 
         <!-- Right Column: FAQs and Reviews -->
+        
+        
+        
+        
         <div class="col-lg-4">
           <div class="sticky-top" style="top: 1.25rem;">
+            {% if upcoming_classes or past_classes %}
             <div class="card card-body mb-4">
               {% if upcoming_classes %}
               <h2 class="font-weight-bold mt-4 mb-3">
@@ -258,6 +263,7 @@
                 
               {% endif %}
             </div>
+            {% endif %}
             <h2 class="font-weight-bold mb-3">FAQs</h2>
             <div class="accordion mb-4" id="faqAccordion">
               {% for faq in course.faqs.all %}
