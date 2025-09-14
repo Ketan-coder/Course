@@ -287,6 +287,18 @@
                     {% comment %} <div class="mb-3">
                         <smart-input type="switch" is-big label="Repeat it?" name="is_recurring" id="live-class-is-recurring-input" required></smart-input>
                     </div> {% endcomment %}
+                    {% comment %} Additional fields like Qr Code {% endcomment %}
+
+                    {% comment %} <div class="mb-3 collapse" id="live-class-qr-box">
+                        <div class="card card-body">
+                            <h5 class="card-title">QR Code (Optional)</h5>
+                            <img id="live-class-qr-img" src="" alt="QR Code" style="max-width: 200px; max-height: 200px;"/>
+                            <br>
+                            <input type="file" id="live-class-qr-file" accept="image/*" style="display: none;">
+                            <label for="live-class-qr-file" class="btn btn-primary">Upload QR Code</label>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary" data-bs-toggle="collapse" data-bs-target="#live-class-qr-box">Show QR Code</button> {% endcomment %}
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -542,6 +554,7 @@ document.querySelectorAll(".sortable-lessons").forEach(list => {
                     document.getElementById('live-class-passcode-input').value = data.passcode;
                     document.getElementById('live-class-recording-url-input').value = data.recording_url;
                     document.getElementById('live-class-is-recurring-input').setAttribute('value', data.is_recurring);
+                    document.getElementById('live-class-qr-img').src = data.qr_code_url;
                 });
         } else { // Adding new
             modalTitle.textContent = 'Add New Live Class';

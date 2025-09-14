@@ -1088,6 +1088,7 @@ def create_live_class(request) -> HttpResponse:
         is_recurring = request.POST.get("is_recurring", "off") == "on"
         recording_url = request.POST.get("recording_url", "")
         recurrence_rule = request.POST.get("recurrence_rule", "")
+        create_qr = request.POST.get("create_qr", "off") == "on"
         profile = request.user.profile
         instructor = Instructor.objects.filter(profile=profile).first()
         if not instructor:
@@ -1147,7 +1148,7 @@ def create_live_class(request) -> HttpResponse:
             live_class.is_recurring = is_recurring
             live_class.recording_url = recording_url
             live_class.updated_at = now()
-            live_class.save()
+            live_class.save(create_qr=create_qr if create_qr else False)
             return HttpResponse(
                 """<div class="alert alert-success border-0 rounded-0 d-flex align-items-center" role="alert">
                     <i class="fa-light fa-check-circle text-success-emphasis me-2"></i>
@@ -1169,6 +1170,7 @@ def create_live_class(request) -> HttpResponse:
                 is_recurring=is_recurring,
                 recording_url=recording_url
             )
+            live_class.save(create_qr=True)
             return HttpResponse(
                 """<div class="alert alert-success border-0 rounded-0 d-flex align-items-center" role="alert">
                     <i class="fa-light fa-check-circle text-success-emphasis me-2"></i>
@@ -1538,6 +1540,7 @@ def get_live_class_details(request, live_class_id):
             "passcode": live_class.passcode,
             "is_recurring": live_class.is_recurring,
             "recording_url": live_class.recording_url,
+            "qr_code_url": live_class.qr_code.url if live_class.qr_code else None,
         }
         return JsonResponse(data)
     except LiveClass.DoesNotExist:

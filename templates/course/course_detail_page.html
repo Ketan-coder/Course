@@ -205,7 +205,7 @@
         
         
         <div class="col-lg-4">
-          <div class="sticky-top" style="top: 1.25rem;">
+          <div class="sticky-top" style="">
             {% if upcoming_classes or past_classes %}
             <div class="card card-body mb-4">
               {% if upcoming_classes %}
@@ -225,7 +225,11 @@
                     {% if foorloop.counter == "1" %} active {% endif %}
                     clickable
                     trailing-icon="ph ph-caret-right"
-                    onclick="location.href='{{ live_class.meeting_link }}'">
+                    data-url="{{ live_class.meeting_url }}"
+                    data-qr-url="{{ live_class.qr_code.url }}"
+                    data-qr-modal="live-class-modal-{{ live_class.id }}"
+                    data-qr-title="Show QR Code"
+                    >
                   </smart-list-tile>
                   {% empty %}
                   <p class="text-muted">No upcoming live classes scheduled.</p>
@@ -517,6 +521,59 @@
     </div>
   </div>
 
+  
+  {% if upcoming_classes %}  
+    {% for live_class in upcoming_classes %}  
+    {% if live_class.qr_code and live_class.meeting_url %}  
+      <div class="modal fade" id="live-class-modal-{{ live_class.id }}" tabindex="-1" aria-labelledby="live-class-modal-{{ live_class.id }}" aria-hidden="true">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h1 class="modal-title fs-5" id="modal-title-1">{{ live_class.title }}</h1>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+            <img src="{{ live_class.qr_code.url }}" alt="Live Class QR Code" class="img-fluid mb-3" />
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+              {% comment %} <button type="button" class="btn btn-primary">Save</button> {% endcomment %}
+            </div>
+          </div>
+        </div>
+      </div> 
+    {% endif %} 
+    {% endfor %}
+  {% endif %}
+    
+
+  
+  {% if past_classes %}  
+    {% for live_class in past_classes %}
+    {% if live_class.qr_code and live_class.meeting_url %}  
+      <div class="modal fade" id="live-class-modal-{{ live_class.id }}" tabindex="-1" aria-labelledby="live-class-modal-{{ live_class.id }}" aria-hidden="true">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h1 class="modal-title fs-5" id="modal-title-1">{{ live_class.title }}</h1>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+            <img src="{{ live_class.qr_code.url }}" alt="Live Class QR Code" class="img-fluid mb-3" />
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+              {% comment %} <button type="button" class="btn btn-primary">Save</button> {% endcomment %}
+            </div>
+          </div>
+        </div>
+      </div> 
+    {% endif %}
+      
+    {% endfor %}
+  {% endif %}
+    
+  
   <style>
     .hero-section {
       position: relative;

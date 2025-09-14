@@ -610,5 +610,72 @@ class LiveClass(models.Model):
     class Meta:
         ordering = ['start_time']
 
+    def save(self, create_qr=False, *args, **kwargs):
+        self.extra_fields['last_updated'] = str(self.updated_at)
+        if not self.instructor:
+            raise ValueError("Instructor is required")
+        if not self.qr_code and create_qr:
+            self.generate_qr(auto_save=False)
+        super().save(*args, **kwargs)
+
+
+    @check_load_time
+    @retry_on_failure(retries=3, delay=2)   
+    def generate_qr(self, auto_save=False):
+        import qrcode
+        from io import BytesIO
+        from django.core.files.base import ContentFile
+        from PIL import Image, ImageDraw, ImageFont
+
+        if self.is_deleted or not self.meeting_url or not self.start_time > timezone.now():
+            return
+
+        # QR code for meeting URL
+        qr = qrcode.make(self.meeting_url)
+        qr_width, qr_height = qr.size
+
+        # Meeting info text
+        meeting_info = f"Meeting ID : {self.meeting_id}\nPassword : {self.passcode}\n{self.meeting_url}"
+
+        # Load font
+        try:
+            font = ImageFont.truetype("arial.ttf", 18)
+        except:
+            font = ImageFont.load_default()
+
+        # Use textbbox instead of multiline_textsize
+        dummy_img = Image.new("RGB", (qr_width, 100), "white")
+        draw = ImageDraw.Draw(dummy_img)
+        bbox = draw.multiline_textbbox((0, 0), meeting_info, font=font)  # (x0, y0, x1, y1)
+        text_width = bbox[2] - bbox[0]
+        text_height = bbox[3] - bbox[1]
+
+        # New image: QR on top, text below
+        total_height = qr_height + text_height + 20  # padding
+        combined = Image.new("RGB", (max(qr_width, text_width + 20), total_height), "white")
+
+        # Paste QR
+        combined.paste(qr, (0, 0))
+
+        # Draw text below QR
+        draw = ImageDraw.Draw(combined)
+        text_x = 10
+        text_y = qr_height + 10
+        draw.multiline_text((text_x, text_y), meeting_info, fill="black", font=font)
+
+        # Save to buffer
+        buffer = BytesIO()
+        combined.save(buffer, format="PNG")
+
+        # Ensure title is string before slicing
+        title_str = str(self.title) if self.title else "live_class"
+        filename = f"{title_str[:10]}-qr.png"
+
+        self.qr_code.save(filename, ContentFile(buffer.getvalue()), save=False)
+
+        if auto_save:
+            super(LiveClass, self).save(update_fields=['qr_code'])
+
+
     def __str__(self):
         return f"{self.title} ({self.course.title})"

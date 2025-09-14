@@ -415,13 +415,15 @@ class SmartListTile extends HTMLElement {
         const activeColor = this.getAttribute('active-color') || 'primary';
         const isDisabled = this.hasAttribute('disabled');
         const hasBorder = this.getAttribute('border');
-
+        const OpenModalButton = this.hasAttribute('data-qr-modal');
+        const ButtonTitle = this.getAttribute('data-qr-title');
+    
         this._isActive = isActive;
-
+    
         const activeClass = isActive ? (activeColor === 'primary' ? 'active' : `active-${activeColor}`) : '';
         const disabledClass = isDisabled ? 'disabled' : '';
         const borderClass = hasBorder ? 'custom-border' : '';
-
+    
         this.innerHTML = `
             <div class="smart-list-tile-inner ${activeClass} ${disabledClass} ${borderClass}">
                 <div class="list-tile-leading">
@@ -431,20 +433,71 @@ class SmartListTile extends HTMLElement {
                     <h4 class="list-tile-title">${title}</h4>
                     ${subtitle ? `<p class="list-tile-subtitle max-lines-${maxLines}">${subtitle}</p>` : ''}
                 </div>
-                ${trailingIcon ? `<div class="list-tile-trailing"><i class="${trailingIcon}"></i></div>` : ''}
+                <div class="list-tile-trailing">
+                    <!--${trailingIcon ? `<i class="${trailingIcon}"></i>` : ''}-->
+                    ${OpenModalButton ? `<button class="btn qr-btn btn-sm btn-outline-primary">${ButtonTitle ? ButtonTitle : 'QR Code'}</button>` : `${trailingIcon ? `<i class="${trailingIcon}"></i>` : ''}`}
+                </div>
             </div>
         `;
-
-        // Apply custom styles after rendering
+    
         this._updateStyles();
+        this._attachQRButtonHandler();
     }
+    
+    _attachQRButtonHandler() {
+        const btn = this.querySelector('.qr-btn');
+        if (!btn) return;
+    
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation(); // prevent tile click event
+            this._openModal();
+        });
+    }
+
+    _openModal() {
+        let modal = document.getElementById(`qr-modal-${this.getAttribute("data-qr-url")}`);
+        if (!modal) {
+            modal = document.createElement('div');
+            modal.id = 'qr-modal';
+            modal.style.position = 'fixed';
+            modal.style.top = '0';
+            modal.style.left = '0';
+            modal.style.width = '100%';
+            modal.style.height = '100%';
+            modal.style.backgroundColor = 'rgba(0,0,0,0.6)';
+            modal.style.display = 'flex';
+            modal.style.justifyContent = 'center';
+            modal.style.alignItems = 'center';
+            modal.innerHTML = `
+                <div style="background:white; padding:20px; border-radius:10px; max-width:400px; text-align:center;">
+                    <h3 style="color:#000;">QR Code</h3>
+                    <img src="${this.getAttribute('data-qr-url')}" alt="QR Code" />
+                    <br/><br/>
+                    <button id="close-qr-btn" class="btn btn-danger">Close</button>
+                </div>
+            `;
+            document.body.appendChild(modal);
+    
+            // Close handler
+            modal.querySelector('#close-qr-btn').addEventListener('click', () => {
+                modal.remove();
+            });
+        }
+    }
+    
+    
 
     _attachEventListeners() {
         const inner = this.querySelector('.smart-list-tile-inner');
         if (inner && this.hasAttribute('clickable')) {
             this._clickHandler = (e) => {
                 if (this.hasAttribute('disabled')) return;
-                
+    
+                const url = this.getAttribute('data-url');
+                if (url) {
+                    window.open(url, "_blank"); // opens external links properly
+                }
+    
                 this.dispatchEvent(new CustomEvent('tile-click', {
                     bubbles: true,
                     detail: { 
@@ -455,7 +508,7 @@ class SmartListTile extends HTMLElement {
             };
             inner.addEventListener('click', this._clickHandler);
         }
-    }
+    }    
 
     _reattachEventListeners() {
         const inner = this.querySelector('.smart-list-tile-inner');

@@ -108,9 +108,14 @@
                                     </span>
                                 </td>
                                 <td class="text-right p-2">
-                                    <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#courseQRModal{{ course.id }}">
+                                    {% comment %} <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#courseQRModal{{ course.id }}">
                                         View QR Code
-                                    </button>
+                                    </button> {% endcomment %}
+                                    {% if course.recent_classes %}
+                                        <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#liveClassQRModal{{ course.id }}">
+                                            View Live Classes QR Code
+                                        </button>
+                                    {% endif %}
                                     <button type="button" class="btn btn-secondary btn-sm" onclick="copyCourseUrl('{{ course.id }}')">Copy Course URL</button>
                                     <a href="{% url 'course_detail' course.id %}" class="btn btn-info btn-sm">View Course</a>
                                 </td>
@@ -230,7 +235,33 @@
             </div>
         </div>
     </div>
+    
+    {% if course.recent_classes %}
+        <!-- Vertically centered modal for recent live class QR code -->
+        <div class="modal fade" id="liveClassQRModal{{ course.id }}" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Recent Live Class QR Code - {{ course.recent_classes.0.title }}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body p-3">
+                        <div class="text-center">
+                            {% if course.recent_classes_qr_code_url %}
+                                <img src="{{ course.recent_classes_qr_code_url }}" alt="QR Code for Recent Live Class of {{ course.title }}" class="img-fluid" style="max-width: 100%; height: auto;">
+                            {% else %}
+                                <p class="text-muted">No QR code available for recent live class.</p>
+                            {% endif %}
+                        </div>
+                        <p class="text-muted mt-3">Scan this QR code to access the recent live class directly.</p>
+                        <p class="text-muted">You can also share this QR code with your students.</p>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+        
     {% endfor %}
+    
 
     {% if student_data %}
         {% for student in student_data %}

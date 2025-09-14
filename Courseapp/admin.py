@@ -426,6 +426,9 @@ class LiveClassAdmin(admin.ModelAdmin):
         (None, {
             'fields': ('title', 'description', 'course', 'section', 'instructor', 'start_time', 'end_time', 'meeting_url')
         }),
+        ('Images', {
+            'fields': ('qr_code',)
+        }),
         ('Extra Fields', {
             'fields': ('extra_fields',)
         }),

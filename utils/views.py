@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from Tiers.models import Tier, Tournament, LeaderboardEntry
@@ -9,7 +9,7 @@ from django.contrib.auth.models import User
 from utils.decorators import check_load_time
 from utils.models import FeedBack, Activity
 from Users.models import Profile, Student, Instructor
-from django.db.models import Sum
+from django.db.models import Sum, Q
 import json
 from django.http import JsonResponse
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
@@ -215,7 +215,11 @@ def index(request):
                         c.bookmarked_count = c.bookmarked_by_users.count()
                         users_who_bought_courses = c.is_bought_by_users.all()
                         c.earnings = (users_who_bought_courses.count() if users_who_bought_courses else 0) * c.price if users_who_bought_courses else 0
-
+                        # recent_classes from the course
+                        recent_classes = c.live_classes.filter(Q(start_time__gte=datetime.now() - timedelta(days=7))) | c.live_classes.filter(Q(end_time__gte=datetime.now() - timedelta(days=7))).order_by('-start_time')
+                        c.recent_classes = recent_classes if recent_classes.exists() else None
+                        c.recent_classes_qr_code_url = recent_classes.first().qr_code.url if recent_classes.exists() else None
+                        
                         if c.is_class_room_course:
                             for student in c.is_bought_by_users.all():
                                 quizzes = QuizSubmission.objects.filter(user=student).order_by('-submitted_at')
