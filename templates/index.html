@@ -112,7 +112,7 @@
                                         View QR Code
                                     </button> {% endcomment %}
                                     {% if course.recent_classes %}
-                                        <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#liveClassQRModal{{ course.id }}">
+                                        <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#courseQRModal{{ course.id }}">
                                             View Live Classes QR Code
                                         </button>
                                     {% endif %}
@@ -216,7 +216,7 @@
     </div>
     {% for course in courses %}
     <!-- Vertically centered modal -->
-        <div class="modal fade" id="courseQRModal{{ course.id }}" tabindex="-1" aria-hidden="true">
+        {% comment %} <div class="modal fade" id="courseQRModal{{ course.id }}" tabindex="-1" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
                     <div class="modal-header">
@@ -234,11 +234,11 @@
                 </div>
             </div>
         </div>
-    </div>
+    </div> {% endcomment %}
     
     {% if course.recent_classes %}
         <!-- Vertically centered modal for recent live class QR code -->
-        <div class="modal fade" id="liveClassQRModal{{ course.id }}" tabindex="-1" aria-hidden="true">
+        <div class="modal fade" id="courseQRModal{{ course.id }}" tabindex="-1" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
                     <div class="modal-header">
