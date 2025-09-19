@@ -159,7 +159,10 @@
                                                                     {{ student.status|default:'pending' }}
                                                                     {% endif%}
                                                                     <br>
-                                                                    <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#checkAnswers-{{ student.quiz_submission_id }}">
+                                                                    {% comment %} <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#checkAnswers-{{ student.quiz_submission_id }}">
+                                                                        Check Student Answers
+                                                                    </button> {% endcomment %}
+                                                                    <button type="button" class="btn btn-primary btn-sm" onclick="showStudentModal('{{ student.quiz_submission_id }}')">
                                                                         Check Student Answers
                                                                     </button>
                                                                 </td>
@@ -214,6 +217,7 @@
         </div>
 
     </div>
+    
     {% for course in courses %}
     <!-- Vertically centered modal -->
         {% comment %} <div class="modal fade" id="courseQRModal{{ course.id }}" tabindex="-1" aria-hidden="true">
@@ -261,63 +265,6 @@
     {% endif %}
         
     {% endfor %}
-    
-
-    {% if student_data %}
-        {% for student in student_data %}
-            <!-- Modal for each student's quiz answers -->
-            <div class="modal fade" id="checkAnswers-{{ student.quiz_submission_id }}" tabindex="-1" aria-labelledby="checkAnswersLabel-{{ student.quiz_submission_id }}" aria-hidden="true">
-                <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
-                    <div class="modal-content border-0 shadow-lg rounded-3">
-                        <div class="modal-header bg-light border-bottom-0 py-3">
-                            <h5 class="modal-title fw-bold text-dark" id="checkAnswersLabel-{{ student.quiz_submission_id }}">
-                                Quiz Answers for {{ student.user.user.first_name }} {{ student.user.user.last_name }}
-                            </h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <div class="modal-body p-4">
-                            {% if student.answers %}
-                                <div class="my-3">
-                                    {% for question, answer in student.answers.items %}
-                                        <div class="card p-4 mb-3 border-0 shadow-sm rounded-3 animate__animated animate__fadeIn">
-                                            <p class="fs-5 fw-semibold text-primary mb-2">
-                                                Question {{ forloop.counter }}: {{ answer.question_type|title }}
-                                            </p>
-                                            <p class="text-muted mb-3">{{ answer.question_text }}</p>
-                                            <div class="mt-2 d-flex align-items-center">
-                                                <span class="fw-semibold me-2">Student's Answer:</span>
-                                                <span class="badge {% if answer.is_correct %}bg-success{% else %}bg-danger{% endif %} rounded-pill px-3 py-2">
-                                                    {{ answer.human_answers|default:"No answer provided" }}
-                                                </span>
-                                            </div>
-                                            {% if not answer.is_correct %}
-                                                <div class="mt-3">
-                                                    <span class="fw-semibold">Correct Answer:</span>
-                                                    <p class="text-muted mb-0">{{ answer.correct_answers|default:"Not available" }}</p>
-                                                </div>
-                                            {% endif %}
-                                        </div>
-                                    {% endfor %}
-                                </div>
-                            {% else %}
-                                <p class="text-muted text-center my-4 fs-5">No answers submitted for this quiz.</p>
-                            {% endif %}
-                        </div>
-                        <div class="modal-footer bg-light border-top-0 py-3">
-                            <div class="text-muted me-3">
-                                <span class="fw-semibold">Correct Answers:</span> 
-                                {{ student.answers|length|add:"0" }} / {{ student.answers|length|default:"0" }}
-                                <br>
-                                <span class="fw-semibold">Score:</span> 
-                                {{ student.score|default:"0" }} / {{ student.total|default:"0" }}
-                            </div>
-                            <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Close</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        {% endfor %}
-    {% endif %}
 
     {% else %}
 
@@ -491,6 +438,15 @@
 {% endblock body %}
 {% block script %}
     <script>
+        function showStudentModal(submissionId) {
+            console.log("Clicked for submission ID:", submissionId);
+            const modalId = '#checkAnswers-' + submissionId;
+            const modalElement = document.querySelector(modalId);
+            if (modalElement) {
+                const modal = new bootstrap.Modal(modalElement);
+                modal.show();
+            }
+        }
         function copyCourseUrl(courseId) {
             const courseUrl = window.location.origin + "{% url 'course_detail' 0 %}?ref={{ request.user.username }}".replace('0', courseId);
             navigator.clipboard.writeText(courseUrl).then(() => {

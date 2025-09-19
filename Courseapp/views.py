@@ -1335,7 +1335,8 @@ def create_quiz_ajax(request):
         return JsonResponse({'success': False, 'error': 'Invalid request method'}, status=405)
 
     try:
-        print(request.POST)
+        print("POST data:", request.POST)
+        
         # Extract basic quiz fields
         quiz_id = request.POST.get("quiz_id")
         title = request.POST.get("title", "")
@@ -1344,57 +1345,75 @@ def create_quiz_ajax(request):
         lesson_id = request.POST.get("lesson_id")
         questions_json = request.POST.get("questions_json", "[]")
 
-        # Parse the JSON string into a list of dicts
+        # Parse the JSON string into a dict
         questions = json.loads(questions_json)
+        print("Parsed questions:", questions)
 
-        # Build quiz.question JSON-like object with keys: 1, 2, 3...
+        # The questions are already in the correct format from JavaScript
+        # Just ensure all required fields are present
         formatted_questions = {}
-        for index, q in questions.items():
-            raw_options = q.get("options", [])
-            print(f"Raw options: {raw_options}")
+        for key, q in questions.items():
+            print(f"Processing question {key}: {q}")
             
-            # Generate option objects with ids: a, b, c, ...
-            option_objs = [
-                {"id": chr(97 + i), "text": option}
-                for i, option in enumerate(raw_options)
-            ] if raw_options else []
-
-            print(f"Formatted options: {option_objs}")
-
-            formatted_questions[str(index)] = {
-                "id": str(index),
-                "question": q["question"],
-                "type": q["type"],
-                "options": option_objs,
-                "answer": ",".join(q["answer"]) if isinstance(q["answer"], list) else q["answer"],
-                "is_completed": False,
-                "score_on_completion": q.get("score_on_completion", 10)
+            # Ensure options are in correct format (they should already be from JS)
+            options = q.get("options", [])
+            if options:
+                print(f"Options for question {key}: {options}")
+            
+            formatted_questions[key] = {
+                "id": q.get("id", key),
+                "question": q.get("question", ""),
+                "type": q.get("type", "SINGLE_SELECT"),
+                "options": options,  # Already in correct format: [{"id": "text", "text": "text"}]
+                "answer": q.get("answer", ""),
+                "is_completed": q.get("is_completed", False),
+                "score_on_completion": int(q.get("score_on_completion", 10))
             }
 
-        if course_id:
-            course = get_object_or_404(Course.all_objects, id=course_id)
+        print("Final formatted questions:", formatted_questions)
 
-            if quiz_id:
-                quiz = get_object_or_404(Quiz.all_objects, id=quiz_id, instructor=course.instructor)
-                quiz.title = title
-                quiz.questions = formatted_questions
-            else:
-                quiz = Quiz.all_objects.create(title=title, questions=formatted_questions, instructor=course.instructor)
+        # Get course
+        if not course_id:
+            return JsonResponse({'success': False, 'error': 'Course ID is required'}, status=400)
+            
+        course = get_object_or_404(Course.all_objects, id=course_id)
 
-        # Optional: Link related objects
-        if course_id:
-            quiz.course = get_object_or_404(Course.all_objects, id=course_id)
+        # Create or update quiz
+        if quiz_id:
+            quiz = get_object_or_404(Quiz.all_objects, id=quiz_id, instructor=course.instructor)
+            quiz.title = title
+            quiz.questions = formatted_questions
+        else:
+            quiz = Quiz.all_objects.create(
+                title=title, 
+                questions=formatted_questions, 
+                instructor=course.instructor
+            )
+
+        # Link related objects
+        quiz.course = course
         if section_id:
             quiz.section = get_object_or_404(Section.all_objects, id=section_id)
         if lesson_id:
             quiz.lesson = get_object_or_404(Lesson.all_objects, id=lesson_id)
 
         quiz.save()
-        return JsonResponse({'success': True, 'message': 'Quiz saved successfully.'}, status=200)
+        
+        return JsonResponse({
+            'success': True, 
+            'message': 'Quiz saved successfully.',
+            'quiz_id': quiz.id
+        }, status=200)
 
+    except json.JSONDecodeError as e:
+        print(f"JSON decode error: {e}")
+        return JsonResponse({'success': False, 'error': 'Invalid JSON format'}, status=400)
     except Exception as e:
         print(f"Error saving quiz: {e}")
+        import traceback
+        traceback.print_exc()
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
+    
     
 def create_course_notes(request) -> HttpResponse:
     try:

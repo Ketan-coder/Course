@@ -358,6 +358,7 @@ function removeQuestion(id) {
 }
 
 // --- FORM SUBMISSION & DELETE ---
+// Replace your existing saveQuiz function with this corrected version
 function saveQuiz(event) {
     event.preventDefault();
     const form = event.target;
@@ -366,15 +367,32 @@ function saveQuiz(event) {
     const questions = {};
     document.querySelectorAll('.question-card').forEach((q, index) => {
         const id = q.id;
-        const options = Array.from(q.querySelectorAll(`[name^="${id}_option_"]`)).map(opt => ({ text: opt.value }));
+        const questionType = formData.get(`${id}_type`);
+        
+        // FIX: Create proper option format with id and text
+        let options = [];
+        if (questionType === 'SINGLE_SELECT' || questionType === 'MULTIPLE_SELECT') {
+            options = Array.from(q.querySelectorAll(`[name^="${id}_option_"]`))
+                .map(opt => {
+                    const text = opt.value.trim();
+                    return {
+                        id: text,    // This was missing - causing the [object Object] issue
+                        text: text
+                    };
+                })
+                .filter(opt => opt.text !== ''); // Remove empty options
+        }
+        
         questions[index + 1] = {
-            id: index + 1,
+            id: (index + 1).toString(),  // Convert to string to match your expected format
             question: formData.get(`${id}_question`),
-            type: formData.get(`${id}_type`),
+            type: questionType,
+            options: options,  // Now correctly formatted as [{"id": "First", "text": "First"}]
             answer: formData.get(`${id}_answer`),
-            options: options,
-            score_on_completion: formData.get(`${id}_score`)
+            is_completed: false,  // Boolean instead of False
+            score_on_completion: parseInt(formData.get(`${id}_score`)) || 10
         };
+        
         // Clean up formData
         formData.delete(`${id}_question`);
         formData.delete(`${id}_type`);
@@ -382,11 +400,21 @@ function saveQuiz(event) {
         formData.delete(`${id}_score`);
         q.querySelectorAll(`[name^="${id}_option_"]`).forEach(opt => formData.delete(opt.name));
     });
+    
     formData.append('questions_json', JSON.stringify(questions));
 
     fetch("{% url 'create_quiz_ajax' %}", { method: 'POST', body: formData })
-        .then(res => res.text()).then(data => {
-            if (data.includes('success')) location.reload(); else alert('Error saving quiz. ' + data.message);
+        .then(res => res.json())  // Changed from .text() to .json()
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Error saving quiz: ' + (data.error || data.message || 'Unknown error'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error saving quiz: ' + error.message);
         });
 }
 
